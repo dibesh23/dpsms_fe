@@ -6,13 +6,13 @@ Simple reference for what each folder is used for.
 
 ## Root Level
 
-| Folder / File | Purpose |
-|---------------|---------|
-| `src/` | All application source code |
-| `public/` | Static assets — images, icons, favicon |
-| `docs/` | Project documentation |
-| `.env.local` | Local environment variables (never commit) |
-| `package.json` | Dependencies and scripts |
+| Folder / File  | Purpose                                    |
+| -------------- | ------------------------------------------ |
+| `src/`         | All application source code                |
+| `public/`      | Static assets — images, icons, favicon     |
+| `docs/`        | Project documentation                      |
+| `.env.local`   | Local environment variables (never commit) |
+| `package.json` | Dependencies and scripts                   |
 
 ---
 
@@ -20,22 +20,22 @@ Simple reference for what each folder is used for.
 
 Next.js App Router — **route pages only.** Keep pages thin; put logic in `features/`.
 
-| Folder | Purpose |
-|--------|---------|
-| `(marketing)/` | Public landing page and school onboarding |
-| `(auth)/login/` | Login page |
-| `(auth)/register/` | Registration / signup page |
-| `(auth)/forgot-password/` | Password reset page |
-| `(dashboard)/` | Authenticated app shell (sidebar + main content) |
-| `(dashboard)/academic/` | Academic setup page |
-| `(dashboard)/students/` | Student management page |
-| `(dashboard)/teachers/` | Teacher management page |
-| `(dashboard)/attendance/` | Attendance page |
-| `(dashboard)/fees/` | Fees management page |
-| `(dashboard)/exams/` | Exams and results page |
-| `(dashboard)/notices/` | Notices page |
-| `(dashboard)/reports/` | Reports and exports page |
-| `(dashboard)/settings/` | School / account settings page |
+| Folder                    | Purpose                                          |
+| ------------------------- | ------------------------------------------------ |
+| `(marketing)/`            | Public landing page and school onboarding        |
+| `(auth)/login/`           | Login page                                       |
+| `(auth)/register/`        | Registration / signup page                       |
+| `(auth)/forgot-password/` | Password reset page                              |
+| `(dashboard)/`            | Authenticated app shell (sidebar + main content) |
+| `(dashboard)/academic/`   | Academic setup page                              |
+| `(dashboard)/students/`   | Student management page                          |
+| `(dashboard)/teachers/`   | Teacher management page                          |
+| `(dashboard)/attendance/` | Attendance page                                  |
+| `(dashboard)/fees/`       | Fees management page                             |
+| `(dashboard)/exams/`      | Exams and results page                           |
+| `(dashboard)/notices/`    | Notices page                                     |
+| `(dashboard)/reports/`    | Reports and exports page                         |
+| `(dashboard)/settings/`   | School / account settings page                   |
 
 **Rule:** Pages compose components from `features/` — do not put business logic or API calls directly in page files.
 
@@ -47,29 +47,29 @@ Business modules. **Mirrors the backend feature folders.** Each module owns its 
 
 Each feature folder contains:
 
-| Subfolder | Purpose |
-|-----------|---------|
-| `api/` | Typed API client — all backend calls for this feature |
-| `components/` | Feature-specific UI components |
-| `hooks/` | Feature-specific React hooks |
-| `types/` | TypeScript types matching backend DTOs |
-| `index.ts` | Public exports only |
+| Subfolder     | Purpose                                               |
+| ------------- | ----------------------------------------------------- |
+| `api/`        | Typed API client — all backend calls for this feature |
+| `components/` | Feature-specific UI components                        |
+| `hooks/`      | Feature-specific React hooks                          |
+| `types/`      | TypeScript types matching backend DTOs                |
+| `index.ts`    | Public exports only                                   |
 
 ### Feature folders
 
-| Folder | What it handles |
-|--------|-----------------|
-| `auth/` | Login form, session, logout UI |
-| `tenant/` | School onboarding flow |
-| `academic/` | Class, section, subject setup UI |
-| `student/` | Student list, profile, guardians, documents |
-| `teacher/` | Teacher list, profile, assignments |
-| `attendance/` | Mark and view attendance |
-| `fees/` | Fee collection, installments, receipts |
-| `exam/` | Exam setup, marks entry, results |
-| `notice/` | Create and view notices |
-| `reports/` | Export and report UI |
-| `dashboard/` | Dashboard widgets and overview stats |
+| Folder        | What it handles                             |
+| ------------- | ------------------------------------------- |
+| `auth/`       | Login form, session, logout UI              |
+| `tenant/`     | School onboarding flow                      |
+| `academic/`   | Class, section, subject setup UI            |
+| `student/`    | Student list, profile, guardians, documents |
+| `teacher/`    | Teacher list, profile, assignments          |
+| `attendance/` | Mark and view attendance                    |
+| `fees/`       | Fee collection, installments, receipts      |
+| `exam/`       | Exam setup, marks entry, results            |
+| `notice/`     | Create and view notices                     |
+| `reports/`    | Export and report UI                        |
+| `dashboard/`  | Dashboard widgets and overview stats        |
 
 **Rule:** Do not import another feature's internal files. Import only from that feature's `index.ts`.
 
@@ -83,22 +83,22 @@ Reusable code used across multiple features and pages.
 
 ### `shared/components/`
 
-| Folder | Purpose |
-|--------|---------|
-| `ui/` | shadcn/ui primitives — Button, Input, Dialog, Table, etc. |
-| `layout/` | Sidebar, header, page shell, navigation |
+| Folder      | Purpose                                                   |
+| ----------- | --------------------------------------------------------- |
+| `ui/`       | shadcn/ui primitives — Button, Input, Dialog, Table, etc. |
+| `layout/`   | Sidebar, header, page shell, navigation                   |
 | `feedback/` | Loading spinner, toast notifications (bottom, 5s timeout) |
 
 ### Other shared folders
 
-| Folder | Purpose |
-|--------|---------|
-| `hooks/` | Reusable hooks — `usePermission`, `useToast`, etc. |
-| `lib/` | API base client, `cn()` helper, formatters |
+| Folder       | Purpose                                            |
+| ------------ | -------------------------------------------------- |
+| `hooks/`     | Reusable hooks — `usePermission`, `useToast`, etc. |
+| `lib/`       | API base client, `cn()` helper, formatters         |
 | `providers/` | Context providers — theme (light/dark), auth state |
-| `types/` | Shared TypeScript types used by multiple features |
-| `constants/` | Shared colors, roles, route paths |
-| `utils/` | Pure helper functions |
+| `types/`     | Shared TypeScript types used by multiple features  |
+| `constants/` | Shared colors, roles, route paths                  |
+| `utils/`     | Pure helper functions                              |
 
 **Rule:** If a component or hook is used in more than one feature, move it to `shared/`.
 
@@ -130,18 +130,18 @@ Is it a static image or icon?
 
 ## Page → Feature Mapping
 
-| Route | Feature folder |
-|-------|----------------|
-| `/` | `features/tenant/` |
-| `/login` | `features/auth/` |
-| `/students` | `features/student/` |
-| `/teachers` | `features/teacher/` |
-| `/academic` | `features/academic/` |
+| Route         | Feature folder         |
+| ------------- | ---------------------- |
+| `/`           | `features/tenant/`     |
+| `/login`      | `features/auth/`       |
+| `/students`   | `features/student/`    |
+| `/teachers`   | `features/teacher/`    |
+| `/academic`   | `features/academic/`   |
 | `/attendance` | `features/attendance/` |
-| `/fees` | `features/fees/` |
-| `/exams` | `features/exam/` |
-| `/notices` | `features/notice/` |
-| `/reports` | `features/reports/` |
+| `/fees`       | `features/fees/`       |
+| `/exams`      | `features/exam/`       |
+| `/notices`    | `features/notice/`     |
+| `/reports`    | `features/reports/`    |
 
 ---
 

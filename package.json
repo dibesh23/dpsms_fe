@@ -1,0 +1,19 @@
+{
+  "name": "DP-SMS-FRONTEND",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.10.0",
+      "onFail": "download"
+    }
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
+}
