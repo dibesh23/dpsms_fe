@@ -1,84 +1,95 @@
-import React from "react";
-import { BrandMark } from "./BrandMark";
+import { cn } from "../lib/cn";
+import { Grid } from "./ui/grid";
+import { Wordmark } from "./ui/wordmark";
+import Link from "next/link";
 
-const FEATURES = [
-  "Student & teacher management",
-  "Attendance & exam tracking",
-  "Fee management & reporting",
-  "Multi-tenant school support",
-];
-
-export function AuthShell({ children }: { children: React.ReactNode }) {
+export function AuthShell({
+  children,
+  showTerms = true,
+}: {
+  children: React.ReactNode;
+  showTerms?: boolean;
+}) {
   return (
-    <div className="min-h-screen lg:flex">
-      <aside className="relative hidden overflow-hidden bg-[#0d3320] lg:flex lg:w-1/2 lg:flex-col lg:justify-between lg:p-12">
+    <div className="relative min-h-[100dvh]">
+      <div className="absolute inset-0 isolate overflow-hidden bg-white">
+        {/* Grid */}
         <div
-          className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-[#156d39]/40 blur-3xl"
-          aria-hidden="true"
-        />
-        <div
-          className="pointer-events-none absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl"
-          aria-hidden="true"
-        />
-
-        <div className="relative z-10">
-          <BrandMark variant="dark" />
+          className={cn(
+            "absolute inset-y-0 left-1/2 w-[1200px] -translate-x-1/2",
+            "[mask-composite:intersect] [mask-image:linear-gradient(black,transparent_320px),linear-gradient(90deg,transparent,black_5%,black_95%,transparent)]",
+          )}
+        >
+          <Grid
+            cellSize={60}
+            patternOffset={[0.75, 0]}
+            className="text-neutral-200"
+          />
         </div>
 
-        <div className="relative z-10 max-w-md">
-          <h1 className="text-4xl font-bold leading-tight tracking-tight text-white">
-            Run your whole school from one place.
-          </h1>
-          <p className="mt-4 text-lg leading-relaxed text-emerald-100/80">
-            Attendance, exams, fees and notices — built for Nepali schools by
-            Digital Pathshala.
-          </p>
-        </div>
+        {/* Gradient */}
+        {[...Array(2)].map((_, idx) => (
+          <div
+            key={idx}
+            className={cn(
+              "absolute left-1/2 top-6 size-[80px] -translate-x-1/2 -translate-y-1/2 scale-x-[1.6]",
+              idx === 0 ? "mix-blend-overlay" : "opacity-10",
+            )}
+          >
+            {[...Array(idx === 0 ? 2 : 1)].map((_, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  "absolute -inset-16 mix-blend-overlay blur-[50px] saturate-[2]",
+                  "bg-[conic-gradient(from_90deg,#F00_5deg,#EAB308_63deg,#5CFF80_115deg,#1E00FF_170deg,#855AFC_220deg,#3A8BFD_286deg,#F00_360deg)]",
+                )}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
 
-        <div className="relative z-10 space-y-3">
-          {FEATURES.map((feature) => (
-            <div key={feature} className="flex items-center gap-3">
-              <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-emerald-400/20">
-                <svg
-                  className="h-3 w-3 text-emerald-300"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  aria-hidden="true"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </span>
-              <span className="text-sm text-emerald-50/90">{feature}</span>
-            </div>
-          ))}
-        </div>
+      <div className="relative flex min-h-[100dvh] w-full justify-center">
+        <Link
+          href="/"
+          className="absolute left-1/2 top-4 z-10 -translate-x-1/2"
+          aria-label="Digital Pathshala home"
+        >
+          <Wordmark className="h-8" />
+        </Link>
 
-        <p className="relative z-10 text-xs text-emerald-100/60">
-          © {new Date().getFullYear()} Digital Pathshala Nepal. All rights
-          reserved.
-        </p>
-      </aside>
-
-      <main className="flex flex-1 items-center justify-center bg-slate-50 px-4 py-10 sm:px-6 sm:py-14">
-        <div className="w-full max-w-md">
-          <div className="mb-8 flex justify-center lg:hidden">
-            <BrandMark variant="light" />
+        <div className="flex min-h-[100dvh] w-full flex-col items-center justify-between">
+          {/* Spacer to help center the main content */}
+          <div className="grow basis-0">
+            <div className="h-24" />
           </div>
 
-          <div className="animate-rise rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xl shadow-slate-200/60 sm:p-8">
+          <div className="relative flex w-full flex-col items-center justify-center px-4">
             {children}
           </div>
 
-          <p className="mt-6 text-center text-xs text-slate-500 lg:hidden">
-            © {new Date().getFullYear()} Digital Pathshala Nepal. All rights
-            reserved.
-          </p>
+          <div className="flex grow basis-0 flex-col justify-end">
+            {showTerms && (
+              <p className="px-20 py-8 text-center text-xs font-medium text-neutral-500 md:px-0">
+                By continuing, you agree to our{" "}
+                <Link
+                  href="/terms"
+                  className="font-semibold text-neutral-600 hover:text-neutral-800"
+                >
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/privacy"
+                  className="font-semibold text-neutral-600 hover:text-neutral-800"
+                >
+                  Privacy Policy
+                </Link>
+              </p>
+            )}
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

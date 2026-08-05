@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useOnboarding } from "../hooks/useOnboarding";
 import type { OnboardingStepState } from "../types";
+import { LoadingSpinner } from "@/shared/components/ui/icons";
 
 function StepItem({
   step,
@@ -36,26 +37,26 @@ function StepItem({
 
   return (
     <div
-      className={`flex items-start gap-4 p-4 rounded-xl border transition-colors ${
+      className={`flex items-start gap-4 rounded-lg border p-4 transition-colors ${
         isCompleted
-          ? "bg-green-50 border-green-200"
+          ? "border-neutral-200 bg-neutral-50"
           : isCurrent
-            ? "bg-blue-50 border-blue-200"
-            : "bg-gray-50 border-gray-200"
+            ? "border-neutral-900"
+            : "border-neutral-200 bg-white"
       }`}
     >
       <div
-        className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+        className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${
           isCompleted
-            ? "bg-green-500"
+            ? "bg-black text-white"
             : isCurrent
-              ? "bg-blue-600"
-              : "bg-gray-300"
+              ? "bg-black text-white"
+              : "bg-neutral-200 text-neutral-500"
         }`}
       >
         {isCompleted ? (
           <svg
-            className="w-4 h-4 text-white"
+            className="h-4 w-4"
             fill="currentColor"
             viewBox="0 0 20 20"
           >
@@ -66,25 +67,29 @@ function StepItem({
             />
           </svg>
         ) : (
-          <span className="text-white text-xs font-bold">
-            {isCurrent ? "→" : "○"}
+          <span className="text-xs font-bold">
+            {isCurrent ? "→" : "•"}
           </span>
         )}
       </div>
 
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <p
-          className={`text-sm font-semibold ${isCompleted ? "text-green-800" : isCurrent ? "text-blue-900" : "text-gray-500"}`}
+          className={`text-sm font-semibold ${
+            isCompleted || isCurrent
+              ? "text-neutral-900"
+              : "text-neutral-500"
+          }`}
         >
           {stepLabel}
         </p>
         {step.completedAt && (
-          <p className="text-xs text-green-600 mt-0.5">
+          <p className="mt-0.5 text-xs text-neutral-500">
             Completed {new Date(step.completedAt).toLocaleDateString()}
           </p>
         )}
         {error && (
-          <p role="alert" className="text-xs text-red-600 mt-1">
+          <p role="alert" className="mt-1 text-xs text-red-500">
             {error}
           </p>
         )}
@@ -92,32 +97,10 @@ function StepItem({
           <button
             onClick={handleComplete}
             disabled={isSubmitting}
-            className="mt-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg
-              transition-colors disabled:opacity-60 flex items-center gap-1.5"
+            className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-neutral-800 disabled:opacity-60"
           >
             {isSubmitting ? (
-              <>
-                <svg
-                  className="w-3 h-3 animate-spin"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  />
-                </svg>
-                Saving…
-              </>
+              <LoadingSpinner className="h-3 w-3" />
             ) : (
               "Complete step"
             )}
@@ -134,9 +117,9 @@ export function OnboardingWizard() {
 
   if (isLoading) {
     return (
-      <div className="space-y-3 animate-pulse">
+      <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 bg-gray-100 rounded-xl" />
+          <div key={i} className="h-16 animate-pulse rounded-lg bg-neutral-100" />
         ))}
       </div>
     );
@@ -144,7 +127,7 @@ export function OnboardingWizard() {
 
   if (error || !status) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+      <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
         {error ?? "Failed to load onboarding status."}
       </div>
     );
@@ -164,15 +147,15 @@ export function OnboardingWizard() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="flex justify-between text-xs text-gray-500 mb-2">
+        <div className="mb-2 flex justify-between text-xs text-neutral-500">
           <span>Progress</span>
           <span>
             {completedCount} of {totalCount} steps
           </span>
         </div>
-        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200">
           <div
-            className="h-full bg-blue-600 rounded-full transition-all duration-500"
+            className="h-full rounded-full bg-black transition-all duration-500"
             style={{ width: `${progress}%` }}
             role="progressbar"
             aria-valuenow={completedCount}
@@ -194,8 +177,8 @@ export function OnboardingWizard() {
       </div>
 
       {status.completedAt && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-center">
-          <p className="text-sm font-semibold text-green-800">
+        <div className="rounded-md border border-neutral-200 bg-neutral-50 p-4 text-center">
+          <p className="text-sm font-semibold text-neutral-900">
             All steps complete! Redirecting to dashboard…
           </p>
         </div>

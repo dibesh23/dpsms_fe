@@ -5,8 +5,33 @@
     "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
 
+  /* Dub-style semantic design tokens (light mode) */
+  --color-bg-emphasis: #e5e5e5;
+  --color-bg-default: #ffffff;
+  --color-bg-subtle: #f5f5f5;
+  --color-bg-muted: #fafafa;
+  --color-bg-inverted: #171717;
+
+  --color-border-emphasis: #a3a3a3;
+  --color-border-default: #d4d4d4;
+  --color-border-muted: #f5f5f5;
+  --color-border-subtle: #e5e5e5;
+
+  --color-content-inverted: #ffffff;
+  --color-content-muted: #a3a3a3;
+  --color-content-subtle: #737373;
+  --color-content-default: #404040;
+  --color-content-emphasis: #171717;
+
+  --color-content-success: #16a34a;
+  --color-content-error: #dc2626;
+  --color-content-attention: #ea580c;
+
   --animate-spinner: spinner 1.2s linear infinite;
   --animate-rise: rise 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-in-blur: fade-in-blur 0.5s ease-out forwards;
+  --animate-scale-in: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slide-up-fade: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes spinner {
@@ -29,9 +54,47 @@
   }
 }
 
+@keyframes fade-in-blur {
+  0% {
+    opacity: 0;
+    filter: blur(4px);
+  }
+  50% {
+    opacity: 0.5;
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+@keyframes scale-in {
+  0% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-up-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-spinner,
-  .animate-rise {
+  .animate-rise,
+  .animate-fade-in-blur,
+  .animate-scale-in,
+  .animate-slide-up-fade {
     animation: none;
   }
 }
