@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@hookform/resolvers": "^5.7.1",
@@ -23,6 +25,14 @@
     "@types/node": "^26.1.2",
     "@types/react": "19.2.18",
     "postcss": "^8.5.25",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "prettier": "^3.6.2"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.10.0",
+      "onFail": "download"
+    }
   }
 }
