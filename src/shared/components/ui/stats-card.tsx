@@ -1,0 +1,57 @@
+import Link from "next/link";
+import { cn } from "@/shared/lib/cn";
+import { ArrowDownRightIcon, TrendingUpIcon } from "./icons";
+import type { ReactNode } from "react";
+
+export function StatsCard({
+  label,
+  value,
+  delta,
+  deltaDirection = "up",
+  icon,
+  href,
+}: {
+  label: string;
+  value: string;
+  delta?: string;
+  deltaDirection?: "up" | "down" | "neutral";
+  icon?: ReactNode;
+  href?: string;
+}) {
+  const body = (
+    <div className="flex items-start justify-between gap-3 rounded-lg border border-neutral-200 bg-bg-default p-5 transition-colors hover:border-neutral-300">
+      <div className="min-w-0">
+        <p className="text-sm text-neutral-500">{label}</p>
+        <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-900">{value}</p>
+        {delta && (
+          <p
+            className={cn(
+              "mt-1 flex items-center gap-1 text-xs font-medium",
+              deltaDirection === "up" && "text-emerald-600",
+              deltaDirection === "down" && "text-red-600",
+              deltaDirection === "neutral" && "text-neutral-500",
+            )}
+          >
+            {deltaDirection === "up" && <TrendingUpIcon className="size-3" />}
+            {deltaDirection === "down" && <ArrowDownRightIcon className="size-3" />}
+            {delta}
+          </p>
+        )}
+      </div>
+      {icon && (
+        <div className="flex size-9 flex-none items-center justify-center rounded-lg border border-neutral-200 bg-bg-subtle text-neutral-600">
+          {icon}
+        </div>
+      )}
+    </div>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className="block">
+        {body}
+      </Link>
+    );
+  }
+  return body;
+}
