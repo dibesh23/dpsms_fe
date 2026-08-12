@@ -73,12 +73,7 @@ function SettingsLink({
           : "text-neutral-500 hover:bg-bg-subtle/70 hover:text-neutral-900",
       )}
     >
-      <Icon
-        className={cn(
-          "size-4 flex-none",
-          active ? "text-neutral-900" : "text-neutral-400",
-        )}
-      />
+      <Icon className={cn("size-4 flex-none", active ? "text-neutral-900" : "text-neutral-400")} />
       {label}
     </button>
   );
@@ -161,7 +156,6 @@ export function ProfilePage() {
 
   const handleChangePassword = async () => {
     setPasswordSubmitting(true);
-    setPasswordError(null);
     try {
       await profileApi.changePassword({
         currentPassword,
@@ -174,9 +168,7 @@ export function ProfilePage() {
       setConfirmPassword("");
       toast.success("Password updated.");
     } catch {
-      toast.error(
-        "Could not update your password. Please check your current password.",
-      );
+      toast.error("Could not update your password. Please check your current password.");
     } finally {
       setPasswordSubmitting(false);
     }
@@ -215,11 +207,7 @@ export function ProfilePage() {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-4">
-              <SettingsNav
-                activeItem={activeItem}
-                onNavigate={handleNavigate}
-                user={user}
-              />
+              <SettingsNav activeItem={activeItem} onNavigate={handleNavigate} user={user} />
             </div>
           </div>
         </div>
@@ -249,9 +237,7 @@ export function ProfilePage() {
               )}
 
               <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-neutral-900">
-                  Profile Picture
-                </h3>
+                <h3 className="text-sm font-semibold text-neutral-900">Profile Picture</h3>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <Button
                     text="Upload Image"
@@ -281,12 +267,10 @@ export function ProfilePage() {
           </div>
 
           <div className="mt-10">
-            <h2 className="text-base font-medium text-neutral-900">
-              Personal Information
-            </h2>
+            <h2 className="text-base font-medium text-neutral-900">Personal Information</h2>
             <p className="mt-0.5 text-sm text-neutral-500">
-              Your personal details. This information will be shown to other
-              people in your workspace.
+              Your personal details. This information will be shown to other people in your
+              workspace.
             </p>
 
             <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -307,9 +291,7 @@ export function ProfilePage() {
             </div>
 
             <div className="mt-5">
-              <span className="mb-1.5 block text-sm font-medium text-neutral-800">
-                Email
-              </span>
+              <span className="mb-1.5 block text-sm font-medium text-neutral-800">Email</span>
               <div className="flex items-center gap-2">
                 <div className="min-w-0 flex-1">
                   <Input value={email} readOnly className="max-w-none" aria-label="Email" />
@@ -329,12 +311,10 @@ export function ProfilePage() {
           <div className="mt-12 border-t border-neutral-200 pt-10">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="max-w-md">
-                <h2 className="text-base font-semibold text-neutral-900">
-                  Password
-                </h2>
+                <h2 className="text-base font-semibold text-neutral-900">Password</h2>
                 <p className="mt-1 text-sm text-neutral-500">
-                  Your account is secured with a password used to sign in. Reset
-                  it at any time to keep your account safe.
+                  Your account is secured with a password used to sign in. Reset it at any time to
+                  keep your account safe.
                 </p>
               </div>
               <button
@@ -349,65 +329,62 @@ export function ProfilePage() {
 
           <div className="mt-10 border-t border-neutral-200 pt-6">
             <div className="flex items-center justify-end gap-2">
-              <Button
-                text="Cancel"
-                variant="secondary"
-                className="w-auto"
-                onClick={handleCancel}
-              />
+              <Button text="Cancel" variant="secondary" className="w-auto" onClick={handleCancel} />
               <Button
                 text={saving ? "Saving…" : "Save"}
                 className="w-auto"
                 loading={saving}
                 onClick={handleSave}
               />
-</div>
-        </div>
-
-      <Dialog
-        open={passwordOpen}
-        onClose={() => setPasswordOpen(false)}
-        title="Change Password"
-        description="Enter your current password and a new one."
-      >
-        <div className="space-y-4">
-          <Field label="Current Password">
-            <Input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-            />
-          </Field>
-          <Field label="New Password">
-            <Input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-            />
-          </Field>
-          <Field label="Confirm New Password">
-            <Input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-          </Field>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              text="Cancel"
-              variant="secondary"
-              className="w-auto"
-              onClick={() => setPasswordOpen(false)}
-            />
-            <Button
-              text={passwordSubmitting ? "Updating…" : "Save"}
-              className="w-auto"
-              loading={passwordSubmitting}
-              onClick={handleChangePassword}
-            />
+            </div>
           </div>
+
+          <Dialog
+            open={passwordOpen}
+            onClose={() => setPasswordOpen(false)}
+            title="Change Password"
+            description="Enter your current password and a new one."
+          >
+            <div className="space-y-4">
+              <Field label="Current Password">
+                <Input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                />
+              </Field>
+              <Field label="New Password">
+                <Input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </Field>
+              <Field label="Confirm New Password">
+                <Input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </Field>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  text="Cancel"
+                  variant="secondary"
+                  className="w-auto"
+                  onClick={() => setPasswordOpen(false)}
+                />
+                <Button
+                  text={passwordSubmitting ? "Updating…" : "Save"}
+                  className="w-auto"
+                  loading={passwordSubmitting}
+                  onClick={handleChangePassword}
+                />
+              </div>
+            </div>
+          </Dialog>
         </div>
-      </Dialog>
+      </div>
     </div>
   );
 }
@@ -415,9 +392,7 @@ export function ProfilePage() {
 function ProfilePageHeader() {
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
-        Account
-      </h1>
+      <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Account</h1>
       <p className="mt-1 text-sm text-neutral-500">
         Manage your account settings, profile, and preferences.
       </p>
