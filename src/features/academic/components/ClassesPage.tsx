@@ -1,13 +1,17 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
 import { StatsCard } from "@/shared/components/ui/stats-card";
 import { Avatar } from "@/shared/components/ui/avatar";
 import { EmptyState } from "@/shared/components/ui/empty-state";
+import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
 import { cn } from "@/shared/lib/cn";
+import { AddClassForm, type AddClassValues } from "./AddClassForm";
+import { academicApi } from "../api/academicApi";
 import {
   LayoutGridIcon,
   MapPinIcon,
@@ -26,66 +30,60 @@ export interface SchoolClass {
   attendance: number;
 }
 
-const CLASSES: SchoolClass[] = [
-  {
-    id: "c-06",
-    name: "Grade 6",
-    sections: ["A", "B"],
-    students: 73,
-    teacher: "Gita Adhikari",
-    room: "B-101",
-    attendance: 95,
-  },
-  {
-    id: "c-07",
-    name: "Grade 7",
-    sections: ["A", "B"],
-    students: 69,
-    teacher: "Ram Prasad Dahal",
-    room: "B-102",
-    attendance: 92,
-  },
-  {
-    id: "c-08",
-    name: "Grade 8",
-    sections: ["A", "B"],
-    students: 71,
-    teacher: "Sunita K.C.",
-    room: "B-201",
-    attendance: 87,
-  },
-  {
-    id: "c-09",
-    name: "Grade 9",
-    sections: ["A", "B"],
-    students: 64,
-    teacher: "Prakash Khadka",
-    room: "B-202",
-    attendance: 94,
-  },
-  {
-    id: "c-10",
-    name: "Grade 10",
-    sections: ["A", "B"],
-    students: 61,
-    teacher: "Manoj Bhattarai",
-    room: "B-301",
-    attendance: 96,
-  },
-  {
-    id: "c-11",
-    name: "Grade 11",
-    sections: ["Science", "Management"],
-    students: 48,
-    teacher: "Renu Poudel",
-    room: "C-101",
-    attendance: 90,
-  },
-];
-
 export function ClassesPage() {
+  const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const records = await academicApi.listClasses();
+      setClasses(
+        records.map((r) => ({
+          id: r.id,
+          name: r.name,
+          sections: r.sections,
+          students: r.students,
+          teacher: "",
+          room: "",
+          attendance: 0,
+        })),
+      );
+    } catch {
+      setClasses([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const handleAdd = async (values: AddClassValues): Promise<boolean> => {
+    try {
+      const sections = values.sections
+        ? values.sections.split(",").map((s) => s.trim()).filter(Boolean)
+        : ["A"];
+      const record = await academicApi.createClass({ name: values.name, sections });
+      setClasses((current) => [
+        {
+          id: record.id,
+          name: record.name,
+          sections: record.sections,
+          students: 0,
+          teacher: "",
+          room: "",
+          attendance: 0,
+        },
+        ...current,
+      ]);
+      setDialogOpen(false);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const table = useTable<SchoolClass>({
-    data: CLASSES,
+    data: classes,
     pageSize: 6,
     getSearchText: (schoolClass) =>
       `${schoolClass.name} ${schoolClass.sections.join(" ")} ${schoolClass.teacher} ${schoolClass.room}`,
@@ -93,24 +91,29 @@ export function ClassesPage() {
     defaultSortKey: "name",
   });
 
-  const totalSections = CLASSES.reduce((sum, schoolClass) => sum + schoolClass.sections.length, 0);
-  const totalStudents = CLASSES.reduce((sum, schoolClass) => sum + schoolClass.students, 0);
+  const totalSections = classes.reduce((sum, schoolClass) => sum + schoolClass.sections.length, 0);
+  const totalStudents = classes.reduce((sum, schoolClass) => sum + schoolClass.students, 0);
 
   return (
     <div className="space-y-4">
       <PageHeader
         title="Classes"
-        description="Grades and sections for the 2082/83 academic year"
+        description="Grades and sections for the active academic year"
         actions={
-          <Button text="New Class" icon={<PlusIcon className="size-4" />} className="w-auto" />
+          <Button
+            text="New Class"
+            icon={<PlusIcon className="size-4" />}
+            className="w-auto"
+            onClick={() => setDialogOpen(true)}
+          />
         }
       />
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatsCard
           label="Total Classes"
-          value={String(CLASSES.length)}
-          delta="Grade 6 – 11"
+          value={String(classes.length)}
+          delta="Across all grades"
           deltaDirection="neutral"
           icon={<LayoutGridIcon className="size-4" />}
         />
@@ -213,6 +216,15 @@ export function ClassesPage() {
           ))}
         </div>
       )}
+
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        title="Add Class"
+        description="Create a class with one or more sections."
+      >
+        <AddClassForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+      </Dialog>
     </div>
   );
 }

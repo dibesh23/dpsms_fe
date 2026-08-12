@@ -39,7 +39,7 @@ export function AddTeacherForm({
   onAdd,
   onClose,
 }: {
-  onAdd: (values: AddTeacherValues) => void;
+  onAdd: (values: AddTeacherValues) => Promise<boolean>;
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
@@ -55,12 +55,8 @@ export function AddTeacherForm({
 
   const onSubmit = async (values: AddTeacherValues) => {
     setApiError(null);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      onAdd(values);
-    } catch {
-      setApiError("Could not add the teacher. Please try again.");
-    }
+    const ok = await onAdd(values);
+    if (!ok) setApiError("Could not add the teacher. Check the details and try again.");
   };
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
@@ -12,6 +12,7 @@ import { EmptyState } from "@/shared/components/ui/empty-state";
 import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
 import { AddTeacherForm, type AddTeacherValues } from "./AddTeacherForm";
+import { teacherApi } from "../api/teacherApi";
 import {
   GraduationCapIcon,
   MailIcon,
@@ -20,6 +21,7 @@ import {
   UsersIcon,
 } from "@/shared/components/ui/icons";
 import { cn } from "@/shared/lib/cn";
+import { useToast } from "@/shared/components/ui/toast";
 
 export interface Teacher {
   id: string;
@@ -32,89 +34,6 @@ export interface Teacher {
   status: "Active" | "On Leave" | "Invited";
 }
 
-const TEACHERS: Teacher[] = [
-  {
-    id: "t-01",
-    name: "Ram Prasad Dahal",
-    subject: "Mathematics",
-    department: "Science & Math",
-    email: "ram.dahal@pathshala.edu.np",
-    phone: "9841-220011",
-    classesPerWeek: 24,
-    status: "Active",
-  },
-  {
-    id: "t-02",
-    name: "Sunita K.C.",
-    subject: "Science",
-    department: "Science & Math",
-    email: "sunita.kc@pathshala.edu.np",
-    phone: "9851-102938",
-    classesPerWeek: 22,
-    status: "Active",
-  },
-  {
-    id: "t-03",
-    name: "Manoj Bhattarai",
-    subject: "English",
-    department: "Languages",
-    email: "manoj.bhattarai@pathshala.edu.np",
-    phone: "9803-456712",
-    classesPerWeek: 20,
-    status: "On Leave",
-  },
-  {
-    id: "t-04",
-    name: "Gita Adhikari",
-    subject: "Nepali",
-    department: "Languages",
-    email: "gita.adhikari@pathshala.edu.np",
-    phone: "9812-334455",
-    classesPerWeek: 26,
-    status: "Active",
-  },
-  {
-    id: "t-05",
-    name: "Prakash Khadka",
-    subject: "Social Studies",
-    department: "Humanities",
-    email: "prakash.khadka@pathshala.edu.np",
-    phone: "9860-778899",
-    classesPerWeek: 18,
-    status: "Active",
-  },
-  {
-    id: "t-06",
-    name: "Renu Poudel",
-    subject: "Computer Science",
-    department: "Science & Math",
-    email: "renu.poudel@pathshala.edu.np",
-    phone: "9843-221100",
-    classesPerWeek: 16,
-    status: "Active",
-  },
-  {
-    id: "t-07",
-    name: "Bikash Tamang",
-    subject: "Physical Education",
-    department: "Sports",
-    email: "bikash.tamang@pathshala.edu.np",
-    phone: "9851-667788",
-    classesPerWeek: 28,
-    status: "Invited",
-  },
-  {
-    id: "t-08",
-    name: "Kabita Shrestha",
-    subject: "Accountancy",
-    department: "Commerce",
-    email: "kabita.shrestha@pathshala.edu.np",
-    phone: "9814-998877",
-    classesPerWeek: 19,
-    status: "Active",
-  },
-];
-
 const DEPARTMENT_FILTERS = [
   { value: "Science & Math", label: "Science & Math" },
   { value: "Languages", label: "Languages" },
@@ -123,23 +42,76 @@ const DEPARTMENT_FILTERS = [
   { value: "Sports", label: "Sports" },
 ];
 
-export function TeachersPage() {
-  const [teachers, setTeachers] = useState<Teacher[]>(TEACHERS);
-  const [dialogOpen, setDialogOpen] = useState(false);
+const toStatus = (status: string): Teacher["status"] => {
+  if (status === "ON_LEAVE") return "On Leave";
+  if (status === "INVITED") return "Invited";
+  return "Active";
+};
 
-  const handleAdd = (values: AddTeacherValues) => {
-    const record: Teacher = {
-      id: `t-${String(teachers.length + 1).padStart(2, "0")}`,
-      name: values.fullName,
-      subject: values.subject,
-      department: values.department,
-      email: values.email,
-      phone: values.phone,
-      classesPerWeek: Number(values.classesPerWeek) || 0,
-      status: values.status,
-    };
-    setTeachers((current) => [record, ...current]);
-    setDialogOpen(false);
+const toApiStatus = (
+  status: Teacher["status"],
+): "ACTIVE" | "ON_LEAVE" | "INVITED" | "INACTIVE" =>
+  status === "On Leave" ? "ON_LEAVE" : status === "Invited" ? "INVITED" : "ACTIVE";
+
+export function TeachersPage() {
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const toast = useToast();
+
+  const load = useCallback(async () => {
+    try {
+      const records = await teacherApi.list();
+      setTeachers(
+        records.map((r) => ({
+          id: r.id,
+          name: r.name,
+          subject: r.subject,
+          department: r.department,
+          email: r.email,
+          phone: r.phone ?? "",
+          classesPerWeek: r.classesPerWeek,
+          status: toStatus(r.status),
+        })),
+      );
+    } catch {
+      setTeachers([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const handleAdd = async (values: AddTeacherValues): Promise<boolean> => {
+    try {
+      const record = await teacherApi.create({
+        fullName: values.fullName,
+        email: values.email,
+        subject: values.subject,
+        department: values.department,
+        phone: values.phone,
+        classesPerWeek: Number(values.classesPerWeek) || 0,
+        status: toApiStatus(values.status),
+      });
+      setTeachers((current) => [
+        {
+          id: record.id,
+          name: record.name,
+          subject: record.subject,
+          department: record.department,
+          email: record.email,
+          phone: record.phone ?? "",
+          classesPerWeek: record.classesPerWeek,
+          status: toStatus(record.status),
+        },
+        ...current,
+      ]);
+      setDialogOpen(false);
+      toast.success("Teacher invited successfully.");
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   const table = useTable<Teacher>({

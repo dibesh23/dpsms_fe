@@ -39,7 +39,7 @@ export function AddStudentForm({
   onAdd,
   onClose,
 }: {
-  onAdd: (values: AddStudentValues) => void;
+  onAdd: (values: AddStudentValues) => Promise<boolean>;
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
@@ -58,12 +58,8 @@ export function AddStudentForm({
 
   const onSubmit = async (values: AddStudentValues) => {
     setApiError(null);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      onAdd(values);
-    } catch {
-      setApiError("Could not add the student. Please try again.");
-    }
+    const ok = await onAdd(values);
+    if (!ok) setApiError("Could not add the student. Check the details and try again.");
   };
 
   return (

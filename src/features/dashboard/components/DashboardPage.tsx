@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { cn } from "@/shared/lib/cn";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -8,113 +9,45 @@ import { StatsCard } from "@/shared/components/ui/stats-card";
 import { DashboardWidget } from "@/shared/components/ui/dashboard-widget";
 import { BarChart, DonutChart } from "@/shared/components/ui/charts";
 import { StatusBadge } from "@/shared/components/ui/status-badge";
+import { dashboardApi, type DashboardSummary } from "../api/dashboardApi";
 import {
-  AlertTriangleIcon,
   ArrowUpRightIcon,
   BellIcon,
   CalendarDaysIcon,
   CheckCircle2Icon,
   CreditCardIcon,
-  FileTextIcon,
   GraduationCapIcon,
   HeartHandshakeIcon,
   UserPlusIcon,
   UsersIcon,
 } from "@/shared/components/ui/icons";
 
-const STATS = [
-  {
-    label: "Student Count",
-    value: "1,284",
-    delta: "24 new this term",
-    deltaDirection: "up",
-    href: "/students",
-    icon: <UsersIcon className="size-4" />,
-  },
-  {
-    label: "Teacher Count",
-    value: "86",
-    delta: "3 new this term",
-    deltaDirection: "up",
-    href: "/teachers",
-    icon: <GraduationCapIcon className="size-4" />,
-  },
-  {
-    label: "Attendance Today",
-    value: "94.2%",
-    delta: "1.1% vs yesterday",
-    deltaDirection: "up",
-    href: "/classes",
-    icon: <CheckCircle2Icon className="size-4" />,
-  },
-  {
-    label: "Fees Collected (month)",
-    value: "Rs 1,482,000",
-    delta: "61% of monthly target",
-    deltaDirection: "neutral",
-    href: "/students",
-    icon: <CreditCardIcon className="size-4" />,
-  },
-] as const;
+const STAT_ICONS: Record<string, React.ReactNode> = {
+  "Student Count": <UsersIcon className="size-4" />,
+  "Teacher Count": <GraduationCapIcon className="size-4" />,
+  "Attendance Today": <CheckCircle2Icon className="size-4" />,
+  "Fees Collected (month)": <CreditCardIcon className="size-4" />,
+};
 
-const WEEKLY_ATTENDANCE = [
-  { label: "Mon", value: 91.2, valueLabel: "91.2%" },
-  { label: "Tue", value: 93.5, valueLabel: "93.5%" },
-  { label: "Wed", value: 94.1, valueLabel: "94.1%" },
-  { label: "Thu", value: 92.8, valueLabel: "92.8%" },
-  { label: "Fri", value: 94.2, valueLabel: "94.2%" },
-  { label: "Sat", value: 88.6, valueLabel: "88.6%" },
-  { label: "Sun", value: 89.3, valueLabel: "89.3%" },
-];
+const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
+  admission: <UserPlusIcon className="size-4" />,
+  payment: <CreditCardIcon className="size-4" />,
+  notice: <BellIcon className="size-4" />,
+  teacher: <GraduationCapIcon className="size-4" />,
+};
 
-const DISTRIBUTION = [
-  { label: "Grade 6", value: 212, color: "#171717" },
-  { label: "Grade 7", value: 198, color: "#525252" },
-  { label: "Grade 8", value: 205, color: "#a3a3a3" },
-  { label: "Grade 9", value: 186, color: "#d4d4d4" },
-  { label: "Grade 10", value: 173, color: "#737373" },
-];
-const DISTRIBUTION_TOTAL = DISTRIBUTION.reduce((sum, d) => sum + d.value, 0);
-
-const RECENT_ACTIVITIES = [
-  {
-    icon: UserPlusIcon,
-    tone: "text-emerald-600",
-    title: "Aarav Sharma was admitted to Grade 7 A",
-    time: "2 hours ago",
-  },
-  {
-    icon: FileTextIcon,
-    tone: "text-blue-600",
-    title: "Term I Mathematics results published",
-    time: "4 hours ago",
-  },
-  {
-    icon: CreditCardIcon,
-    tone: "text-emerald-600",
-    title: "Fee payment of Rs 8,500 received from Sita Rai",
-    time: "6 hours ago",
-  },
-  {
-    icon: BellIcon,
-    tone: "text-amber-600",
-    title: "Notice on Dashain vacation sent to 1,280 guardians",
-    time: "Yesterday",
-  },
-  {
-    icon: GraduationCapIcon,
-    tone: "text-neutral-500",
-    title: "Teacher account for Sunita K.C. activated",
-    time: "Yesterday",
-  },
-] as const;
-
-const UPCOMING_EVENTS = [
-  { day: 10, month: "Aug", title: "Term I Exams begin", meta: "Grade 6 – 10" },
-  { day: 12, month: "Aug", title: "Science Fair", meta: "School grounds" },
-  { day: 18, month: "Aug", title: "Parent–Teacher Meeting", meta: "Main hall, 9:00 AM" },
-  { day: 21, month: "Aug", title: "Dashain Vacation starts", meta: "School closed" },
-];
+const EMPTY_SUMMARY: DashboardSummary = {
+  academicYear: "",
+  stats: [],
+  attendanceToday: 0,
+  weeklyAttendance: [],
+  gradeDistribution: [],
+  gradeDistributionTotal: 0,
+  recentActivities: [],
+  upcomingEvents: [],
+  recentAdmissions: [],
+  notifications: [],
+};
 
 const QUICK_ACTIONS = [
   {
@@ -140,48 +73,6 @@ const QUICK_ACTIONS = [
     description: "Open the 2083/84 session",
     href: "/academic-sessions",
     icon: CalendarDaysIcon,
-  },
-];
-
-const RECENT_ADMISSIONS = [
-  { name: "Aarav Sharma", grade: "Grade 7 A", date: "Aug 4" },
-  { name: "Prativa Maharjan", grade: "Grade 6 B", date: "Aug 3" },
-  { name: "Dipesh Adhikari", grade: "Grade 8 A", date: "Aug 2" },
-  { name: "Kritika Basnet", grade: "Grade 9 A", date: "Aug 1" },
-];
-
-const NOTIFICATIONS = [
-  {
-    icon: AlertTriangleIcon,
-    tone: "text-amber-600",
-    bg: "bg-amber-50",
-    title: "Attendance below 90% in Grade 8 A",
-    time: "1 hour ago",
-    unread: true,
-  },
-  {
-    icon: FileTextIcon,
-    tone: "text-blue-600",
-    bg: "bg-blue-50",
-    title: "3 invoices awaiting approval",
-    time: "3 hours ago",
-    unread: true,
-  },
-  {
-    icon: BellIcon,
-    tone: "text-neutral-500",
-    bg: "bg-neutral-100",
-    title: "New notice published: Dashain vacation",
-    time: "Yesterday",
-    unread: false,
-  },
-  {
-    icon: CheckCircle2Icon,
-    tone: "text-emerald-600",
-    bg: "bg-emerald-50",
-    title: "Term I timetable confirmed",
-    time: "2 days ago",
-    unread: false,
   },
 ];
 
@@ -211,6 +102,30 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const firstName = user?.fullName?.split(" ")[0] ?? "Principal";
   const calendar = buildMonthGrid();
+  const [summary, setSummary] = useState<DashboardSummary>(EMPTY_SUMMARY);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    try {
+      const data = await dashboardApi.getSummary();
+      setSummary(data);
+    } catch {
+      setSummary(EMPTY_SUMMARY);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const stats = summary.stats.map((stat) => ({
+    ...stat,
+    icon: STAT_ICONS[stat.label],
+  }));
+
+  const academicYearLabel = summary.academicYear || "2082/83";
 
   return (
     <div className="space-y-4">
@@ -228,7 +143,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           <span className="rounded-full border border-neutral-200 bg-bg-default px-3 py-1 text-xs font-medium text-neutral-500">
-            Academic Year 2082/83
+            Academic Year {academicYearLabel}
           </span>
           <button
             type="button"
@@ -243,12 +158,12 @@ export default function DashboardPage() {
       </header>
 
       <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        {STATS.map((stat) => (
+        {stats.map((stat) => (
           <StatsCard
             key={stat.label}
             label={stat.label}
-            value={stat.value}
-            delta={stat.delta}
+            value={loading ? "—" : stat.value}
+            delta={loading ? "Loading…" : stat.delta}
             deltaDirection={stat.deltaDirection}
             href={stat.href}
             icon={stat.icon}
@@ -270,18 +185,18 @@ export default function DashboardPage() {
             </Link>
           }
         >
-          <BarChart data={WEEKLY_ATTENDANCE} highlightMax />
+          <BarChart data={summary.weeklyAttendance} highlightMax />
         </DashboardWidget>
 
         <DashboardWidget title="Student Distribution" description="By grade">
           <div className="flex items-center gap-6">
             <DonutChart
-              data={DISTRIBUTION}
-              centerValue={String(DISTRIBUTION_TOTAL)}
+              data={summary.gradeDistribution}
+              centerValue={String(summary.gradeDistributionTotal)}
               centerLabel="Students"
             />
             <ul className="space-y-2">
-              {DISTRIBUTION.map((grade) => (
+              {summary.gradeDistribution.map((grade) => (
                 <li key={grade.label} className="flex items-center gap-2 text-sm">
                   <span
                     className="size-2.5 rounded-full"
@@ -304,7 +219,7 @@ export default function DashboardPage() {
           action={<span className="text-xs text-neutral-400">Last 24 hours</span>}
         >
           <ul className="space-y-1">
-            {RECENT_ACTIVITIES.map((activity) => (
+            {summary.recentActivities.map((activity) => (
               <li key={activity.title} className="flex items-start gap-3 py-2">
                 <span
                   className={cn(
@@ -312,7 +227,7 @@ export default function DashboardPage() {
                     activity.tone,
                   )}
                 >
-                  <activity.icon className="size-4" />
+                  {ACTIVITY_ICONS[activity.type] ?? <BellIcon className="size-4" />}
                 </span>
                 <div className="min-w-0">
                   <p className="text-sm text-neutral-800">{activity.title}</p>
@@ -325,8 +240,8 @@ export default function DashboardPage() {
 
         <DashboardWidget title="Upcoming Events">
           <ul className="space-y-3">
-            {UPCOMING_EVENTS.map((event) => (
-              <li key={event.title} className="flex items-center gap-3">
+            {summary.upcomingEvents.map((event) => (
+              <li key={event.id} className="flex items-center gap-3">
                 <div className="flex size-11 flex-none flex-col items-center justify-center rounded-lg border border-neutral-200 bg-bg-subtle">
                   <span className="text-sm font-semibold leading-none text-neutral-900">
                     {event.day}
@@ -379,7 +294,7 @@ export default function DashboardPage() {
           }
         >
           <ul className="divide-y divide-neutral-100">
-            {RECENT_ADMISSIONS.map((admission) => (
+            {summary.recentAdmissions.map((admission) => (
               <li key={admission.name} className="flex items-center gap-3 py-2.5">
                 <Avatar name={admission.name} size="sm" />
                 <div className="min-w-0 flex-1">
@@ -441,9 +356,9 @@ export default function DashboardPage() {
           action={<span className="text-xs font-medium text-blue-600">View all</span>}
         >
           <ul className="space-y-1">
-            {NOTIFICATIONS.map((notification) => (
+            {summary.notifications.map((notification) => (
               <li
-                key={notification.title}
+                key={notification.id}
                 className="relative flex items-start gap-3 rounded-lg px-0.5 py-2"
               >
                 {notification.unread && (
@@ -456,7 +371,7 @@ export default function DashboardPage() {
                     notification.tone,
                   )}
                 >
-                  <notification.icon className="size-3.5" />
+                  <BellIcon className="size-3.5" />
                 </span>
                 <div className="min-w-0">
                   <p

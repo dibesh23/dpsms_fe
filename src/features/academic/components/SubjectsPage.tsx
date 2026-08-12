@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
@@ -8,7 +9,11 @@ import { DataTable, type Column } from "@/shared/components/ui/data-table";
 import { Pagination } from "@/shared/components/ui/pagination";
 import { StatusBadge } from "@/shared/components/ui/status-badge";
 import { RowActions } from "@/shared/components/ui/row-actions";
+import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
+import { useToast } from "@/shared/components/ui/toast";
+import { AddSubjectForm, type AddSubjectValues } from "./AddSubjectForm";
+import { academicApi } from "../api/academicApi";
 import {
   BookOpenIcon,
   FileTextIcon,
@@ -27,89 +32,6 @@ export interface Subject {
   credit: number;
   status: "Active" | "Invited";
 }
-
-const SUBJECTS: Subject[] = [
-  {
-    id: "su-01",
-    name: "Mathematics",
-    code: "MATH-101",
-    department: "Science & Math",
-    teacher: "Ram Prasad Dahal",
-    classes: "6 – 11",
-    credit: 4,
-    status: "Active",
-  },
-  {
-    id: "su-02",
-    name: "Physics",
-    code: "PHY-201",
-    department: "Science & Math",
-    teacher: "Sunita K.C.",
-    classes: "9 – 11",
-    credit: 4,
-    status: "Active",
-  },
-  {
-    id: "su-03",
-    name: "Chemistry",
-    code: "CHE-202",
-    department: "Science & Math",
-    teacher: "Renu Poudel",
-    classes: "9 – 11",
-    credit: 3,
-    status: "Active",
-  },
-  {
-    id: "su-04",
-    name: "English",
-    code: "ENG-210",
-    department: "Languages",
-    teacher: "Manoj Bhattarai",
-    classes: "6 – 11",
-    credit: 4,
-    status: "Active",
-  },
-  {
-    id: "su-05",
-    name: "Nepali",
-    code: "NEP-211",
-    department: "Languages",
-    teacher: "Gita Adhikari",
-    classes: "6 – 11",
-    credit: 3,
-    status: "Active",
-  },
-  {
-    id: "su-06",
-    name: "Social Studies",
-    code: "SOC-220",
-    department: "Humanities",
-    teacher: "Prakash Khadka",
-    classes: "6 – 10",
-    credit: 3,
-    status: "Active",
-  },
-  {
-    id: "su-07",
-    name: "Accountancy",
-    code: "ACC-310",
-    department: "Commerce",
-    teacher: "Kabita Shrestha",
-    classes: "11",
-    credit: 4,
-    status: "Invited",
-  },
-  {
-    id: "su-08",
-    name: "Computer Science",
-    code: "CSC-240",
-    department: "Science & Math",
-    teacher: "Renu Poudel",
-    classes: "9 – 11",
-    credit: 2,
-    status: "Active",
-  },
-];
 
 const DEPARTMENT_FILTERS = [
   { value: "Science & Math", label: "Science & Math" },
@@ -139,13 +61,13 @@ const COLUMNS: Column<Subject>[] = [
     key: "department",
     header: "Department",
     sortValue: (subject) => subject.department,
-    render: (subject) => <span className="text-neutral-600">{subject.department}</span>,
+    render: (subject) => <span className="text-neutral-600">{subject.department || "—"}</span>,
   },
   {
     key: "teacher",
     header: "Teacher",
     sortValue: (subject) => subject.teacher,
-    render: (subject) => <span className="text-neutral-600">{subject.teacher}</span>,
+    render: (subject) => <span className="text-neutral-600">{subject.teacher || "Unassigned"}</span>,
   },
   {
     key: "classes",
@@ -183,8 +105,65 @@ const COLUMNS: Column<Subject>[] = [
 ];
 
 export function SubjectsPage() {
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const toast = useToast();
+
+  const load = useCallback(async () => {
+    try {
+      const records = await academicApi.listSubjects();
+      setSubjects(
+        records.map((r) => ({
+          id: r.id,
+          name: r.name,
+          code: r.code,
+          department: r.department,
+          teacher: "",
+          classes: "",
+          credit: 0,
+          status: r.type === "ELECTIVE" ? "Invited" : "Active",
+        })),
+      );
+    } catch {
+      setSubjects([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const handleAdd = async (values: AddSubjectValues): Promise<boolean> => {
+    try {
+      const record = await academicApi.createSubject({
+        name: values.name,
+        code: values.code?.trim() || undefined,
+        type: values.type,
+        department: values.department?.trim() || undefined,
+      });
+      setSubjects((current) => [
+        {
+          id: record.id,
+          name: record.name,
+          code: record.code,
+          department: record.department,
+          teacher: "",
+          classes: "",
+          credit: 0,
+          status: "Active",
+        },
+        ...current,
+      ]);
+      setDialogOpen(false);
+      toast.success("Subject added successfully.");
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const table = useTable<Subject>({
-    data: SUBJECTS,
+    data: subjects,
     pageSize: 8,
     getSearchText: (subject) =>
       `${subject.name} ${subject.code} ${subject.department} ${subject.teacher}`,
@@ -199,7 +178,12 @@ export function SubjectsPage() {
         title="Subjects"
         description="Subjects offered and their assigned faculty"
         actions={
-          <Button text="New Subject" icon={<PlusIcon className="size-4" />} className="w-auto" />
+          <Button
+            text="New Subject"
+            icon={<PlusIcon className="size-4" />}
+            className="w-auto"
+            onClick={() => setDialogOpen(true)}
+          />
         }
       />
 
@@ -234,6 +218,15 @@ export function SubjectsPage() {
           />
         }
       />
+
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        title="Add Subject"
+        description="Create a new subject."
+      >
+        <AddSubjectForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+      </Dialog>
     </div>
   );
 }

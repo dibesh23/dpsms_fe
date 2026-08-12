@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
@@ -14,7 +14,9 @@ import { RowActions } from "@/shared/components/ui/row-actions";
 import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
 import { formatDate } from "@/shared/lib/format";
+import { useToast } from "@/shared/components/ui/toast";
 import { AddStaffForm, type AddStaffValues } from "./AddStaffForm";
+import { staffApi } from "../api/staffApi";
 import {
   BriefcaseIcon,
   ClockIcon,
@@ -34,81 +36,6 @@ export interface StaffMember {
   joinedAt: string;
 }
 
-const STAFF: StaffMember[] = [
-  {
-    id: "st-01",
-    name: "Suresh Rana",
-    role: "Accountant",
-    department: "Administration",
-    email: "suresh.rana@pathshala.edu.np",
-    status: "Active",
-    joinedAt: "2019-02-11",
-  },
-  {
-    id: "st-02",
-    name: "Rita Kunwar",
-    role: "Office Manager",
-    department: "Administration",
-    email: "rita.kunwar@pathshala.edu.np",
-    status: "Active",
-    joinedAt: "2020-08-03",
-  },
-  {
-    id: "st-03",
-    name: "Deepak Lama",
-    role: "Librarian",
-    department: "Library",
-    email: "deepak.lama@pathshala.edu.np",
-    status: "Active",
-    joinedAt: "2021-01-19",
-  },
-  {
-    id: "st-04",
-    name: "Sabita Joshi",
-    role: "Lab Assistant",
-    department: "Science & Math",
-    email: "sabita.joshi@pathshala.edu.np",
-    status: "On Leave",
-    joinedAt: "2021-07-12",
-  },
-  {
-    id: "st-05",
-    name: "Gopal Bhandari",
-    role: "IT Support",
-    department: "Administration",
-    email: "gopal.bhandari@pathshala.edu.np",
-    status: "Active",
-    joinedAt: "2022-03-28",
-  },
-  {
-    id: "st-06",
-    name: "Kiran Magar",
-    role: "Groundskeeper",
-    department: "Facilities",
-    email: "kiran.magar@pathshala.edu.np",
-    status: "Active",
-    joinedAt: "2018-11-05",
-  },
-  {
-    id: "st-07",
-    name: "Sunita Gurung",
-    role: "Admin Officer",
-    department: "Administration",
-    email: "sunita.gurung@pathshala.edu.np",
-    status: "Resigned",
-    joinedAt: "2019-09-23",
-  },
-  {
-    id: "st-08",
-    name: "Bimal Shrestha",
-    role: "Transport Coordinator",
-    department: "Transport",
-    email: "bimal.shrestha@pathshala.edu.np",
-    status: "Active",
-    joinedAt: "2023-04-17",
-  },
-];
-
 const DEPARTMENT_FILTERS = [
   { value: "Administration", label: "Administration" },
   { value: "Library", label: "Library" },
@@ -116,6 +43,14 @@ const DEPARTMENT_FILTERS = [
   { value: "Facilities", label: "Facilities" },
   { value: "Transport", label: "Transport" },
 ];
+
+const toStatus = (status: string): StaffMember["status"] => {
+  if (status === "RESIGNED") return "Resigned";
+  return status === "ON_LEAVE" ? "On Leave" : "Active";
+};
+
+const toApiStatus = (status: StaffMember["status"]): "ACTIVE" | "ON_LEAVE" | "RESIGNED" =>
+  status === "Resigned" ? "RESIGNED" : status === "On Leave" ? "ON_LEAVE" : "ACTIVE";
 
 const COLUMNS: Column<StaffMember>[] = [
   {
@@ -173,21 +108,61 @@ const COLUMNS: Column<StaffMember>[] = [
 ];
 
 export function StaffPage() {
-  const [staff, setStaff] = useState<StaffMember[]>(STAFF);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const toast = useToast();
 
-  const handleAdd = (values: AddStaffValues) => {
-    const record: StaffMember = {
-      id: `st-${String(staff.length + 1).padStart(2, "0")}`,
-      name: values.fullName,
-      role: values.role,
-      department: values.department,
-      email: values.email,
-      status: values.status,
-      joinedAt: values.joinedAt,
-    };
-    setStaff((current) => [record, ...current]);
-    setDialogOpen(false);
+  const load = useCallback(async () => {
+    try {
+      const records = await staffApi.list();
+      setStaff(
+        records.map((r) => ({
+          id: r.id,
+          name: r.name,
+          role: r.role,
+          department: r.department,
+          email: r.email,
+          status: toStatus(r.status),
+          joinedAt: r.joinedAt,
+        })),
+      );
+    } catch {
+      setStaff([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const handleAdd = async (values: AddStaffValues): Promise<boolean> => {
+    try {
+      const record = await staffApi.create({
+        fullName: values.fullName,
+        email: values.email,
+        role: values.role,
+        department: values.department,
+        status: toApiStatus(values.status),
+        joinedAt: values.joinedAt,
+      });
+      setStaff((current) => [
+        {
+          id: record.id,
+          name: record.name,
+          role: record.role,
+          department: record.department,
+          email: record.email,
+          status: toStatus(record.status),
+          joinedAt: record.joinedAt,
+        },
+        ...current,
+      ]);
+      setDialogOpen(false);
+      toast.success("Staff member added successfully.");
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   const table = useTable<StaffMember>({
