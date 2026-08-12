@@ -24,7 +24,7 @@ export function AddParentForm({
   onAdd,
   onClose,
 }: {
-  onAdd: (values: AddParentValues) => void;
+  onAdd: (values: AddParentValues) => Promise<boolean>;
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
@@ -40,12 +40,8 @@ export function AddParentForm({
 
   const onSubmit = async (values: AddParentValues) => {
     setApiError(null);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      onAdd(values);
-    } catch {
-      setApiError("Could not add the parent. Please try again.");
-    }
+    const ok = await onAdd(values);
+    if (!ok) setApiError("Could not add the parent. Check the details and try again.");
   };
 
   return (

@@ -287,6 +287,63 @@ export const InboxIcon = createIcon(
   </>,
 );
 
+export const UserIcon = createIcon(
+  <>
+    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </>,
+);
+
+export const SlidersIcon = createIcon(
+  <>
+    <line x1="4" x2="20" y1="21" y2="21" />
+    <line x1="4" x2="20" y1="3" y2="3" />
+    <line x1="9" x2="9" y1="3" y2="21" />
+    <line x1="14" x2="14" y1="3" y2="21" />
+  </>,
+);
+
+export const ShareIcon = createIcon(
+  <>
+    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+    <polyline points="16 6 12 2 8 6" />
+    <line x1="12" x2="12" y1="2" y2="15" />
+  </>,
+);
+
+export const BanIcon = createIcon(
+  <>
+    <circle cx="12" cy="12" r="10" />
+    <line x1="4.9" x2="19.1" y1="4.9" y2="19.1" />
+  </>,
+);
+
+export const GroupIcon = createIcon(
+  <>
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </>,
+);
+
+export const PlugIcon = createIcon(
+  <>
+    <path d="M12 22v-5" />
+    <path d="M9 8V2" />
+    <path d="M15 8V2" />
+    <path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" />
+  </>,
+);
+
+export const BookUserIcon = createIcon(
+  <>
+    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+    <circle cx="10" cy="8" r="2" />
+    <path d="M6 18.5a4 4 0 0 1 8 0" />
+  </>,
+);
+
 export function LoadingSpinner({ className }: { className?: string }) {
   return (
     <div className={cn("h-5 w-5 flex-none", className)}>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
@@ -8,8 +9,11 @@ import { DataTable, type Column } from "@/shared/components/ui/data-table";
 import { Pagination } from "@/shared/components/ui/pagination";
 import { StatusBadge } from "@/shared/components/ui/status-badge";
 import { RowActions } from "@/shared/components/ui/row-actions";
+import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
 import { formatDate } from "@/shared/lib/format";
+import { AddSessionForm, type AddSessionValues } from "./AddSessionForm";
+import { academicApi } from "../api/academicApi";
 import {
   CalendarDaysIcon,
   FileTextIcon,
@@ -27,68 +31,14 @@ export interface AcademicSession {
   status: "Active" | "Upcoming" | "Completed";
 }
 
-const SESSIONS: AcademicSession[] = [
-  {
-    id: "ses-01",
-    name: "Academic Year 2082/83",
-    term: "Full year",
-    start: "2025-04-13",
-    end: "2026-04-12",
-    students: 1284,
-    status: "Active",
-  },
-  {
-    id: "ses-02",
-    name: "Term I 2082/83",
-    term: "First term",
-    start: "2025-04-13",
-    end: "2025-08-21",
-    students: 1284,
-    status: "Active",
-  },
-  {
-    id: "ses-03",
-    name: "Term II 2082/83",
-    term: "Second term",
-    start: "2025-09-01",
-    end: "2025-12-26",
-    students: 1284,
-    status: "Upcoming",
-  },
-  {
-    id: "ses-04",
-    name: "Term III 2082/83",
-    term: "Third term",
-    start: "2026-01-11",
-    end: "2026-04-12",
-    students: 1284,
-    status: "Upcoming",
-  },
-  {
-    id: "ses-05",
-    name: "Academic Year 2081/82",
-    term: "Full year",
-    start: "2024-04-13",
-    end: "2025-04-12",
-    students: 1221,
-    status: "Completed",
-  },
-  {
-    id: "ses-06",
-    name: "Academic Year 2080/81",
-    term: "Full year",
-    start: "2023-04-14",
-    end: "2024-04-12",
-    students: 1175,
-    status: "Completed",
-  },
-];
-
 const STATUS_FILTERS = [
   { value: "Active", label: "Active" },
   { value: "Upcoming", label: "Upcoming" },
   { value: "Completed", label: "Completed" },
 ];
+
+const toStatus = (isActive: boolean): AcademicSession["status"] =>
+  isActive ? "Active" : "Upcoming";
 
 const COLUMNS: Column<AcademicSession>[] = [
   {
@@ -150,8 +100,61 @@ const COLUMNS: Column<AcademicSession>[] = [
 ];
 
 export function AcademicSessionsPage() {
+  const [sessions, setSessions] = useState<AcademicSession[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const records = await academicApi.listSessions();
+      setSessions(
+        records.map((r) => ({
+          id: r.id,
+          name: r.label,
+          term: "",
+          start: r.startDate.slice(0, 10),
+          end: r.endDate.slice(0, 10),
+          students: 0,
+          status: toStatus(r.isActive),
+        })),
+      );
+    } catch {
+      setSessions([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const handleAdd = async (values: AddSessionValues): Promise<boolean> => {
+    try {
+      const record = await academicApi.createSession({
+        label: values.label,
+        startDate: values.startDate,
+        endDate: values.endDate,
+        isActive: true,
+      });
+      setSessions((current) => [
+        {
+          id: record.id,
+          name: record.label,
+          term: "",
+          start: record.startDate.slice(0, 10),
+          end: record.endDate.slice(0, 10),
+          students: 0,
+          status: toStatus(record.isActive),
+        },
+        ...current,
+      ]);
+      setDialogOpen(false);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const table = useTable<AcademicSession>({
-    data: SESSIONS,
+    data: sessions,
     pageSize: 6,
     getSearchText: (session) => `${session.name} ${session.term} ${session.status}`,
     filterMatch: (session, value) => session.status === value,
@@ -165,7 +168,12 @@ export function AcademicSessionsPage() {
         title="Academic Sessions"
         description="Terms and academic years for the school calendar"
         actions={
-          <Button text="New Session" icon={<PlusIcon className="size-4" />} className="w-auto" />
+          <Button
+            text="New Session"
+            icon={<PlusIcon className="size-4" />}
+            className="w-auto"
+            onClick={() => setDialogOpen(true)}
+          />
         }
       />
 
@@ -200,6 +208,15 @@ export function AcademicSessionsPage() {
           />
         }
       />
+
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        title="Add Session"
+        description="Create a new academic session."
+      >
+        <AddSessionForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+      </Dialog>
     </div>
   );
 }

@@ -34,6 +34,7 @@
   --animate-slide-up-fade: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-drawer-in: drawer-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-overlay-in: overlay-in 0.2s ease-out;
+  --animate-toast-in: toast-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes spinner {
@@ -109,6 +110,17 @@
   }
 }
 
+@keyframes toast-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-spinner,
   .animate-rise,
@@ -116,7 +128,8 @@
   .animate-scale-in,
   .animate-slide-up-fade,
   .animate-drawer-in,
-  .animate-overlay-in {
+  .animate-overlay-in,
+  .animate-toast-in {
     animation: none;
   }
 }

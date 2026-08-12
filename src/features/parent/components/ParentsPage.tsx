@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
@@ -13,7 +13,9 @@ import { Avatar } from "@/shared/components/ui/avatar";
 import { RowActions } from "@/shared/components/ui/row-actions";
 import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
+import { useToast } from "@/shared/components/ui/toast";
 import { AddParentForm, type AddParentValues } from "./AddParentForm";
+import { parentApi } from "../api/parentApi";
 import {
   HeartHandshakeIcon,
   MailIcon,
@@ -31,93 +33,16 @@ export interface Parent {
   status: "Verified" | "Pending";
 }
 
-const PARENTS: Parent[] = [
-  {
-    id: "p-01",
-    name: "Hari Sharma",
-    students: ["Aarav Sharma"],
-    phone: "9841-889900",
-    email: "hari.sharma@gmail.com",
-    status: "Verified",
-  },
-  {
-    id: "p-02",
-    name: "Mina Rai",
-    students: ["Sita Rai", "Sunita Rai"],
-    phone: "9851-445566",
-    email: "mina.rai@gmail.com",
-    status: "Verified",
-  },
-  {
-    id: "p-03",
-    name: "Dawa Gurung",
-    students: ["Bibek Gurung"],
-    phone: "9803-112233",
-    email: "dawa.gurung@gmail.com",
-    status: "Pending",
-  },
-  {
-    id: "p-04",
-    name: "Pramila Shrestha",
-    students: ["Anisha Shrestha", "Sujan Shrestha"],
-    phone: "9860-778899",
-    email: "pramila.shrestha@gmail.com",
-    status: "Verified",
-  },
-  {
-    id: "p-05",
-    name: "Kamal Karki",
-    students: ["Rohan Karki"],
-    phone: "9849-554433",
-    email: "kamal.karki@gmail.com",
-    status: "Verified",
-  },
-  {
-    id: "p-06",
-    name: "Keshav Maharjan",
-    students: ["Prativa Maharjan"],
-    phone: "9851-667788",
-    email: "keshav.maharjan@gmail.com",
-    status: "Pending",
-  },
-  {
-    id: "p-07",
-    name: "Laxmi Thapa",
-    students: ["Sagar Thapa"],
-    phone: "9812-345678",
-    email: "laxmi.thapa@gmail.com",
-    status: "Verified",
-  },
-  {
-    id: "p-08",
-    name: "Ramesh Tamang",
-    students: ["Nisha Tamang"],
-    phone: "9843-221100",
-    email: "ramesh.tamang@gmail.com",
-    status: "Verified",
-  },
-  {
-    id: "p-09",
-    name: "Sabina Adhikari",
-    students: ["Dipesh Adhikari"],
-    phone: "9808-998877",
-    email: "sabina.adhikari@gmail.com",
-    status: "Pending",
-  },
-  {
-    id: "p-10",
-    name: "Prakash Basnet",
-    students: ["Kritika Basnet"],
-    phone: "9861-223344",
-    email: "prakash.basnet@gmail.com",
-    status: "Verified",
-  },
-];
-
 const STATUS_FILTERS = [
   { value: "Verified", label: "Verified" },
   { value: "Pending", label: "Pending" },
 ];
+
+const toStatus = (status: string): Parent["status"] =>
+  status === "PENDING" ? "Pending" : "Verified";
+
+const toApiStatus = (status: Parent["status"]): "VERIFIED" | "PENDING" =>
+  status === "Pending" ? "PENDING" : "VERIFIED";
 
 const COLUMNS: Column<Parent>[] = [
   {
@@ -137,7 +62,11 @@ const COLUMNS: Column<Parent>[] = [
   {
     key: "students",
     header: "Linked Students",
-    render: (parent) => <span className="text-neutral-600">{parent.students.join(", ")}</span>,
+    render: (parent) => (
+      <span className="text-neutral-600">
+        {parent.students.length ? parent.students.join(", ") : "Not linked"}
+      </span>
+    ),
   },
   {
     key: "phone",
@@ -168,23 +97,61 @@ const COLUMNS: Column<Parent>[] = [
 ];
 
 export function ParentsPage() {
-  const [parents, setParents] = useState<Parent[]>(PARENTS);
+  const [parents, setParents] = useState<Parent[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const toast = useToast();
 
-  const handleAdd = (values: AddParentValues) => {
-    const record: Parent = {
-      id: `p-${String(parents.length + 1).padStart(2, "0")}`,
-      name: values.fullName,
-      students: values.students
-        .split(",")
-        .map((student) => student.trim())
-        .filter(Boolean),
-      phone: values.phone,
-      email: values.email,
-      status: values.status,
-    };
-    setParents((current) => [record, ...current]);
-    setDialogOpen(false);
+  const load = useCallback(async () => {
+    try {
+      const records = await parentApi.list();
+      setParents(
+        records.map((r) => ({
+          id: r.id,
+          name: r.name,
+          students: r.students ?? [],
+          phone: r.phone,
+          email: r.email ?? "",
+          status: toStatus(r.status),
+        })),
+      );
+    } catch {
+      setParents([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const handleAdd = async (values: AddParentValues): Promise<boolean> => {
+    try {
+      const record = await parentApi.create({
+        fullName: values.fullName,
+        email: values.email,
+        phone: values.phone,
+        status: toApiStatus(values.status),
+        studentNames: values.students
+          .split(",")
+          .map((student) => student.trim())
+          .filter(Boolean),
+      });
+      setParents((current) => [
+        {
+          id: record.id,
+          name: record.name,
+          students: record.students ?? [],
+          phone: record.phone,
+          email: record.email ?? "",
+          status: toStatus(record.status),
+        },
+        ...current,
+      ]);
+      setDialogOpen(false);
+      toast.success("Parent added successfully.");
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   const table = useTable<Parent>({

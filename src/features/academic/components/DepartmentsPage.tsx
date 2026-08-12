@@ -1,12 +1,17 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
 import { StatsCard } from "@/shared/components/ui/stats-card";
 import { Avatar } from "@/shared/components/ui/avatar";
 import { EmptyState } from "@/shared/components/ui/empty-state";
+import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
+import { useToast } from "@/shared/components/ui/toast";
+import { AddDepartmentForm, type AddDepartmentValues } from "./AddDepartmentForm";
+import { academicApi } from "../api/academicApi";
 import { BookOpenIcon, Building2Icon, PlusIcon, UsersIcon } from "@/shared/components/ui/icons";
 
 export interface Department {
@@ -18,52 +23,61 @@ export interface Department {
   description: string;
 }
 
-const DEPARTMENTS: Department[] = [
-  {
-    id: "d-01",
-    name: "Science & Math",
-    head: "Sunita K.C.",
-    staffCount: 18,
-    subjectCount: 6,
-    description: "Mathematics, Physics, Chemistry and Biology across Grades 6 – 11.",
-  },
-  {
-    id: "d-02",
-    name: "Languages",
-    head: "Gita Adhikari",
-    staffCount: 14,
-    subjectCount: 4,
-    description: "Nepali, English and Sanskrit literature and grammar.",
-  },
-  {
-    id: "d-03",
-    name: "Humanities",
-    head: "Prakash Khadka",
-    staffCount: 11,
-    subjectCount: 5,
-    description: "Social Studies, History, Geography and Civics.",
-  },
-  {
-    id: "d-04",
-    name: "Commerce",
-    head: "Kabita Shrestha",
-    staffCount: 8,
-    subjectCount: 4,
-    description: "Accountancy, Economics and Business Studies.",
-  },
-  {
-    id: "d-05",
-    name: "Sports",
-    head: "Bikash Tamang",
-    staffCount: 6,
-    subjectCount: 3,
-    description: "Physical education and inter-house sports programmes.",
-  },
-];
-
 export function DepartmentsPage() {
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const toast = useToast();
+
+  const load = useCallback(async () => {
+    try {
+      const records = await academicApi.listDepartments();
+      setDepartments(
+        records.map((r) => ({
+          id: r.id,
+          name: r.name,
+          head: r.head,
+          staffCount: r.staffCount,
+          subjectCount: r.subjectCount,
+          description: r.description,
+        })),
+      );
+    } catch {
+      setDepartments([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const handleAdd = async (values: AddDepartmentValues): Promise<boolean> => {
+    try {
+      const record = await academicApi.createDepartment({
+        name: values.name,
+        headName: values.headName?.trim() || undefined,
+        description: values.description?.trim() || undefined,
+      });
+      setDepartments((current) => [
+        {
+          id: record.id,
+          name: record.name,
+          head: record.head,
+          staffCount: 0,
+          subjectCount: 0,
+          description: record.description,
+        },
+        ...current,
+      ]);
+      setDialogOpen(false);
+      toast.success("Department added successfully.");
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const table = useTable<Department>({
-    data: DEPARTMENTS,
+    data: departments,
     pageSize: 6,
     getSearchText: (department) =>
       `${department.name} ${department.head} ${department.description}`,
@@ -71,8 +85,8 @@ export function DepartmentsPage() {
     defaultSortKey: "name",
   });
 
-  const totalStaff = DEPARTMENTS.reduce((sum, department) => sum + department.staffCount, 0);
-  const totalSubjects = DEPARTMENTS.reduce((sum, department) => sum + department.subjectCount, 0);
+  const totalStaff = departments.reduce((sum, department) => sum + department.staffCount, 0);
+  const totalSubjects = departments.reduce((sum, department) => sum + department.subjectCount, 0);
 
   return (
     <div className="space-y-4">
@@ -80,14 +94,19 @@ export function DepartmentsPage() {
         title="Departments"
         description="Academic departments and their faculty leads"
         actions={
-          <Button text="New Department" icon={<PlusIcon className="size-4" />} className="w-auto" />
+          <Button
+            text="New Department"
+            icon={<PlusIcon className="size-4" />}
+            className="w-auto"
+            onClick={() => setDialogOpen(true)}
+          />
         }
       />
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatsCard
           label="Total Departments"
-          value={String(DEPARTMENTS.length)}
+          value={String(departments.length)}
           delta="All faculties"
           deltaDirection="neutral"
           icon={<Building2Icon className="size-4" />}
@@ -154,6 +173,15 @@ export function DepartmentsPage() {
           ))}
         </div>
       )}
+
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        title="Add Department"
+        description="Create a new academic department."
+      >
+        <AddDepartmentForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+      </Dialog>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
@@ -13,11 +13,14 @@ import { RowActions } from "@/shared/components/ui/row-actions";
 import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
 import { formatDate } from "@/shared/lib/format";
+import { useToast } from "@/shared/components/ui/toast";
 import { AddStudentForm, type AddStudentValues } from "./AddStudentForm";
+import { studentApi } from "../api/studentApi";
 import { MailIcon, PlusIcon, UserPlusIcon, FileTextIcon } from "@/shared/components/ui/icons";
 
 export interface Student {
   id: string;
+  admissionNumber: string;
   name: string;
   email: string;
   grade: string;
@@ -25,110 +28,16 @@ export interface Student {
   enrolledAt: string;
 }
 
-const STUDENTS: Student[] = [
-  {
-    id: "s-01",
-    name: "Aarav Sharma",
-    email: "aarav.sharma@pathshala.edu.np",
-    grade: "Grade 7 A",
-    status: "Active",
-    enrolledAt: "2024-04-12",
-  },
-  {
-    id: "s-02",
-    name: "Sita Rai",
-    email: "sita.rai@pathshala.edu.np",
-    grade: "Grade 6 A",
-    status: "Active",
-    enrolledAt: "2024-04-15",
-  },
-  {
-    id: "s-03",
-    name: "Bibek Gurung",
-    email: "bibek.gurung@pathshala.edu.np",
-    grade: "Grade 8 B",
-    status: "On Leave",
-    enrolledAt: "2024-05-02",
-  },
-  {
-    id: "s-04",
-    name: "Anisha Shrestha",
-    email: "anisha.shrestha@pathshala.edu.np",
-    grade: "Grade 9 A",
-    status: "Active",
-    enrolledAt: "2024-05-20",
-  },
-  {
-    id: "s-05",
-    name: "Rohan Karki",
-    email: "rohan.karki@pathshala.edu.np",
-    grade: "Grade 10 A",
-    status: "Active",
-    enrolledAt: "2024-06-01",
-  },
-  {
-    id: "s-06",
-    name: "Prativa Maharjan",
-    email: "prativa.maharjan@pathshala.edu.np",
-    grade: "Grade 6 B",
-    status: "Active",
-    enrolledAt: "2024-06-18",
-  },
-  {
-    id: "s-07",
-    name: "Sagar Thapa",
-    email: "sagar.thapa@pathshala.edu.np",
-    grade: "Grade 7 B",
-    status: "Inactive",
-    enrolledAt: "2024-07-03",
-  },
-  {
-    id: "s-08",
-    name: "Nisha Tamang",
-    email: "nisha.tamang@pathshala.edu.np",
-    grade: "Grade 8 A",
-    status: "Active",
-    enrolledAt: "2024-07-21",
-  },
-  {
-    id: "s-09",
-    name: "Dipesh Adhikari",
-    email: "dipesh.adhikari@pathshala.edu.np",
-    grade: "Grade 8 A",
-    status: "Active",
-    enrolledAt: "2025-04-08",
-  },
-  {
-    id: "s-10",
-    name: "Kritika Basnet",
-    email: "kritika.basnet@pathshala.edu.np",
-    grade: "Grade 9 A",
-    status: "On Leave",
-    enrolledAt: "2025-04-25",
-  },
-  {
-    id: "s-11",
-    name: "Sujan Shrestha",
-    email: "sujan.shrestha@pathshala.edu.np",
-    grade: "Grade 10 B",
-    status: "Active",
-    enrolledAt: "2025-05-14",
-  },
-  {
-    id: "s-12",
-    name: "Aashish Pandey",
-    email: "aashish.pandey@pathshala.edu.np",
-    grade: "Grade 6 A",
-    status: "Active",
-    enrolledAt: "2025-06-09",
-  },
-];
-
 const STATUS_FILTERS = [
   { value: "Active", label: "Active" },
   { value: "Inactive", label: "Inactive" },
   { value: "On Leave", label: "On Leave" },
 ];
+
+const toStatus = (status: string): Student["status"] => {
+  if (status === "ON_LEAVE") return "On Leave";
+  return status === "INACTIVE" ? "Inactive" : "Active";
+};
 
 const COLUMNS: Column<Student>[] = [
   {
@@ -140,7 +49,7 @@ const COLUMNS: Column<Student>[] = [
         <Avatar name={student.name} size="sm" />
         <div className="min-w-0">
           <p className="truncate font-medium text-neutral-900">{student.name}</p>
-          <p className="text-xs text-neutral-400">Adm. {student.id.replace("s-", "DP")}</p>
+          <p className="text-xs text-neutral-400">Adm. {student.admissionNumber}</p>
         </div>
       </div>
     ),
@@ -173,7 +82,7 @@ const COLUMNS: Column<Student>[] = [
     key: "actions",
     header: "",
     align: "right",
-    render: (student) => (
+    render: () => (
       <RowActions
         actions={[
           { label: "View profile", href: "/students", icon: <UserPlusIcon className="size-3.5" /> },
@@ -187,20 +96,63 @@ const COLUMNS: Column<Student>[] = [
 ];
 
 export function StudentsPage() {
-  const [students, setStudents] = useState<Student[]>(STUDENTS);
+  const [students, setStudents] = useState<Student[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const toast = useToast();
 
-  const handleAdd = (values: AddStudentValues) => {
-    const record: Student = {
-      id: `s-${String(students.length + 1).padStart(2, "0")}`,
-      name: values.fullName,
-      email: values.email,
-      grade: values.grade,
-      status: values.status,
-      enrolledAt: values.enrolledAt,
-    };
-    setStudents((current) => [record, ...current]);
-    setDialogOpen(false);
+  const load = useCallback(async () => {
+    try {
+      const records = await studentApi.list();
+      setStudents(
+        records.map((r) => ({
+          id: r.id,
+          admissionNumber: r.admissionNumber,
+          name: r.name,
+          email: r.email ?? "",
+          grade: r.grade,
+          status: toStatus(r.status),
+          enrolledAt: r.enrolledAt,
+        })),
+      );
+    } catch {
+      setStudents([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const handleAdd = async (values: AddStudentValues): Promise<boolean> => {
+    try {
+      const record = await studentApi.create({
+        fullName: values.fullName,
+        email: values.email,
+        grade: values.grade,
+        status: (values.status === "On Leave" ? "ON_LEAVE" : values.status.toUpperCase()) as
+          | "ACTIVE"
+          | "INACTIVE"
+          | "ON_LEAVE",
+        admissionDate: values.enrolledAt,
+      });
+      setStudents((current) => [
+        {
+          id: record.id,
+          admissionNumber: record.admissionNumber,
+          name: record.name,
+          email: record.email ?? "",
+          grade: record.grade,
+          status: toStatus(record.status),
+          enrolledAt: record.enrolledAt,
+        },
+        ...current,
+      ]);
+      setDialogOpen(false);
+      toast.success("Student added successfully.");
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   const table = useTable<Student>({
@@ -272,7 +224,7 @@ export function StudentsPage() {
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         title="Add Student"
-        description="Enrol a new student for the 2082/83 academic year."
+        description="Enrol a new student."
       >
         <AddStudentForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
       </Dialog>
