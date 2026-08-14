@@ -1,5 +1,142 @@
 import { apiClient } from "@/shared/lib/apiClient";
 
+
+export type AttendanceStatus = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED";
+export type Gender = "MALE" | "FEMALE" | "OTHER";
+export type GuardianRelation = "FATHER" | "MOTHER" | "GUARDIAN";
+export type StudentLifecycleStatus =
+  | "ACTIVE"
+  | "INACTIVE"
+  | "ON_LEAVE"
+  | "TRANSFERRED_OUT"
+  | "GRADUATED"
+  | "WITHDRAWN";
+export type ExamStatus = "DRAFT" | "RESULTS_PENDING_APPROVAL" | "PUBLISHED";
+export type InvoiceStatus = "DRAFT" | "UNPAID" | "PARTIAL" | "PAID";
+export type NotificationType = "ALERT" | "WARNING" | "SUCCESS" | "INFO";
+export type SchoolEventCategory =
+  | "EXAM"
+  | "ACADEMIC"
+  | "EXTRA_CURRICULAR"
+  | "HOLIDAY"
+  | "MEETING"
+  | "OTHER";
+
+/** StudentAttendance.status, widened with a client-only sentinel for
+ *  "no record exists for this date yet" — the schema has no such
+ *  enum value since a row simply doesn't exist until marked. */
+export type DayAttendanceStatus = AttendanceStatus | "NOT_MARKED";
+
+export interface GuardianSummary {
+  fullName: string;
+  relation: GuardianRelation;
+  phone: string;
+  email: string | null;
+  occupation: string | null;
+  isPrimary: boolean;
+}
+
+export interface StudentProfileSummary {
+  fullName: string;
+  admissionNumber: string;
+  admissionDate: string;
+  status: StudentLifecycleStatus;
+  dateOfBirth: string | null;
+  gender: Gender | null;
+  bloodGroup: string | null;
+  address: string | null;
+  academicYearLabel: string;
+  className: string;
+  sectionName: string;
+  rollNumber: string;
+  guardians: GuardianSummary[];
+}
+
+export interface AttendanceSummary {
+  /** % PRESENT out of all marked days, current academic year */
+  overallPercent: number;
+  /** % PRESENT out of all marked days, current calendar month */
+  monthPercent: number;
+  monthLabel: string;
+  todayStatus: DayAttendanceStatus;
+  yesterdayStatus: DayAttendanceStatus;
+  presentDaysThisMonth: number;
+  lateDaysThisMonth: number;
+  excusedDaysThisMonth: number;
+  absentDaysThisMonth: number;
+}
+
+export interface ExamSubjectResult {
+  subjectId: string;
+  subjectName: string;
+  theoryMarks: number | null;
+  practicalMarks: number | null;
+  fullMarksTheory: number;
+  fullMarksPractical: number;
+  grade: string | null;
+}
+
+export interface ExamResultSummary {
+  examId: string;
+  examName: string;
+  examTypeName: string;
+  termName: string | null;
+  status: ExamStatus;
+  totalObtained: number;
+  totalFullMarks: number;
+  percentage: number;
+  overallGrade: string | null;
+  subjects: ExamSubjectResult[];
+}
+
+export interface FeeDiscountSummary {
+  id: string;
+  kind: "DISCOUNT" | "SCHOLARSHIP";
+  label: string;
+  /** Fixed-amount discount (FeeDiscount.amount) */
+  amount: number | null;
+  /** Scholarship of type PERCENTAGE or FIXED (FeeScholarship.percentageOrAmount) */
+  scholarshipType: "PERCENTAGE" | "FIXED" | null;
+  percentageOrAmount: number | null;
+}
+
+export interface FeeInstallmentSummary {
+  invoiceId: string;
+  installmentLabel: string;
+  dueDate: string;
+  amount: number;
+  amountPaid: number;
+  status: InvoiceStatus;
+  paidAt: string | null;
+  receiptNumber: string | null;
+  receiptUrl: string | null;
+}
+
+export interface FeeSummary {
+  totalAnnualFee: number;
+  totalPaid: number;
+  totalDue: number;
+  discounts: FeeDiscountSummary[];
+  installments: FeeInstallmentSummary[];
+}
+
+export interface StudentSchoolEvent {
+  id: string;
+  title: string;
+  category: SchoolEventCategory;
+  startsAt: string;
+  location: string | null;
+}
+
+export interface StudentNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
 export interface StudentStatCard {
   label: string;
   value: string;
@@ -8,97 +145,13 @@ export interface StudentStatCard {
   href: string;
 }
 
-export interface StudentProfileSummary {
-  fullName: string;
-  admissionNumber: string;
-  admissionDate: string;
-  grade: string;
-  section: string;
-  guardianName: string | null;
-  feeDiscountPercent: number;
-  dateOfBirth: string | null;
-  gender: string | null;
-  bloodGroup: string | null;
-  medicalNotes: string | null;
-  identificationMark: string | null;
-  birthCertificateOrNic: string | null;
-}
-
-export type MarkStatus = "PRESENT" | "ABSENT" | "LEAVE" | "NOT_MARKED";
-
-export interface AttendanceSummary {
-  overallPercent: number;
-  monthPercent: number;
-  monthLabel: string;
-  todayStatus: MarkStatus;
-  yesterdayStatus: MarkStatus;
-  presentsThisMonth: number;
-  leavesThisMonth: number;
-  absentsThisMonth: number;
-}
-
-export interface ClassTestResult {
-  id: string;
-  subject: string;
-  testName: string;
-  date: string;
-  marksObtained: number;
-  marksTotal: number;
-}
-
-export interface ExamResult {
-  id: string;
-  examName: string;
-  term: string;
-  date: string;
-  percentage: number;
-  grade: string;
-  status: "Pass" | "Fail" | "Pending";
-}
-
-export interface FeeInstallment {
-  id: string;
-  label: string;
-  amount: number;
-  dueDate: string;
-  status: "Paid" | "Pending" | "Overdue";
-}
-
-export interface FeeSummary {
-  totalAnnualFee: number;
-  totalPaid: number;
-  totalDue: number;
-  discountPercent: number;
-  nextDueDate: string | null;
-  installments: FeeInstallment[];
-}
-
-export interface StudentUpcomingEvent {
-  id: string;
-  day: string;
-  month: string;
-  title: string;
-  meta: string;
-}
-
-export interface StudentNotification {
-  id: string;
-  tone: string;
-  bg: string;
-  title: string;
-  time: string;
-  unread: boolean;
-}
-
 export interface StudentDashboardSummary {
-  academicYear: string;
   stats: StudentStatCard[];
   profile: StudentProfileSummary;
   attendance: AttendanceSummary;
-  classTests: ClassTestResult[];
-  examResults: ExamResult[];
+  examResults: ExamResultSummary[];
   fee: FeeSummary;
-  upcomingEvents: StudentUpcomingEvent[];
+  upcomingEvents: StudentSchoolEvent[];
   notifications: StudentNotification[];
 }
 

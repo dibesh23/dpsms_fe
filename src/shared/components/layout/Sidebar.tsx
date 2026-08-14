@@ -7,48 +7,8 @@ import { cn } from "@/shared/lib/cn";
 import { Wordmark } from "../ui/wordmark";
 import { Avatar } from "../ui/avatar";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import {
-  BookOpenIcon,
-  BriefcaseIcon,
-  Building2Icon,
-  CalendarDaysIcon,
-  GraduationCapIcon,
-  HeartHandshakeIcon,
-  LayoutDashboardIcon,
-  LayoutGridIcon,
-  LogOutIcon,
-  MenuIcon,
-  UsersIcon,
-  XIcon,
-} from "../ui/icons";
-
-const NAV_SECTIONS: Array<{
-  label: string;
-  items: Array<{ label: string; href: string; icon: typeof LayoutDashboardIcon }>;
-}> = [
-  {
-    label: "Management",
-    items: [{ label: "Dashboard", href: "/dashboard", icon: LayoutDashboardIcon }],
-  },
-  {
-    label: "People",
-    items: [
-      { label: "Students", href: "/students", icon: UsersIcon },
-      { label: "Teachers", href: "/teachers", icon: GraduationCapIcon },
-      { label: "Parents", href: "/parents", icon: HeartHandshakeIcon },
-      { label: "Staff", href: "/staff", icon: BriefcaseIcon },
-    ],
-  },
-  {
-    label: "Academic",
-    items: [
-      { label: "Classes", href: "/classes", icon: LayoutGridIcon },
-      { label: "Departments", href: "/departments", icon: Building2Icon },
-      { label: "Subjects", href: "/subjects", icon: BookOpenIcon },
-      { label: "Academic Sessions", href: "/academic-sessions", icon: CalendarDaysIcon },
-    ],
-  },
-];
+import { getNavSections, type NavSection } from "./navConfig";
+import { LogOutIcon, MenuIcon, XIcon } from "../ui/icons";
 
 const ROLE_LABELS: Record<string, string> = {
   SUPER_ADMIN: "Administrator",
@@ -61,11 +21,17 @@ function roleLabel(role?: string): string {
   return (role && ROLE_LABELS[role]) ?? "Staff";
 }
 
-function NavList({ onNavigate }: { onNavigate?: () => void }) {
+function NavList({
+  sections,
+  onNavigate,
+}: {
+  sections: NavSection[];
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   return (
     <nav className="flex-1 overflow-y-auto px-3 pb-4">
-      {NAV_SECTIONS.map((section) => (
+      {sections.map((section) => (
         <div key={section.label}>
           <p className="px-3 pb-2 pt-5 text-xs font-medium tracking-wider text-neutral-400 uppercase">
             {section.label}
@@ -106,6 +72,8 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { user, logout } = useAuth();
+  const sections = getNavSections(user?.role);
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 flex-none items-center border-b border-neutral-100 px-5">
@@ -114,7 +82,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         </Link>
       </div>
 
-      <NavList onNavigate={onNavigate} />
+      <NavList sections={sections} onNavigate={onNavigate} />
 
       <div className="flex-none border-t border-neutral-100 p-3">
         <Link

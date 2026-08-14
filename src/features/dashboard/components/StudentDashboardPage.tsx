@@ -13,57 +13,93 @@ import { formatCurrency, formatDate } from "@/shared/lib/format";
 import {
   studentDashboardApi,
   type StudentDashboardSummary,
-  type MarkStatus,
+  type DayAttendanceStatus,
+  type NotificationType,
+  type InvoiceStatus,
+  type SchoolEventCategory,
 } from "../api/studentDashboardApi";
 import {
+  AlertTriangleIcon,
   BellIcon,
-  BookOpenIcon,
   CalendarDaysIcon,
   CheckCircle2Icon,
   ClockIcon,
   CreditCardIcon,
   FileTextIcon,
   GraduationCapIcon,
+  MapPinIcon,
+  PhoneIcon,
 } from "@/shared/components/ui/icons";
 
 const STAT_ICONS: Record<string, React.ReactNode> = {
   "Overall Attendance": <CheckCircle2Icon className="size-4" />,
   "Fee Due": <CreditCardIcon className="size-4" />,
-  "Class Tests": <BookOpenIcon className="size-4" />,
-  "Upcoming Exams": <GraduationCapIcon className="size-4" />,
+  "Latest Exam": <GraduationCapIcon className="size-4" />,
+  Notifications: <BellIcon className="size-4" />,
 };
 
-const MARK_STATUS_LABEL: Record<MarkStatus, string> = {
+const ATTENDANCE_LABEL: Record<DayAttendanceStatus, string> = {
   PRESENT: "Present",
   ABSENT: "Absent",
-  LEAVE: "On Leave",
+  LATE: "Late",
+  EXCUSED: "Excused",
   NOT_MARKED: "Not Marked",
 };
 
-const MARK_STATUS_VARIANT: Record<MarkStatus, StatusVariant> = {
+const ATTENDANCE_VARIANT: Record<DayAttendanceStatus, StatusVariant> = {
   PRESENT: "success",
   ABSENT: "danger",
-  LEAVE: "warning",
+  LATE: "warning",
+  EXCUSED: "info",
   NOT_MARKED: "neutral",
 };
 
+const INVOICE_LABEL: Record<InvoiceStatus, string> = {
+  DRAFT: "Draft",
+  UNPAID: "Unpaid",
+  PARTIAL: "Partial",
+  PAID: "Paid",
+};
+
+const INVOICE_VARIANT: Record<InvoiceStatus, StatusVariant> = {
+  DRAFT: "neutral",
+  UNPAID: "danger",
+  PARTIAL: "warning",
+  PAID: "success",
+};
+
+const NOTIFICATION_ICON: Record<NotificationType, React.ReactNode> = {
+  ALERT: <AlertTriangleIcon className="size-3.5" />,
+  WARNING: <AlertTriangleIcon className="size-3.5" />,
+  SUCCESS: <CheckCircle2Icon className="size-3.5" />,
+  INFO: <BellIcon className="size-3.5" />,
+};
+
+const EVENT_CATEGORY_VARIANT: Record<SchoolEventCategory, StatusVariant> = {
+  EXAM: "danger",
+  ACADEMIC: "info",
+  EXTRA_CURRICULAR: "success",
+  HOLIDAY: "warning",
+  MEETING: "neutral",
+  OTHER: "neutral",
+};
+
 const EMPTY_SUMMARY: StudentDashboardSummary = {
-  academicYear: "",
   stats: [],
   profile: {
     fullName: "",
     admissionNumber: "",
     admissionDate: "",
-    grade: "",
-    section: "",
-    guardianName: null,
-    feeDiscountPercent: 0,
+    status: "ACTIVE",
     dateOfBirth: null,
     gender: null,
     bloodGroup: null,
-    medicalNotes: null,
-    identificationMark: null,
-    birthCertificateOrNic: null,
+    address: null,
+    academicYearLabel: "",
+    className: "",
+    sectionName: "",
+    rollNumber: "",
+    guardians: [],
   },
   attendance: {
     overallPercent: 0,
@@ -71,18 +107,17 @@ const EMPTY_SUMMARY: StudentDashboardSummary = {
     monthLabel: "",
     todayStatus: "NOT_MARKED",
     yesterdayStatus: "NOT_MARKED",
-    presentsThisMonth: 0,
-    leavesThisMonth: 0,
-    absentsThisMonth: 0,
+    presentDaysThisMonth: 0,
+    lateDaysThisMonth: 0,
+    excusedDaysThisMonth: 0,
+    absentDaysThisMonth: 0,
   },
-  classTests: [],
   examResults: [],
   fee: {
     totalAnnualFee: 0,
     totalPaid: 0,
     totalDue: 0,
-    discountPercent: 0,
-    nextDueDate: null,
+    discounts: [],
     installments: [],
   },
   upcomingEvents: [],
@@ -131,6 +166,32 @@ function ProfileField({ label, value }: { label: string; value: string | null | 
   );
 }
 
+function GuardianRow({
+  guardian,
+}: {
+  guardian: StudentDashboardSummary["profile"]["guardians"][number];
+}) {
+  const relationLabel =
+    guardian.relation === "FATHER"
+      ? "Father"
+      : guardian.relation === "MOTHER"
+        ? "Mother"
+        : "Guardian";
+  return (
+    <li className="py-2.5">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium text-neutral-800">{guardian.fullName}</p>
+        {guardian.isPrimary && <StatusBadge status="Primary" variant="info" dot={false} />}
+      </div>
+      <p className="text-xs text-neutral-500">{relationLabel}</p>
+      <p className="mt-1 flex items-center gap-1 text-xs text-neutral-400">
+        <PhoneIcon className="size-3" />
+        {guardian.phone}
+      </p>
+    </li>
+  );
+}
+
 export default function StudentDashboardPage() {
   const { user } = useAuth();
   const firstName = user?.fullName?.split(" ")[0] ?? "Student";
@@ -157,9 +218,11 @@ export default function StudentDashboardPage() {
     icon: STAT_ICONS[stat.label],
   }));
 
-  const academicYearLabel = summary.academicYear || "2082/83";
   const { profile, attendance, fee } = summary;
-  const classLabel = [profile.grade, profile.section].filter(Boolean).join(" - ");
+  const classLabel = [profile.className, profile.sectionName].filter(Boolean).join(" - ");
+  // Only PUBLISHED exam results should ever reach a student; filtering
+  // defensively here in case the API ever includes DRAFT/pending ones.
+  const publishedResults = summary.examResults.filter((exam) => exam.status === "PUBLISHED");
 
   return (
     <div className="space-y-4">
@@ -170,22 +233,27 @@ export default function StudentDashboardPage() {
               Welcome back, {firstName}
             </h1>
             <StatusBadge status="Student" variant="info" />
+            {profile.status !== "ACTIVE" && (
+              <StatusBadge status={profile.status.replace(/_/g, " ")} variant="warning" />
+            )}
           </div>
           <p className="mt-1 text-sm text-neutral-500">
             Here is your academic summary for today.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded-full border border-neutral-200 bg-bg-default px-3 py-1 text-xs font-medium text-neutral-500">
-            Academic Year {academicYearLabel}
-          </span>
+          {profile.academicYearLabel && (
+            <span className="rounded-full border border-neutral-200 bg-bg-default px-3 py-1 text-xs font-medium text-neutral-500">
+              Academic Year {profile.academicYearLabel}
+            </span>
+          )}
           <button
             type="button"
             aria-label="Notifications"
             className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-bg-default text-neutral-600 transition-colors hover:bg-bg-muted"
           >
             <BellIcon className="size-4" />
-            {summary.notifications.some((n) => n.unread) && (
+            {summary.notifications.some((n) => !n.isRead) && (
               <span className="absolute right-2 top-2 size-1.5 rounded-full bg-red-500" />
             )}
           </button>
@@ -217,112 +285,139 @@ export default function StudentDashboardPage() {
                 {profile.fullName || user?.fullName}
               </p>
               {classLabel && (
-                <p className="mt-1 text-xs text-neutral-500">Class {classLabel}</p>
+                <p className="mt-1 text-xs text-neutral-500">
+                  Class {classLabel}
+                  {profile.rollNumber ? ` · Roll ${profile.rollNumber}` : ""}
+                </p>
               )}
             </div>
 
             <dl className="mt-4 divide-y divide-neutral-100 border-t border-neutral-100">
-              <ProfileField label="Registration No" value={profile.admissionNumber} />
+              <ProfileField label="Admission Number" value={profile.admissionNumber} />
               <ProfileField
                 label="Date of Admission"
                 value={profile.admissionDate ? formatDate(profile.admissionDate) : null}
               />
               <ProfileField label="Class" value={classLabel} />
-              <ProfileField label="Family / Guardian" value={profile.guardianName} />
-              <ProfileField
-                label="Discount in Fee"
-                value={`${profile.feeDiscountPercent ?? 0}%`}
-              />
+              <ProfileField label="Roll Number" value={profile.rollNumber} />
               <ProfileField
                 label="Date of Birth"
                 value={profile.dateOfBirth ? formatDate(profile.dateOfBirth) : null}
               />
-              <ProfileField label="Gender" value={profile.gender} />
-              <ProfileField label="Blood Group" value={profile.bloodGroup} />
-              <ProfileField label="Disease if Any" value={profile.medicalNotes} />
               <ProfileField
-                label="Student Birth Form ID / NIC"
-                value={profile.birthCertificateOrNic}
+                label="Gender"
+                value={
+                  profile.gender
+                    ? profile.gender.charAt(0) + profile.gender.slice(1).toLowerCase()
+                    : null
+                }
               />
+              <ProfileField label="Blood Group" value={profile.bloodGroup} />
+              <ProfileField label="Address" value={profile.address} />
             </dl>
+
+            {profile.address && (
+              <p className="mt-1 flex items-start gap-1.5 text-xs text-neutral-400">
+                <MapPinIcon className="mt-0.5 size-3 flex-none" />
+                {profile.address}
+              </p>
+            )}
+
+            <div className="mt-2 border-t border-neutral-100 pt-1">
+              <p className="px-0 pt-3 text-xs font-medium tracking-wide text-neutral-400 uppercase">
+                Guardians
+              </p>
+              {profile.guardians.length === 0 ? (
+                <p className="py-3 text-sm text-neutral-400">No guardian on file.</p>
+              ) : (
+                <ul className="divide-y divide-neutral-100">
+                  {profile.guardians.map((guardian) => (
+                    <GuardianRow key={guardian.fullName + guardian.relation} guardian={guardian} />
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Reports */}
         <div className="min-w-0 flex-1 space-y-4">
+          <DashboardWidget title="Attendance Report" description="Overall and this month">
+            {loading ? (
+              <div className="flex h-40 items-center justify-center text-sm text-neutral-400">
+                Loading…
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-wrap items-center justify-around gap-6">
+                  <AttendanceGauge
+                    percent={attendance.overallPercent}
+                    label="Overall"
+                    statusBadge={
+                      <StatusBadge
+                        status={ATTENDANCE_LABEL[attendance.todayStatus]}
+                        variant={ATTENDANCE_VARIANT[attendance.todayStatus]}
+                      />
+                    }
+                  />
+                  <AttendanceGauge
+                    percent={attendance.monthPercent}
+                    label={attendance.monthLabel || "This month"}
+                    statusBadge={
+                      <StatusBadge
+                        status={ATTENDANCE_LABEL[attendance.yesterdayStatus]}
+                        variant={ATTENDANCE_VARIANT[attendance.yesterdayStatus]}
+                      />
+                    }
+                  />
+                </div>
+
+                <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                    <p className="text-xs font-medium text-emerald-700">Present</p>
+                    <p className="mt-1 text-xl font-semibold text-emerald-800">
+                      {attendance.presentDaysThisMonth}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+                    <p className="text-xs font-medium text-blue-700">Excused</p>
+                    <p className="mt-1 text-xl font-semibold text-blue-800">
+                      {attendance.excusedDaysThisMonth}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <p className="text-xs font-medium text-amber-700">Late</p>
+                    <p className="mt-1 text-xl font-semibold text-amber-800">
+                      {attendance.lateDaysThisMonth}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                    <p className="text-xs font-medium text-red-700">Absent</p>
+                    <p className="mt-1 text-xl font-semibold text-red-800">
+                      {attendance.absentDaysThisMonth}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+          </DashboardWidget>
+
           <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <DashboardWidget
-              title="Attendance Report"
-              description="Overall and this month"
+              title="Exam Results"
+              description="Published results, most recent first"
               className="lg:col-span-2"
             >
-              {loading ? (
-                <div className="flex h-40 items-center justify-center text-sm text-neutral-400">
-                  Loading…
-                </div>
-              ) : (
-                <>
-                  <div className="flex flex-wrap items-center justify-around gap-6">
-                    <AttendanceGauge
-                      percent={attendance.overallPercent}
-                      label="Overall"
-                      statusBadge={
-                        <StatusBadge
-                          status={MARK_STATUS_LABEL[attendance.todayStatus]}
-                          variant={MARK_STATUS_VARIANT[attendance.todayStatus]}
-                        />
-                      }
-                    />
-                    <AttendanceGauge
-                      percent={attendance.monthPercent}
-                      label={attendance.monthLabel || "This month"}
-                      statusBadge={
-                        <StatusBadge
-                          status={MARK_STATUS_LABEL[attendance.yesterdayStatus]}
-                          variant={MARK_STATUS_VARIANT[attendance.yesterdayStatus]}
-                        />
-                      }
-                    />
-                  </div>
-
-                  <div className="mt-5 grid grid-cols-3 gap-3">
-                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-                      <p className="text-xs font-medium text-emerald-700">Presents</p>
-                      <p className="mt-1 text-xl font-semibold text-emerald-800">
-                        {attendance.presentsThisMonth}
-                      </p>
-                      <p className="text-[11px] text-emerald-600">This month</p>
-                    </div>
-                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                      <p className="text-xs font-medium text-amber-700">Leaves</p>
-                      <p className="mt-1 text-xl font-semibold text-amber-800">
-                        {attendance.leavesThisMonth}
-                      </p>
-                      <p className="text-[11px] text-amber-600">This month</p>
-                    </div>
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                      <p className="text-xs font-medium text-red-700">Absents</p>
-                      <p className="mt-1 text-xl font-semibold text-red-800">
-                        {attendance.absentsThisMonth}
-                      </p>
-                      <p className="text-[11px] text-red-600">This month</p>
-                    </div>
-                  </div>
-                </>
-              )}
-            </DashboardWidget>
-
-            <DashboardWidget title="Examination Report" description="Latest results">
-              {summary.examResults.length === 0 ? (
+              {publishedResults.length === 0 ? (
                 <EmptyState
                   icon={<GraduationCapIcon className="size-5" />}
                   title="No record found"
-                  description="Exam results will appear here once published."
+                  description="Results appear here once an exam is published."
                 />
               ) : (
                 <ul className="divide-y divide-neutral-100">
-                  {summary.examResults.map((exam) => (
-                    <li key={exam.id} className="flex items-center gap-3 py-2.5">
+                  {publishedResults.map((exam) => (
+                    <li key={exam.examId} className="flex items-center gap-3 py-2.5">
                       <span className="flex size-8 flex-none items-center justify-center rounded-lg bg-bg-subtle text-neutral-500">
                         <FileTextIcon className="size-4" />
                       </span>
@@ -331,61 +426,21 @@ export default function StudentDashboardPage() {
                           {exam.examName}
                         </p>
                         <p className="text-xs text-neutral-500">
-                          {exam.term} · {formatDate(exam.date)}
+                          {exam.examTypeName}
+                          {exam.termName ? ` · ${exam.termName}` : ""}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-semibold text-neutral-900">
                           {exam.percentage}%
                         </p>
-                        <StatusBadge
-                          status={exam.status}
-                          variant={
-                            exam.status === "Pass"
-                              ? "success"
-                              : exam.status === "Fail"
-                                ? "danger"
-                                : "warning"
-                          }
-                        />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </DashboardWidget>
-          </section>
-
-          <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <DashboardWidget
-              title="Class Tests Report"
-              description="Recent class test scores"
-              className="lg:col-span-2"
-            >
-              {summary.classTests.length === 0 ? (
-                <EmptyState
-                  icon={<BookOpenIcon className="size-5" />}
-                  title="No record found"
-                  description="Class test scores will show up here after they are graded."
-                />
-              ) : (
-                <ul className="divide-y divide-neutral-100">
-                  {summary.classTests.map((test) => (
-                    <li key={test.id} className="flex items-center gap-3 py-2.5">
-                      <span className="flex size-8 flex-none items-center justify-center rounded-lg bg-bg-subtle text-neutral-500">
-                        <BookOpenIcon className="size-4" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-neutral-800">
-                          {test.testName}
-                        </p>
-                        <p className="text-xs text-neutral-500">
-                          {test.subject} · {formatDate(test.date)}
+                        <p className="text-xs text-neutral-400">
+                          {exam.totalObtained}/{exam.totalFullMarks}
                         </p>
                       </div>
-                      <span className="text-sm font-semibold text-neutral-900">
-                        {test.marksObtained}/{test.marksTotal}
-                      </span>
+                      {exam.overallGrade && (
+                        <StatusBadge status={exam.overallGrade} variant="neutral" dot={false} />
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -425,6 +480,24 @@ export default function StudentDashboardPage() {
                   />
                 </div>
 
+                {fee.discounts.length > 0 && (
+                  <ul className="space-y-1 border-t border-neutral-100 pt-2">
+                    {fee.discounts.map((discount) => (
+                      <li
+                        key={discount.id}
+                        className="flex items-center justify-between text-xs text-neutral-500"
+                      >
+                        <span>{discount.label}</span>
+                        <span className="font-medium text-neutral-700">
+                          {discount.kind === "SCHOLARSHIP" && discount.scholarshipType === "PERCENTAGE"
+                            ? `${discount.percentageOrAmount}% off`
+                            : formatCurrency(discount.amount ?? discount.percentageOrAmount ?? 0)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
                 {fee.installments.length === 0 ? (
                   <EmptyState
                     icon={<CreditCardIcon className="size-5" />}
@@ -435,24 +508,20 @@ export default function StudentDashboardPage() {
                   <ul className="divide-y divide-neutral-100 pt-1">
                     {fee.installments.map((installment) => (
                       <li
-                        key={installment.id}
+                        key={installment.invoiceId}
                         className="flex items-center justify-between py-2 text-sm"
                       >
                         <div className="min-w-0">
-                          <p className="truncate text-neutral-800">{installment.label}</p>
+                          <p className="truncate text-neutral-800">
+                            {installment.installmentLabel}
+                          </p>
                           <p className="text-xs text-neutral-400">
                             Due {formatDate(installment.dueDate)}
                           </p>
                         </div>
                         <StatusBadge
-                          status={installment.status}
-                          variant={
-                            installment.status === "Paid"
-                              ? "success"
-                              : installment.status === "Overdue"
-                                ? "danger"
-                                : "warning"
-                          }
+                          status={INVOICE_LABEL[installment.status]}
+                          variant={INVOICE_VARIANT[installment.status]}
                         />
                       </li>
                     ))}
@@ -480,24 +549,40 @@ export default function StudentDashboardPage() {
                 />
               ) : (
                 <ul className="space-y-3">
-                  {summary.upcomingEvents.map((event) => (
-                    <li key={event.id} className="flex items-center gap-3">
-                      <div className="flex size-11 flex-none flex-col items-center justify-center rounded-lg border border-neutral-200 bg-bg-subtle">
-                        <span className="text-sm font-semibold leading-none text-neutral-900">
-                          {event.day}
-                        </span>
-                        <span className="mt-0.5 text-[10px] leading-none text-neutral-500">
-                          {event.month}
-                        </span>
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-neutral-800">
-                          {event.title}
-                        </p>
-                        <p className="text-xs text-neutral-400">{event.meta}</p>
-                      </div>
-                    </li>
-                  ))}
+                  {summary.upcomingEvents.map((event) => {
+                    const date = new Date(event.startsAt);
+                    const day = Number.isNaN(date.getTime())
+                      ? "—"
+                      : date.getDate().toString().padStart(2, "0");
+                    const month = Number.isNaN(date.getTime())
+                      ? ""
+                      : date.toLocaleString("en-US", { month: "short" });
+                    return (
+                      <li key={event.id} className="flex items-center gap-3">
+                        <div className="flex size-11 flex-none flex-col items-center justify-center rounded-lg border border-neutral-200 bg-bg-subtle">
+                          <span className="text-sm font-semibold leading-none text-neutral-900">
+                            {day}
+                          </span>
+                          <span className="mt-0.5 text-[10px] leading-none text-neutral-500">
+                            {month}
+                          </span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-neutral-800">
+                            {event.title}
+                          </p>
+                          <p className="truncate text-xs text-neutral-400">
+                            {event.location ?? "—"}
+                          </p>
+                        </div>
+                        <StatusBadge
+                          status={event.category.replace(/_/g, " ")}
+                          variant={EVENT_CATEGORY_VARIANT[event.category]}
+                          dot={false}
+                        />
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </DashboardWidget>
@@ -515,30 +600,37 @@ export default function StudentDashboardPage() {
                       key={notification.id}
                       className="relative flex items-start gap-3 rounded-lg px-0.5 py-2"
                     >
-                      {notification.unread && (
+                      {!notification.isRead && (
                         <span className="absolute left-0 top-3.5 size-1.5 rounded-full bg-blue-500" />
                       )}
                       <span
                         className={cn(
-                          "ml-2 flex size-7 flex-none items-center justify-center rounded-md",
-                          notification.bg,
-                          notification.tone,
+                          "ml-2 flex size-7 flex-none items-center justify-center rounded-md border",
+                          notification.type === "ALERT" && "border-red-200 bg-red-50 text-red-600",
+                          notification.type === "WARNING" &&
+                            "border-amber-200 bg-amber-50 text-amber-600",
+                          notification.type === "SUCCESS" &&
+                            "border-emerald-200 bg-emerald-50 text-emerald-600",
+                          notification.type === "INFO" &&
+                            "border-blue-200 bg-blue-50 text-blue-600",
                         )}
                       >
-                        <BellIcon className="size-3.5" />
+                        {NOTIFICATION_ICON[notification.type]}
                       </span>
                       <div className="min-w-0">
                         <p
                           className={cn(
                             "text-sm",
-                            notification.unread
+                            !notification.isRead
                               ? "font-medium text-neutral-800"
                               : "text-neutral-600",
                           )}
                         >
                           {notification.title}
                         </p>
-                        <p className="text-xs text-neutral-400">{notification.time}</p>
+                        <p className="text-xs text-neutral-400">
+                          {formatDate(notification.createdAt)}
+                        </p>
                       </div>
                     </li>
                   ))}
