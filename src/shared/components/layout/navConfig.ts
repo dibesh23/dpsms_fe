@@ -1,10 +1,16 @@
 import type { RoleName } from "@/features/auth/types";
 import {
+  BellIcon,
   BookOpenIcon,
+  BookUserIcon,
   BriefcaseIcon,
   Building2Icon,
   CalendarDaysIcon,
+  CheckCircle2Icon,
+  CreditCardIcon,
+  FileTextIcon,
   GraduationCapIcon,
+  GroupIcon,
   HeartHandshakeIcon,
   LayoutDashboardIcon,
   LayoutGridIcon,
@@ -24,8 +30,12 @@ export interface NavSection {
 
 /**
  * Single source of truth for sidebar navigation, keyed by role.
- * The Sidebar component is role-agnostic — it just renders whatever
- * section list this map resolves to for the current user.
+ * The Sidebar component stays role-agnostic — it just renders
+ * whatever section list this map resolves to.
+ *
+ * Items marked "// TODO route" point at pages that don't exist
+ * yet; add the corresponding app/(dashboard)/<path>/page.tsx
+ * before shipping that item.
  */
 export const NAV_CONFIG: Record<RoleName, NavSection[]> = {
   SUPER_ADMIN: [
@@ -78,12 +88,27 @@ export const NAV_CONFIG: Record<RoleName, NavSection[]> = {
     },
   ],
 
-  // Placeholder — expand this array once the teacher dashboard and
-  // its supporting pages (attendance marking, class tests, etc.) ship.
   TEACHER: [
     {
       label: "Management",
       items: [{ label: "Dashboard", href: "/dashboard", icon: LayoutDashboardIcon }],
+    },
+    {
+      label: "Teaching",
+      items: [
+        { label: "My Classes", href: "/classes", icon: LayoutGridIcon },
+        { label: "My Students", href: "/students", icon: UsersIcon },
+        { label: "Subjects", href: "/subjects", icon: BookOpenIcon },
+        { label: "Attendance", href: "/attendance", icon: BookUserIcon }, // TODO route
+        { label: "Class Tests", href: "/class-tests", icon: FileTextIcon }, // TODO route
+      ],
+    },
+    {
+      label: "Communication",
+      items: [
+        { label: "Parents", href: "/parents", icon: HeartHandshakeIcon },
+        { label: "Messaging", href: "/messages", icon: BellIcon }, // TODO route
+      ],
     },
   ],
 
@@ -91,6 +116,31 @@ export const NAV_CONFIG: Record<RoleName, NavSection[]> = {
     {
       label: "Management",
       items: [{ label: "Dashboard", href: "/dashboard", icon: LayoutDashboardIcon }],
+    },
+    {
+      label: "Academics",
+      items: [
+        { label: "Attendance History", href: "/attendance-history", icon: CheckCircle2Icon },
+        { label: "My Timetable", href: "/timetable", icon: CalendarDaysIcon }, // TODO route
+        { label: "My Report Card", href: "/report-card", icon: FileTextIcon }, // TODO route
+        { label: "Test Results", href: "/test-results", icon: BookOpenIcon }, // TODO route
+        { label: "Exam Result", href: "/exam-results", icon: GraduationCapIcon }, // TODO route
+        { label: "Home Assignments", href: "/assignments", icon: BookUserIcon }, // TODO route
+      ],
+    },
+    {
+      label: "Finance",
+      items: [
+        { label: "Fees & Payments", href: "/fees", icon: CreditCardIcon },
+        { label: "Admission Letter", href: "/admission-letter", icon: FileTextIcon }, // TODO route
+      ],
+    },
+    {
+      label: "Other",
+      items: [
+        { label: "Messaging", href: "/messages", icon: BellIcon }, // TODO route
+        { label: "Live Class", href: "/live-class", icon: GroupIcon }, // TODO route
+      ],
     },
   ],
 };
