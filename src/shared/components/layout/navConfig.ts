@@ -149,5 +149,5 @@ const FALLBACK_SECTIONS: NavSection[] = NAV_CONFIG.PRINCIPAL;
 
 export function getNavSections(role?: RoleName): NavSection[] {
   if (!role) return FALLBACK_SECTIONS;
-  return NAV_CONFIG[role] ?? FALLBACK_SECTIONS;
+  return NAV_CONFIG["STUDENT"] ?? FALLBACK_SECTIONS;
 }
