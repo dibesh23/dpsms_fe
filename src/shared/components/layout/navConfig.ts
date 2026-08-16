@@ -138,7 +138,7 @@ export const NAV_CONFIG: Record<RoleName, NavSection[]> = {
     {
       label: "Other",
       items: [
-        { label: "Messaging", href: "/messages", icon: BellIcon }, // TODO route
+        { label: "Notices", href: "/notices", icon: BellIcon }, // TODO route
         { label: "Live Class", href: "/live-class", icon: GroupIcon }, // TODO route
       ],
     },
