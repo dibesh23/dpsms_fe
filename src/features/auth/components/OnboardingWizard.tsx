@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useOnboarding } from "../hooks/useOnboarding";
+import { useAuth } from "../hooks/useAuth";
 import type { OnboardingStepState } from "../types";
 import { LoadingSpinner } from "@/shared/components/ui/icons";
 
@@ -113,7 +114,22 @@ function StepItem({
 
 export function OnboardingWizard() {
   const router = useRouter();
+  const { refreshToken } = useAuth();
   const { status, isLoading, error, completeStep } = useOnboarding();
+
+  const goToDashboard = useCallback(async () => {
+    try {
+      await refreshToken();
+    } finally {
+      router.push("/dashboard");
+    }
+  }, [refreshToken, router]);
+
+  useEffect(() => {
+    if (status?.completedAt) {
+      void goToDashboard();
+    }
+  }, [status?.completedAt, goToDashboard]);
 
   if (isLoading) {
     return (
@@ -141,7 +157,9 @@ export function OnboardingWizard() {
 
   const handleStepComplete = async (stepKey: string) => {
     const result = await completeStep(stepKey);
-    if (!result.nextStep) router.push("/");
+    if (!result.nextStep) {
+      await goToDashboard();
+    }
   };
 
   return (

@@ -14,6 +14,8 @@ import { RowActions } from "@/shared/components/ui/row-actions";
 import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
 import { useToast } from "@/shared/components/ui/toast";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { PERMISSIONS } from "@/shared/permissions";
 import { AddParentForm, type AddParentValues } from "./AddParentForm";
 import { parentApi } from "../api/parentApi";
 import {
@@ -100,6 +102,8 @@ export function ParentsPage() {
   const [parents, setParents] = useState<Parent[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const toast = useToast();
+  const { can } = useAuth();
+  const canCreate = can(PERMISSIONS.PARENT_CREATE);
 
   const load = useCallback(async () => {
     try {
@@ -173,12 +177,14 @@ export function ParentsPage() {
         title="Parents"
         description="Guardian accounts linked to student records"
         actions={
-          <Button
-            text="Add Parent"
-            icon={<PlusIcon className="size-4" />}
-            className="w-auto"
-            onClick={() => setDialogOpen(true)}
-          />
+          canCreate ? (
+            <Button
+              text="Add Parent"
+              icon={<PlusIcon className="size-4" />}
+              className="w-auto"
+              onClick={() => setDialogOpen(true)}
+            />
+          ) : undefined
         }
       />
 
@@ -237,14 +243,16 @@ export function ParentsPage() {
         }
       />
 
-      <Dialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        title="Add Parent"
-        description="Create a guardian account linked to student records."
-      >
-        <AddParentForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
-      </Dialog>
+      {canCreate && (
+        <Dialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          title="Add Parent"
+          description="Create a guardian account linked to student records."
+        >
+          <AddParentForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+        </Dialog>
+      )}
     </div>
   );
 }

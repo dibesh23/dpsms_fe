@@ -9,7 +9,7 @@ import { Button } from "@/shared/components/ui/button";
 import { authApi } from "../api/authApi";
 
 const ForgotSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
+  email: z.string().trim().email("Enter a valid email address").toLowerCase(),
   tenantId: z.string().uuid("Invalid tenant ID"),
 });
 type ForgotFormValues = z.infer<typeof ForgotSchema>;

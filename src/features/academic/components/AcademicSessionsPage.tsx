@@ -12,6 +12,8 @@ import { RowActions } from "@/shared/components/ui/row-actions";
 import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
 import { formatDate } from "@/shared/lib/format";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { PERMISSIONS } from "@/shared/permissions";
 import { AddSessionForm, type AddSessionValues } from "./AddSessionForm";
 import { academicApi } from "../api/academicApi";
 import {
@@ -102,6 +104,8 @@ const COLUMNS: Column<AcademicSession>[] = [
 export function AcademicSessionsPage() {
   const [sessions, setSessions] = useState<AcademicSession[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { can } = useAuth();
+  const canCreate = can(PERMISSIONS.ACADEMIC_SESSION_CREATE);
 
   const load = useCallback(async () => {
     try {
@@ -168,12 +172,14 @@ export function AcademicSessionsPage() {
         title="Academic Sessions"
         description="Terms and academic years for the school calendar"
         actions={
-          <Button
-            text="New Session"
-            icon={<PlusIcon className="size-4" />}
-            className="w-auto"
-            onClick={() => setDialogOpen(true)}
-          />
+          canCreate ? (
+            <Button
+              text="New Session"
+              icon={<PlusIcon className="size-4" />}
+              className="w-auto"
+              onClick={() => setDialogOpen(true)}
+            />
+          ) : undefined
         }
       />
 
@@ -209,14 +215,16 @@ export function AcademicSessionsPage() {
         }
       />
 
-      <Dialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        title="Add Session"
-        description="Create a new academic session."
-      >
-        <AddSessionForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
-      </Dialog>
+      {canCreate && (
+        <Dialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          title="Add Session"
+          description="Create a new academic session."
+        >
+          <AddSessionForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+        </Dialog>
+      )}
     </div>
   );
 }

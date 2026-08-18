@@ -12,6 +12,8 @@ import { RowActions } from "@/shared/components/ui/row-actions";
 import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
 import { useToast } from "@/shared/components/ui/toast";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { PERMISSIONS } from "@/shared/permissions";
 import { AddSubjectForm, type AddSubjectValues } from "./AddSubjectForm";
 import { academicApi } from "../api/academicApi";
 import {
@@ -108,6 +110,8 @@ export function SubjectsPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const toast = useToast();
+  const { can } = useAuth();
+  const canCreate = can(PERMISSIONS.ACADEMIC_SUBJECT_CREATE);
 
   const load = useCallback(async () => {
     try {
@@ -178,12 +182,14 @@ export function SubjectsPage() {
         title="Subjects"
         description="Subjects offered and their assigned faculty"
         actions={
-          <Button
-            text="New Subject"
-            icon={<PlusIcon className="size-4" />}
-            className="w-auto"
-            onClick={() => setDialogOpen(true)}
-          />
+          canCreate ? (
+            <Button
+              text="New Subject"
+              icon={<PlusIcon className="size-4" />}
+              className="w-auto"
+              onClick={() => setDialogOpen(true)}
+            />
+          ) : undefined
         }
       />
 
@@ -219,14 +225,16 @@ export function SubjectsPage() {
         }
       />
 
-      <Dialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        title="Add Subject"
-        description="Create a new subject."
-      >
-        <AddSubjectForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
-      </Dialog>
+      {canCreate && (
+        <Dialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          title="Add Subject"
+          description="Create a new subject."
+        >
+          <AddSubjectForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+        </Dialog>
+      )}
     </div>
   );
 }
