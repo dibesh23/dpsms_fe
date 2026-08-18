@@ -25,7 +25,6 @@ import {
   UsersIcon,
   XIcon,
 } from "@/shared/components/ui/icons";
-import { useRouter } from "next/navigation";
 import { useToast } from "@/shared/components/ui/toast";
 
 type SettingsItem = {
@@ -81,7 +80,6 @@ function SettingsLink({
 
 export function ProfilePage() {
   const { user } = useAuth();
-  const router = useRouter();
   const toast = useToast();
   const [activeItem, setActiveItem] = useState("Profile");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -124,8 +122,6 @@ export function ProfilePage() {
   const handleNavigate = (label: string) => {
     setActiveItem(label);
     setSidebarOpen(false);
-    if (label === "Profile") return;
-    router.push("/dashboard");
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {

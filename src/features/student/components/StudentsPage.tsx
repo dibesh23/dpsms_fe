@@ -14,6 +14,8 @@ import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
 import { formatDate } from "@/shared/lib/format";
 import { useToast } from "@/shared/components/ui/toast";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { PERMISSIONS } from "@/shared/permissions";
 import { AddStudentForm, type AddStudentValues } from "./AddStudentForm";
 import { studentApi } from "../api/studentApi";
 import { MailIcon, PlusIcon, UserPlusIcon, FileTextIcon } from "@/shared/components/ui/icons";
@@ -99,6 +101,8 @@ export function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const toast = useToast();
+  const { can } = useAuth();
+  const canCreate = can(PERMISSIONS.STUDENT_CREATE);
 
   const load = useCallback(async () => {
     try {
@@ -123,7 +127,7 @@ export function StudentsPage() {
     void load();
   }, [load]);
 
-  const handleAdd = async (values: AddStudentValues): Promise<boolean> => {
+  const handleAdd = async (values: AddStudentValues): Promise<string | null> => {
     try {
       const record = await studentApi.create({
         fullName: values.fullName,
@@ -149,9 +153,15 @@ export function StudentsPage() {
       ]);
       setDialogOpen(false);
       toast.success("Student added successfully.");
-      return true;
-    } catch {
-      return false;
+      return null;
+    } catch (err) {
+      if (err instanceof Error && "response" in err) {
+        const response = (err as { response?: { data?: { error?: { message?: string } } } })
+          .response;
+        const message = response?.data?.error?.message;
+        if (message) return message;
+      }
+      return "Could not add the student. Check the details and try again.";
     }
   };
 
@@ -179,12 +189,14 @@ export function StudentsPage() {
         title="Students"
         description={`${students.length} records · Admissions for the 2082/83 academic year`}
         actions={
-          <Button
-            text="Add Student"
-            icon={<PlusIcon className="size-4" />}
-            className="w-auto"
-            onClick={() => setDialogOpen(true)}
-          />
+          canCreate ? (
+            <Button
+              text="Add Student"
+              icon={<PlusIcon className="size-4" />}
+              className="w-auto"
+              onClick={() => setDialogOpen(true)}
+            />
+          ) : undefined
         }
       />
 
@@ -220,14 +232,16 @@ export function StudentsPage() {
         }
       />
 
-      <Dialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        title="Add Student"
-        description="Enrol a new student."
-      >
-        <AddStudentForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
-      </Dialog>
+      {canCreate && (
+        <Dialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          title="Add Student"
+          description="Enrol a new student."
+        >
+          <AddStudentForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+        </Dialog>
+      )}
     </div>
   );
 }

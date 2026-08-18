@@ -15,6 +15,8 @@ import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
 import { formatDate } from "@/shared/lib/format";
 import { useToast } from "@/shared/components/ui/toast";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { PERMISSIONS } from "@/shared/permissions";
 import { AddStaffForm, type AddStaffValues } from "./AddStaffForm";
 import { staffApi } from "../api/staffApi";
 import {
@@ -111,6 +113,8 @@ export function StaffPage() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const toast = useToast();
+  const { can } = useAuth();
+  const canCreate = can(PERMISSIONS.STAFF_CREATE);
 
   const load = useCallback(async () => {
     try {
@@ -186,12 +190,14 @@ export function StaffPage() {
         title="Staff"
         description="Non-teaching staff across departments"
         actions={
-          <Button
-            text="Add Staff"
-            icon={<PlusIcon className="size-4" />}
-            className="w-auto"
-            onClick={() => setDialogOpen(true)}
-          />
+          canCreate ? (
+            <Button
+              text="Add Staff"
+              icon={<PlusIcon className="size-4" />}
+              className="w-auto"
+              onClick={() => setDialogOpen(true)}
+            />
+          ) : undefined
         }
       />
 
@@ -250,14 +256,16 @@ export function StaffPage() {
         }
       />
 
-      <Dialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        title="Add Staff"
-        description="Add a non-teaching staff member."
-      >
-        <AddStaffForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
-      </Dialog>
+      {canCreate && (
+        <Dialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          title="Add Staff"
+          description="Add a non-teaching staff member."
+        >
+          <AddStaffForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+        </Dialog>
+      )}
     </div>
   );
 }

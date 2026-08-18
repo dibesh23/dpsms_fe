@@ -22,6 +22,8 @@ import {
 } from "@/shared/components/ui/icons";
 import { cn } from "@/shared/lib/cn";
 import { useToast } from "@/shared/components/ui/toast";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { PERMISSIONS } from "@/shared/permissions";
 
 export interface Teacher {
   id: string;
@@ -57,6 +59,8 @@ export function TeachersPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const toast = useToast();
+  const { can } = useAuth();
+  const canCreate = can(PERMISSIONS.TEACHER_CREATE);
 
   const load = useCallback(async () => {
     try {
@@ -141,12 +145,14 @@ export function TeachersPage() {
         title="Teachers"
         description="Faculty accounts, subjects and weekly assignments"
         actions={
-          <Button
-            text="Invite Teacher"
-            icon={<PlusIcon className="size-4" />}
-            className="w-auto"
-            onClick={() => setDialogOpen(true)}
-          />
+          canCreate ? (
+            <Button
+              text="Invite Teacher"
+              icon={<PlusIcon className="size-4" />}
+              className="w-auto"
+              onClick={() => setDialogOpen(true)}
+            />
+          ) : undefined
         }
       />
 
@@ -245,14 +251,16 @@ export function TeachersPage() {
         </div>
       )}
 
-      <Dialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        title="Invite Teacher"
-        description="Create a faculty account for the 2082/83 academic year."
-      >
-        <AddTeacherForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
-      </Dialog>
+      {canCreate && (
+        <Dialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          title="Invite Teacher"
+          description="Create a faculty account for the 2082/83 academic year."
+        >
+          <AddTeacherForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+        </Dialog>
+      )}
     </div>
   );
 }

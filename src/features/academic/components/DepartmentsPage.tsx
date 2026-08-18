@@ -10,6 +10,8 @@ import { EmptyState } from "@/shared/components/ui/empty-state";
 import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
 import { useToast } from "@/shared/components/ui/toast";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { PERMISSIONS } from "@/shared/permissions";
 import { AddDepartmentForm, type AddDepartmentValues } from "./AddDepartmentForm";
 import { academicApi } from "../api/academicApi";
 import { BookOpenIcon, Building2Icon, PlusIcon, UsersIcon } from "@/shared/components/ui/icons";
@@ -27,6 +29,8 @@ export function DepartmentsPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const toast = useToast();
+  const { can } = useAuth();
+  const canCreate = can(PERMISSIONS.ACADEMIC_DEPARTMENT_CREATE);
 
   const load = useCallback(async () => {
     try {
@@ -94,12 +98,14 @@ export function DepartmentsPage() {
         title="Departments"
         description="Academic departments and their faculty leads"
         actions={
-          <Button
-            text="New Department"
-            icon={<PlusIcon className="size-4" />}
-            className="w-auto"
-            onClick={() => setDialogOpen(true)}
-          />
+          canCreate ? (
+            <Button
+              text="New Department"
+              icon={<PlusIcon className="size-4" />}
+              className="w-auto"
+              onClick={() => setDialogOpen(true)}
+            />
+          ) : undefined
         }
       />
 
@@ -174,14 +180,16 @@ export function DepartmentsPage() {
         </div>
       )}
 
-      <Dialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        title="Add Department"
-        description="Create a new academic department."
-      >
-        <AddDepartmentForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
-      </Dialog>
+      {canCreate && (
+        <Dialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          title="Add Department"
+          description="Create a new academic department."
+        >
+          <AddDepartmentForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+        </Dialog>
+      )}
     </div>
   );
 }
