@@ -25,7 +25,7 @@ const STATUSES = ["Active", "On Leave", "Invited"] as const;
 
 const AddTeacherSchema = z.object({
   fullName: z.string().min(1, "Full name is required").max(255),
-  email: z.string().email("Enter a valid email address"),
+  email: z.email("Enter a valid email address"),
   subject: z.string().min(1, "Select a subject"),
   department: z.string().min(1, "Select a department"),
   phone: z.string().min(7, "Enter a valid phone number"),

@@ -43,7 +43,7 @@ const RegisterSchoolSchema = z
       .trim()
       .min(1, "Admin name is required")
       .max(255, "Name too long"),
-    email: z.string().trim().email("Enter a valid email address"),
+    email: z.email("Enter a valid email address").trim(),
     password: z
       .string()
       .min(8, "At least 8 characters")

@@ -27,7 +27,7 @@ const STATUSES = ["Active", "On Leave", "Inactive"] as const;
 
 const AddStudentSchema = z.object({
   fullName: z.string().min(1, "Full name is required").max(255),
-  email: z.string().email("Enter a valid email address"),
+  email: z.email("Enter a valid email address"),
   grade: z.string().min(1, "Select a grade"),
   status: z.enum(STATUSES),
   enrolledAt: z.string().min(1, "Enrollment date is required"),
