@@ -12,6 +12,7 @@ import {
   BriefcaseIcon,
   Building2Icon,
   CalendarDaysIcon,
+  ClipboardCheckIcon,
   GraduationCapIcon,
   HeartHandshakeIcon,
   LayoutDashboardIcon,
@@ -37,6 +38,13 @@ const NAV_SECTIONS: Array<{
       { label: "Teachers", href: "/teachers", icon: GraduationCapIcon },
       { label: "Parents", href: "/parents", icon: HeartHandshakeIcon },
       { label: "Staff", href: "/staff", icon: BriefcaseIcon },
+    ],
+  },
+  {
+    label: "Attendance",
+    items: [
+      { label: "Student Attendance", href: "/attendance/students", icon: ClipboardCheckIcon },
+      { label: "Staff Attendance", href: "/attendance/staff", icon: ClipboardCheckIcon },
     ],
   },
   {
