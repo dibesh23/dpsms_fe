@@ -68,8 +68,11 @@ export const authApi = {
     return data;
   },
 
-  async forgotPassword(email: string, tenantId: string): Promise<void> {
-    await apiClient.post("/auth/forgot-password", { email, tenantId });
+  async forgotPassword(email: string, tenantId?: string): Promise<void> {
+    await apiClient.post(
+      "/auth/forgot-password",
+      tenantId ? { email, tenantId } : { email },
+    );
   },
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
