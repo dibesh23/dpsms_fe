@@ -25,7 +25,7 @@ const STATUSES = ["Active", "On Leave", "Resigned"] as const;
 
 const AddStaffSchema = z.object({
   fullName: z.string().min(1, "Full name is required").max(255),
-  email: z.string().email("Enter a valid email address"),
+  email: z.email("Enter a valid email address"),
   role: z.string().min(1, "Select a role"),
   department: z.string().min(1, "Select a department"),
   joinedAt: z.string().min(1, "Join date is required"),

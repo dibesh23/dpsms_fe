@@ -16,9 +16,9 @@ import { saveLastSchool } from "../../../shared/lib/schoolStorage";
 import type { RoleName } from "../types";
 
 const LoginSchema = z.object({
-  email: z.string().trim().email("Enter a valid email address").toLowerCase(),
+  email: z.email("Enter a valid email address").trim().toLowerCase(),
   password: z.string().min(1, "Password is required"),
-  tenantId: z.string().uuid("Invalid tenant ID").optional(),
+  tenantId: z.uuid("Invalid tenant ID").optional(),
 });
 
 type LoginFormValues = z.infer<typeof LoginSchema>;
