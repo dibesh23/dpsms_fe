@@ -29,6 +29,17 @@ export const PERMISSIONS = {
   ACADEMIC_SUBJECT_CREATE: "academic:subjects:create",
   ACADEMIC_SESSION_LIST: "academic:sessions:list",
   ACADEMIC_SESSION_CREATE: "academic:sessions:create",
+
+  TEACHER_OWN_CLASSES_VIEW: "teachers:own-classes:view",
+  ATTENDANCE_OWN_VIEW: "attendance:own:view",
+  EXAM_OWN_VIEW: "exam:own:view",
+  FEE_OWN_VIEW: "fees:own:view",
+  NOTICE_OWN_VIEW: "notices:own:view",
+  TIMETABLE_OWN_VIEW: "timetable:own:view",
+  ASSIGNMENT_OWN_VIEW: "assignments:own:view",
+  LIVE_CLASS_OWN_VIEW: "live-class:own:view",
+  ADMISSION_LETTER_VIEW: "admission-letter:own:view",
+  MESSAGING_OWN_VIEW: "messaging:own:view",
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

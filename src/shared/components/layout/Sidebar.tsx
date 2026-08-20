@@ -9,11 +9,17 @@ import { Avatar } from "../ui/avatar";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS, ROLE_LABELS } from "@/shared/permissions";
 import {
+  BellIcon,
   BookOpenIcon,
+  BookUserIcon,
   BriefcaseIcon,
   Building2Icon,
   CalendarDaysIcon,
+  CheckCircle2Icon,
+  CreditCardIcon,
+  FileTextIcon,
   GraduationCapIcon,
+  GroupIcon,
   HeartHandshakeIcon,
   LayoutDashboardIcon,
   LayoutGridIcon,
@@ -59,6 +65,44 @@ const NAV_SECTIONS: Array<{
       { label: "Departments", href: "/departments", icon: Building2Icon, permission: PERMISSIONS.ACADEMIC_DEPARTMENT_LIST },
       { label: "Subjects", href: "/subjects", icon: BookOpenIcon, permission: PERMISSIONS.ACADEMIC_SUBJECT_LIST },
       { label: "Academic Sessions", href: "/academic-sessions", icon: CalendarDaysIcon, permission: PERMISSIONS.ACADEMIC_SESSION_LIST },
+    ],
+  },
+  {
+    label: "Teaching",
+    items: [
+      { label: "My Classes", href: "/classes", icon: LayoutGridIcon, permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW },
+      { label: "My Students", href: "/students", icon: UsersIcon, permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW },
+      { label: "Subjects", href: "/subjects", icon: BookOpenIcon, permission: PERMISSIONS.ACADEMIC_SUBJECT_LIST },
+      // TODO(confirm-with-team): "Attendance" needs separate mark-vs-view keys once the real attendance module is built.
+      { label: "Attendance", href: "/attendance", icon: CheckCircle2Icon, permission: PERMISSIONS.ATTENDANCE_OWN_VIEW },
+      { label: "Class Tests", href: "/class-tests", icon: FileTextIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
+      { label: "Parents", href: "/parents", icon: HeartHandshakeIcon, permission: PERMISSIONS.PARENT_LIST },
+      { label: "Messaging", href: "/messaging", icon: BellIcon, permission: PERMISSIONS.MESSAGING_OWN_VIEW },
+    ],
+  },
+  {
+    label: "Academics",
+    items: [
+      { label: "Attendance History", href: "/attendance-history", icon: CheckCircle2Icon, permission: PERMISSIONS.ATTENDANCE_OWN_VIEW },
+      { label: "My Timetable", href: "/timetable", icon: CalendarDaysIcon, permission: PERMISSIONS.TIMETABLE_OWN_VIEW },
+      { label: "My Report Card", href: "/report-card", icon: FileTextIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
+      { label: "Test Results", href: "/test-results", icon: BookOpenIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
+      { label: "Exam Result", href: "/exam-results", icon: GraduationCapIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
+      { label: "Home Assignments", href: "/assignments", icon: BookUserIcon, permission: PERMISSIONS.ASSIGNMENT_OWN_VIEW },
+    ],
+  },
+  {
+    label: "Finance",
+    items: [
+      { label: "Fees & Payments", href: "/fees", icon: CreditCardIcon, permission: PERMISSIONS.FEE_OWN_VIEW },
+      { label: "Admission Letter", href: "/admission-letter", icon: FileTextIcon, permission: PERMISSIONS.ADMISSION_LETTER_VIEW },
+    ],
+  },
+  {
+    label: "Other",
+    items: [
+      { label: "Notices", href: "/notices", icon: BellIcon, permission: PERMISSIONS.NOTICE_OWN_VIEW },
+      { label: "Live Class", href: "/live-class", icon: GroupIcon, permission: PERMISSIONS.LIVE_CLASS_OWN_VIEW },
     ],
   },
 ];
