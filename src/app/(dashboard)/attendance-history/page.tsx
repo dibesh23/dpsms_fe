@@ -1,4 +1,4 @@
-import { StudentAttendanceHistoryPage } from "@/features/dashboard/components/StudentAttendanceHistoryPage";
+import { StudentAttendanceHistoryPage } from "@/features/attendance/components/StudentAttendanceHistoryPage";
 
 export default function AttendanceHistoryRoute() {
   return <StudentAttendanceHistoryPage />;

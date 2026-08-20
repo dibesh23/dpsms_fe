@@ -11,8 +11,8 @@ export default function DashboardRoute() {
   if (isLoading) {
     return <LoadingState label="Loading your dashboard…" />;
   }
+   {console.log(user)}
 
-  
     return <StudentDashboardPage />;
   
 

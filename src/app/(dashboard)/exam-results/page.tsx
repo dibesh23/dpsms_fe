@@ -1,4 +1,4 @@
-import { StudentExamResultPage } from "@/features/dashboard/components/StudentExamResultPage";
+import { StudentExamResultPage } from "@/features/exam/components/StudentExamResultPage";
 
 export default function ExamResultsRoute() {
   return <StudentExamResultPage />;

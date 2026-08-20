@@ -1,4 +1,4 @@
-import { StudentFeePage } from "@/features/dashboard/components/StudentFeePage";
+import { StudentFeePage } from "@/features/fee/components/StudentFeePage";
 
 export default function FeesRoute() {
   return <StudentFeePage />;
