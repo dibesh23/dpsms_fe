@@ -15,7 +15,8 @@ import { setAccessTokenRef, setRefreshTokenRef } from "../lib/apiClient";
 import type {
   AuthUser,
   LoginPayload,
-  RegisterPayload,
+  RegisterSchoolPayload,
+  RegisterSchoolResponse,
 } from "../../features/auth/types";
 
 export interface AuthContextValue {
@@ -23,9 +24,11 @@ export interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   login(payload: LoginPayload): Promise<void>;
-  register(payload: RegisterPayload): Promise<void>;
+  registerSchool(payload: RegisterSchoolPayload): Promise<RegisterSchoolResponse>;
   logout(): Promise<void>;
   refreshToken(): Promise<boolean>;
+  can(permission: string): boolean;
+  hasRole(role: AuthUser["role"]): boolean;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
@@ -114,16 +117,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
 
-  const register = useCallback(
-    async (payload: RegisterPayload): Promise<void> => {
-      const result = await authApi.register(payload);
+  const registerSchool = useCallback(
+    async (
+      payload: RegisterSchoolPayload,
+    ): Promise<RegisterSchoolResponse> => {
+      const result = await authApi.registerSchool(payload);
       accessTokenRef.current = result.accessToken;
       setUser(result.user);
-      router.push("/onboarding");
+      if (result.onboardingRequired) {
+        router.push("/onboarding");
+      } else {
+        router.push("/dashboard");
+      }
+      return result;
     },
     [router],
   );
-
 
   const logout = useCallback(async (): Promise<void> => {
     try {
@@ -135,17 +144,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [router]);
 
+  const can = useCallback(
+    (permission: string): boolean => {
+      return user?.permissions?.includes(permission) ?? false;
+    },
+    [user?.permissions],
+  );
+
+  const hasRole = useCallback(
+    (role: AuthUser["role"]): boolean => user?.role === role,
+    [user?.role],
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       isAuthenticated: user !== null,
       isLoading,
       login,
-      register,
+      registerSchool,
       logout,
       refreshToken,
+      can,
+      hasRole,
     }),
-    [user, isLoading, login, register, logout, refreshToken],
+    [user, isLoading, login, registerSchool, logout, refreshToken, can, hasRole],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

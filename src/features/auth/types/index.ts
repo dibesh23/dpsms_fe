@@ -10,19 +10,22 @@ export interface AuthUser {
   tenantId: string;
   status: UserStatus;
   onboardingRequired: boolean;
+  permissions: string[];
 }
 
 export interface LoginPayload {
   email: string;
   password: string;
-  tenantId: string;
+  tenantId?: string;
+  role?: RoleName;
 }
 
-export interface RegisterPayload {
+export interface RegisterSchoolPayload {
+  schoolName: string;
+  subdomain: string;
+  fullName: string;
   email: string;
   password: string;
-  fullName: string;
-  tenantId: string;
 }
 
 export interface LoginResponse {
@@ -31,10 +34,14 @@ export interface LoginResponse {
   onboardingRequired: boolean;
 }
 
-export interface RegisterResponse {
+export interface RegisterSchoolResponse {
   accessToken: string;
   user: AuthUser;
   onboardingRequired: boolean;
+  tenantId: string;
+  schoolName: string;
+  subdomain: string;
+  message: string;
 }
 
 export interface OnboardingStepState {

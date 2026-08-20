@@ -2,20 +2,46 @@ import { apiClient } from "../../../shared/lib/apiClient";
 import type {
   LoginPayload,
   LoginResponse,
-  RegisterPayload,
-  RegisterResponse,
+  RegisterSchoolPayload,
+  RegisterSchoolResponse,
   AuthUser,
   OnboardingStatusResult,
   SessionInfo,
 } from "../types";
 
 export const authApi = {
-  async register(payload: RegisterPayload): Promise<RegisterResponse> {
-    const { data } = await apiClient.post<RegisterResponse>(
+  async registerSchool(
+    payload: RegisterSchoolPayload,
+  ): Promise<RegisterSchoolResponse> {
+    const { data } = await apiClient.post<RegisterSchoolResponse>(
       "/auth/register",
       payload,
     );
     return data;
+  },
+
+  async checkSubdomain(subdomain: string): Promise<boolean> {
+    try {
+      await apiClient.get(`/tenant/${encodeURIComponent(subdomain)}`);
+      return false;
+    } catch {
+      return true;
+    }
+  },
+
+  async resolveTenant(
+    subdomain: string,
+  ): Promise<{ tenantId: string; name: string } | null> {
+    try {
+      const { data } = await apiClient.get<{
+        tenantId: string;
+        name: string;
+        subdomain: string;
+      }>(`/tenant/${encodeURIComponent(subdomain)}`);
+      return { tenantId: data.tenantId, name: data.name };
+    } catch {
+      return null;
+    }
   },
 
   async login(payload: LoginPayload): Promise<LoginResponse> {
@@ -42,8 +68,11 @@ export const authApi = {
     return data;
   },
 
-  async forgotPassword(email: string, tenantId: string): Promise<void> {
-    await apiClient.post("/auth/forgot-password", { email, tenantId });
+  async forgotPassword(email: string, tenantId?: string): Promise<void> {
+    await apiClient.post(
+      "/auth/forgot-password",
+      tenantId ? { email, tenantId } : { email },
+    );
   },
 
   async resetPassword(token: string, newPassword: string): Promise<void> {

@@ -12,7 +12,7 @@ const STATUSES = ["Verified", "Pending"] as const;
 
 const AddParentSchema = z.object({
   fullName: z.string().min(1, "Full name is required").max(255),
-  email: z.string().email("Enter a valid email address"),
+  email: z.email("Enter a valid email address"),
   phone: z.string().min(7, "Enter a valid phone number"),
   students: z.string().min(1, "Link at least one student"),
   status: z.enum(STATUSES),

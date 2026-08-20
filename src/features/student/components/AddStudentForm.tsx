@@ -27,7 +27,7 @@ const STATUSES = ["Active", "On Leave", "Inactive"] as const;
 
 const AddStudentSchema = z.object({
   fullName: z.string().min(1, "Full name is required").max(255),
-  email: z.string().email("Enter a valid email address"),
+  email: z.email("Enter a valid email address"),
   grade: z.string().min(1, "Select a grade"),
   status: z.enum(STATUSES),
   enrolledAt: z.string().min(1, "Enrollment date is required"),
@@ -39,7 +39,7 @@ export function AddStudentForm({
   onAdd,
   onClose,
 }: {
-  onAdd: (values: AddStudentValues) => Promise<boolean>;
+  onAdd: (values: AddStudentValues) => Promise<string | null>;
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
@@ -58,8 +58,8 @@ export function AddStudentForm({
 
   const onSubmit = async (values: AddStudentValues) => {
     setApiError(null);
-    const ok = await onAdd(values);
-    if (!ok) setApiError("Could not add the student. Check the details and try again.");
+    const error = await onAdd(values);
+    if (error) setApiError(error);
   };
 
   return (

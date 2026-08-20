@@ -29,14 +29,21 @@ export interface TeacherCreatePayload {
   status?: "ACTIVE" | "ON_LEAVE" | "INVITED" | "INACTIVE";
 }
 
+export interface TeacherCreateResult extends TeacherRecord {
+  credentials?: {
+    email: string;
+    password: string;
+  };
+}
+
 export const teacherApi = {
   async list(): Promise<TeacherRecord[]> {
     const { data } = await apiClient.get<{ data: TeacherListResult }>("/teachers");
     return data.data.items;
   },
 
-  async create(payload: TeacherCreatePayload): Promise<TeacherRecord> {
-    const { data } = await apiClient.post<{ data: TeacherRecord }>("/teachers", payload);
+  async create(payload: TeacherCreatePayload): Promise<TeacherCreateResult> {
+    const { data } = await apiClient.post<{ data: TeacherCreateResult }>("/teachers", payload);
     return data.data;
   },
 };
