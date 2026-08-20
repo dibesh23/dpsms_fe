@@ -31,6 +31,7 @@ import {
 
 const NAV_SECTIONS: Array<{
   label: string;
+  roles?: readonly string[];
   items: Array<{
     label: string;
     href: string;
@@ -51,6 +52,7 @@ const NAV_SECTIONS: Array<{
   },
   {
     label: "People",
+    roles: ["SUPER_ADMIN", "PRINCIPAL"],
     items: [
       { label: "Students", href: "/students", icon: UsersIcon, permission: PERMISSIONS.STUDENT_LIST },
       { label: "Teachers", href: "/teachers", icon: GraduationCapIcon, permission: PERMISSIONS.TEACHER_LIST },
@@ -60,6 +62,7 @@ const NAV_SECTIONS: Array<{
   },
   {
     label: "Academic",
+    roles: ["SUPER_ADMIN", "PRINCIPAL"],
     items: [
       { label: "Classes", href: "/classes", icon: LayoutGridIcon, permission: PERMISSIONS.ACADEMIC_CLASS_LIST },
       { label: "Departments", href: "/departments", icon: Building2Icon, permission: PERMISSIONS.ACADEMIC_DEPARTMENT_LIST },
@@ -69,11 +72,11 @@ const NAV_SECTIONS: Array<{
   },
   {
     label: "Teaching",
+    roles: ["TEACHER"],
     items: [
       { label: "My Classes", href: "/classes", icon: LayoutGridIcon, permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW },
       { label: "My Students", href: "/students", icon: UsersIcon, permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW },
       { label: "Subjects", href: "/subjects", icon: BookOpenIcon, permission: PERMISSIONS.ACADEMIC_SUBJECT_LIST },
-      // TODO(confirm-with-team): "Attendance" needs separate mark-vs-view keys once the real attendance module is built.
       { label: "Attendance", href: "/attendance", icon: CheckCircle2Icon, permission: PERMISSIONS.ATTENDANCE_OWN_VIEW },
       { label: "Class Tests", href: "/class-tests", icon: FileTextIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
       { label: "Parents", href: "/parents", icon: HeartHandshakeIcon, permission: PERMISSIONS.PARENT_LIST },
@@ -82,6 +85,7 @@ const NAV_SECTIONS: Array<{
   },
   {
     label: "Academics",
+    roles: ["STUDENT"],
     items: [
       { label: "Attendance History", href: "/attendance-history", icon: CheckCircle2Icon, permission: PERMISSIONS.ATTENDANCE_OWN_VIEW },
       { label: "My Timetable", href: "/timetable", icon: CalendarDaysIcon, permission: PERMISSIONS.TIMETABLE_OWN_VIEW },
@@ -93,6 +97,7 @@ const NAV_SECTIONS: Array<{
   },
   {
     label: "Finance",
+    roles: ["STUDENT"],
     items: [
       { label: "Fees & Payments", href: "/fees", icon: CreditCardIcon, permission: PERMISSIONS.FEE_OWN_VIEW },
       { label: "Admission Letter", href: "/admission-letter", icon: FileTextIcon, permission: PERMISSIONS.ADMISSION_LETTER_VIEW },
@@ -100,6 +105,7 @@ const NAV_SECTIONS: Array<{
   },
   {
     label: "Other",
+    roles: ["STUDENT"],
     items: [
       { label: "Notices", href: "/notices", icon: BellIcon, permission: PERMISSIONS.NOTICE_OWN_VIEW },
       { label: "Live Class", href: "/live-class", icon: GroupIcon, permission: PERMISSIONS.LIVE_CLASS_OWN_VIEW },
@@ -113,10 +119,12 @@ function roleLabel(role?: string): string {
 
 function NavList({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const { can } = useAuth();
+  const { user, can } = useAuth();
   return (
     <nav className="flex-1 overflow-y-auto px-3 pb-4">
       {NAV_SECTIONS.map((section) => {
+        const roleMatch = !section.roles || (user?.role && section.roles.includes(user.role));
+        if (!roleMatch) return null;
         const visibleItems = section.items.filter((item) => can(item.permission));
         if (visibleItems.length === 0) return null;
         return (

@@ -11,10 +11,10 @@ export default function DashboardRoute() {
   if (isLoading) {
     return <LoadingState label="Loading your dashboard…" />;
   }
-   {console.log(user)}
 
+  if (user?.role === "STUDENT") {
     return <StudentDashboardPage />;
-  
+  }
 
-
+  return <DashboardPage />;
 }

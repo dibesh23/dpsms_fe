@@ -18,6 +18,10 @@ import type {
   RegisterSchoolPayload,
   RegisterSchoolResponse,
 } from "../../features/auth/types";
+import {
+  PERMISSIONS as P,
+  type PermissionKey,
+} from "../permissions";
 
 export interface AuthContextValue {
   user: AuthUser | null;
@@ -30,6 +34,36 @@ export interface AuthContextValue {
   can(permission: string): boolean;
   hasRole(role: AuthUser["role"]): boolean;
 }
+
+const ROLE_FALLBACK_PERMISSIONS: Record<string, readonly PermissionKey[]> = {
+  SUPER_ADMIN: Object.values(P) as readonly PermissionKey[],
+  PRINCIPAL: Object.values(P) as readonly PermissionKey[],
+  TEACHER: [
+    P.DASHBOARD_VIEW,
+    P.TEACHER_OWN_CLASSES_VIEW,
+    P.STUDENT_LIST,
+    P.PARENT_LIST,
+    P.ACADEMIC_CLASS_LIST,
+    P.ACADEMIC_SUBJECT_LIST,
+    P.ACADEMIC_DEPARTMENT_LIST,
+    P.ACADEMIC_SESSION_LIST,
+    P.EXAM_OWN_VIEW,
+    P.ATTENDANCE_OWN_VIEW,
+    P.NOTICE_OWN_VIEW,
+    P.MESSAGING_OWN_VIEW,
+  ],
+  STUDENT: [
+    P.DASHBOARD_VIEW,
+    P.ATTENDANCE_OWN_VIEW,
+    P.EXAM_OWN_VIEW,
+    P.FEE_OWN_VIEW,
+    P.NOTICE_OWN_VIEW,
+    P.TIMETABLE_OWN_VIEW,
+    P.ASSIGNMENT_OWN_VIEW,
+    P.LIVE_CLASS_OWN_VIEW,
+    P.ADMISSION_LETTER_VIEW,
+  ],
+} as const;
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -146,9 +180,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const can = useCallback(
     (permission: string): boolean => {
-      return user?.permissions?.includes(permission) ?? false;
+      if (user?.permissions?.includes(permission)) return true;
+      const fallbacks = user?.role
+        ? ROLE_FALLBACK_PERMISSIONS[user.role]
+        : undefined;
+      return fallbacks?.includes(permission as PermissionKey) ?? false;
     },
-    [user?.permissions],
+    [user?.permissions, user?.role],
   );
 
   const hasRole = useCallback(
