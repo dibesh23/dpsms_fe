@@ -6,6 +6,13 @@ import { LoadingSpinner } from "@/shared/components/ui/icons";
 import { authApi } from "../api/authApi";
 import { LoginForm } from "./LoginForm";
 import { getLastSchool, saveLastSchool } from "../../../shared/lib/schoolStorage";
+import type { RoleName } from "../types";
+
+const ROLE_FROM_PARAM: Record<string, RoleName | undefined> = {
+  admin: "PRINCIPAL",
+  employee: "TEACHER",
+  student: "STUDENT",
+};
 
 export function LoginWithSchoolContext({
   defaultTenantId,
@@ -18,6 +25,7 @@ export function LoginWithSchoolContext({
   const registered = searchParams.get("registered");
   const subdomain = searchParams.get("subdomain");
   const tenantIdParam = searchParams.get("tenantId");
+  const roleParam = searchParams.get("role");
   const oauthError = searchParams.get("oauth_error");
 
   const [resolvedTenantId, setResolvedTenantId] = useState<string | null>(() =>
@@ -121,6 +129,7 @@ export function LoginWithSchoolContext({
         <LoginForm
           defaultTenantId={resolvedTenantId ?? defaultTenantId}
           schoolName={schoolName}
+          defaultRole={roleParam ? ROLE_FROM_PARAM[roleParam] : undefined}
           oauthEnabled={oauthEnabled}
         />
       )}
