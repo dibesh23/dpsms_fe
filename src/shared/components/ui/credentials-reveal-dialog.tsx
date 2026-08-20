@@ -5,12 +5,15 @@ import { createPortal } from "react-dom";
 import { Button } from "@/shared/components/ui/button";
 import { AlertTriangleIcon, CheckIcon, CopyIcon } from "@/shared/components/ui/icons";
 
-interface StudentCredentialsDialogProps {
+interface CredentialsRevealDialogProps {
   open: boolean;
-  name: string;
-  admissionNumber: string;
-  email: string;
-  password: string;
+  personName: string;
+  identifierLabel?: string;
+  identifierValue?: string;
+  credentials: { email: string; password: string };
+  personType?: string;
+  slipTitle?: string;
+  slipFooter?: string;
   onAcknowledged: () => void;
 }
 
@@ -39,14 +42,17 @@ function CopyButton({ value, label }: { value: string; label: string }) {
   );
 }
 
-export function StudentCredentialsDialog({
+export function CredentialsRevealDialog({
   open,
-  name,
-  admissionNumber,
-  email,
-  password,
+  personName,
+  identifierLabel,
+  identifierValue,
+  credentials,
+  personType = "Student",
+  slipTitle,
+  slipFooter,
   onAcknowledged,
-}: StudentCredentialsDialogProps) {
+}: CredentialsRevealDialogProps) {
   useEffect(() => {
     if (!open) return;
     function handleBeforeUnload(e: BeforeUnloadEvent) {
@@ -78,30 +84,34 @@ export function StudentCredentialsDialog({
   const slip = (
     <div className="print-credential-slip hidden">
       <div className="print-credential-slip__card">
-        <h2 className="print-credential-slip__title">Student Login Credentials</h2>
+        <h2 className="print-credential-slip__title">
+          {slipTitle ?? `${personType} Login Credentials`}
+        </h2>
         <div className="print-credential-slip__body">
           <div className="print-credential-slip__row">
-            <span className="print-credential-slip__label">Student Name</span>
-            <span className="print-credential-slip__value">{name}</span>
+            <span className="print-credential-slip__label">Name</span>
+            <span className="print-credential-slip__value">{personName}</span>
           </div>
-          <div className="print-credential-slip__row">
-            <span className="print-credential-slip__label">Admission No.</span>
-            <span className="print-credential-slip__value">{admissionNumber}</span>
-          </div>
+          {identifierLabel && identifierValue && (
+            <div className="print-credential-slip__row">
+              <span className="print-credential-slip__label">{identifierLabel}</span>
+              <span className="print-credential-slip__value">{identifierValue}</span>
+            </div>
+          )}
           <div className="print-credential-slip__row">
             <span className="print-credential-slip__label">Email</span>
-            <span className="print-credential-slip__value">{email}</span>
+            <span className="print-credential-slip__value">{credentials.email}</span>
           </div>
           <div className="print-credential-slip__row">
             <span className="print-credential-slip__label">Password</span>
             <span className="print-credential-slip__value print-credential-slip__value--password">
-              {password}
+              {credentials.password}
             </span>
           </div>
         </div>
         <p className="print-credential-slip__footer">
-          Please keep this credential safe. Do not share it with anyone other than the
-          student/guardian.
+          {slipFooter ??
+            "Please keep this credential safe. Do not share it with anyone other than the recipient."}
         </p>
       </div>
     </div>
@@ -117,7 +127,7 @@ export function StudentCredentialsDialog({
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Student credentials"
+          aria-label={`${personType} credentials`}
           className="relative my-8 w-full max-w-lg rounded-lg border border-neutral-200 bg-bg-default shadow-xl animate-scale-in"
         >
           <div className="flex items-start gap-4 border-b border-neutral-100 px-5 py-4">
@@ -126,7 +136,7 @@ export function StudentCredentialsDialog({
             </div>
             <div className="min-w-0">
               <h2 className="text-base font-semibold tracking-tight text-neutral-900">
-                Student credentials created
+                {personType} credentials created
               </h2>
               <p className="mt-0.5 text-sm text-neutral-500">
                 Copy these now — the password won&apos;t be shown again.
@@ -140,30 +150,38 @@ export function StudentCredentialsDialog({
             </div>
 
             <div className="space-y-1.5">
-              <p className="text-xs font-medium text-neutral-500">Student</p>
+              <p className="text-xs font-medium text-neutral-500">{personType}</p>
               <p className="text-sm text-neutral-900">
-                {name} <span className="text-neutral-400">·</span>{" "}
-                <span className="text-neutral-500">Adm. {admissionNumber}</span>
+                {personName}
+                {identifierLabel && identifierValue && (
+                  <>
+                    {" "}
+                    <span className="text-neutral-400">·</span>{" "}
+                    <span className="text-neutral-500">
+                      {identifierLabel}: {identifierValue}
+                    </span>
+                  </>
+                )}
               </p>
             </div>
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium text-neutral-500">Email</p>
-                <CopyButton value={email} label="email" />
+                <CopyButton value={credentials.email} label="email" />
               </div>
               <div className="select-all rounded-md border border-neutral-200 bg-bg-subtle px-3 py-2 font-mono text-sm text-neutral-900">
-                {email}
+                {credentials.email}
               </div>
             </div>
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium text-neutral-500">Password</p>
-                <CopyButton value={password} label="password" />
+                <CopyButton value={credentials.password} label="password" />
               </div>
               <div className="select-all rounded-md border border-neutral-200 bg-bg-subtle px-3 py-2 font-mono text-sm text-neutral-900">
-                {password}
+                {credentials.password}
               </div>
             </div>
 

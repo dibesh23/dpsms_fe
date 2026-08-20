@@ -17,7 +17,7 @@ import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { AddStudentForm, type AddStudentValues } from "./AddStudentForm";
-import { StudentCredentialsDialog } from "./StudentCredentialsDialog";
+import { CredentialsRevealDialog } from "@/shared/components/ui/credentials-reveal-dialog";
 import { studentApi } from "../api/studentApi";
 import { MailIcon, PlusIcon, UserPlusIcon, FileTextIcon } from "@/shared/components/ui/icons";
 
@@ -264,12 +264,17 @@ export function StudentsPage() {
         </Dialog>
       )}
 
-      <StudentCredentialsDialog
+      <CredentialsRevealDialog
         open={credentials !== null}
-        name={credentials?.name ?? ""}
-        admissionNumber={credentials?.admissionNumber ?? ""}
-        email={credentials?.email ?? ""}
-        password={credentials?.password ?? ""}
+        personName={credentials?.name ?? ""}
+        identifierLabel="Admission No."
+        identifierValue={credentials?.admissionNumber}
+        credentials={{
+          email: credentials?.email ?? "",
+          password: credentials?.password ?? "",
+        }}
+        personType="Student"
+        slipFooter="Please keep this credential safe. Do not share it with anyone other than the student/guardian."
         onAcknowledged={handleCredentialsAcknowledged}
       />
     </div>

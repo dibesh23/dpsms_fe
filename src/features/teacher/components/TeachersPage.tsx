@@ -12,6 +12,7 @@ import { EmptyState } from "@/shared/components/ui/empty-state";
 import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
 import { AddTeacherForm, type AddTeacherValues } from "./AddTeacherForm";
+import { CredentialsRevealDialog } from "@/shared/components/ui/credentials-reveal-dialog";
 import { teacherApi } from "../api/teacherApi";
 import {
   GraduationCapIcon,
@@ -58,6 +59,11 @@ const toApiStatus = (
 export function TeachersPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [credentials, setCredentials] = useState<{
+    name: string;
+    email: string;
+    password: string;
+  } | null>(null);
   const toast = useToast();
   const { can } = useAuth();
   const canCreate = can(PERMISSIONS.TEACHER_CREATE);
@@ -111,12 +117,25 @@ export function TeachersPage() {
         ...current,
       ]);
       setDialogOpen(false);
-      toast.success("Teacher invited successfully.");
+      if (record.credentials) {
+        setCredentials({
+          name: record.name,
+          email: record.credentials.email,
+          password: record.credentials.password,
+        });
+      } else {
+        toast.success("Teacher invited successfully.");
+      }
       return true;
     } catch {
       return false;
     }
   };
+
+  const handleCredentialsAcknowledged = useCallback(() => {
+    setCredentials(null);
+    toast.success("Teacher invited successfully.");
+  }, [toast]);
 
   const table = useTable<Teacher>({
     data: teachers,
@@ -261,6 +280,18 @@ export function TeachersPage() {
           <AddTeacherForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
         </Dialog>
       )}
+
+      <CredentialsRevealDialog
+        open={credentials !== null}
+        personName={credentials?.name ?? ""}
+        credentials={{
+          email: credentials?.email ?? "",
+          password: credentials?.password ?? "",
+        }}
+        personType="Teacher"
+        slipFooter="Please keep this credential safe. Do not share it with anyone other than the teacher."
+        onAcknowledged={handleCredentialsAcknowledged}
+      />
     </div>
   );
 }
