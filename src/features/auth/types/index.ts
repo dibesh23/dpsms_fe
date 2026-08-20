@@ -17,7 +17,6 @@ export interface LoginPayload {
   email: string;
   password: string;
   tenantId?: string;
-  role?: RoleName;
 }
 
 export interface RegisterSchoolPayload {
