@@ -17,6 +17,7 @@ import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { AddStudentForm, type AddStudentValues } from "./AddStudentForm";
+import { CredentialsRevealDialog } from "@/shared/components/ui/credentials-reveal-dialog";
 import { studentApi } from "../api/studentApi";
 import { MailIcon, PlusIcon, UserPlusIcon, FileTextIcon } from "@/shared/components/ui/icons";
 
@@ -100,6 +101,12 @@ const COLUMNS: Column<Student>[] = [
 export function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [credentials, setCredentials] = useState<{
+    name: string;
+    admissionNumber: string;
+    email: string;
+    password: string;
+  } | null>(null);
   const toast = useToast();
   const { can } = useAuth();
   const canCreate = can(PERMISSIONS.STUDENT_CREATE);
@@ -152,7 +159,16 @@ export function StudentsPage() {
         ...current,
       ]);
       setDialogOpen(false);
-      toast.success("Student added successfully.");
+      if (record.credentials) {
+        setCredentials({
+          name: record.name,
+          admissionNumber: record.admissionNumber,
+          email: record.credentials.email,
+          password: record.credentials.password,
+        });
+      } else {
+        toast.success("Student added successfully.");
+      }
       return null;
     } catch (err) {
       if (err instanceof Error && "response" in err) {
@@ -164,6 +180,11 @@ export function StudentsPage() {
       return "Could not add the student. Check the details and try again.";
     }
   };
+
+  const handleCredentialsAcknowledged = useCallback(() => {
+    setCredentials(null);
+    toast.success("Student added successfully.");
+  }, [toast]);
 
   const table = useTable<Student>({
     data: students,
@@ -242,6 +263,20 @@ export function StudentsPage() {
           <AddStudentForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
         </Dialog>
       )}
+
+      <CredentialsRevealDialog
+        open={credentials !== null}
+        personName={credentials?.name ?? ""}
+        identifierLabel="Admission No."
+        identifierValue={credentials?.admissionNumber}
+        credentials={{
+          email: credentials?.email ?? "",
+          password: credentials?.password ?? "",
+        }}
+        personType="Student"
+        slipFooter="Please keep this credential safe. Do not share it with anyone other than the student/guardian."
+        onAcknowledged={handleCredentialsAcknowledged}
+      />
     </div>
   );
 }

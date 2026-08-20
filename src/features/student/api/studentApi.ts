@@ -31,14 +31,21 @@ export interface StudentCreatePayload {
   status?: "ACTIVE" | "INACTIVE" | "ON_LEAVE";
 }
 
+export interface StudentCreateResult extends StudentRecord {
+  credentials?: {
+    email: string;
+    password: string;
+  };
+}
+
 export const studentApi = {
   async list(): Promise<StudentRecord[]> {
     const { data } = await apiClient.get<{ data: StudentListResult }>("/students");
     return data.data.items;
   },
 
-  async create(payload: StudentCreatePayload): Promise<StudentRecord> {
-    const { data } = await apiClient.post<{ data: StudentRecord }>("/students", payload);
+  async create(payload: StudentCreatePayload): Promise<StudentCreateResult> {
+    const { data } = await apiClient.post<{ data: StudentCreateResult }>("/students", payload);
     return data.data;
   },
 };
