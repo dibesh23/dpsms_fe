@@ -33,6 +33,17 @@ export interface SessionRecord {
   isActive: boolean;
 }
 
+export interface SectionRecord {
+  id: string;
+  name: string;
+  classId: string;
+  className: string;
+  capacity: number | null;
+  shiftId: string | null;
+  houseId: string | null;
+  classTeacherId: string | null;
+}
+
 interface ListResult<T> {
   items: T[];
   total: number;
@@ -103,6 +114,23 @@ export const academicApi = {
   ): Promise<SessionRecord> {
     const { data } = await apiClient.patch<{ data: SessionRecord }>(
       `/academic-sessions/${id}`,
+      payload,
+    );
+    return data.data;
+  },
+
+  async listSections(classId: string): Promise<SectionRecord[]> {
+    const { data } = await apiClient.get<{ data: SectionRecord[] }>(
+      `/classes/${classId}/sections`,
+    );
+    return data.data;
+  },
+  async updateSection(
+    id: string,
+    payload: { classTeacherId?: string },
+  ): Promise<SectionRecord> {
+    const { data } = await apiClient.patch<{ data: SectionRecord }>(
+      `/sections/${id}`,
       payload,
     );
     return data.data;

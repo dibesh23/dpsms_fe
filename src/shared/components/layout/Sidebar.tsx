@@ -65,6 +65,7 @@ const NAV_SECTIONS: Array<{
     roles: ["SUPER_ADMIN", "PRINCIPAL"],
     items: [
       { label: "Classes", href: "/classes", icon: LayoutGridIcon, permission: PERMISSIONS.ACADEMIC_CLASS_LIST },
+      { label: "Teacher Assignments", href: "/teacher-assignments", icon: BookUserIcon, permission: PERMISSIONS.TEACHER_ASSIGNMENT_MANAGE },
       { label: "Departments", href: "/departments", icon: Building2Icon, permission: PERMISSIONS.ACADEMIC_DEPARTMENT_LIST },
       { label: "Subjects", href: "/subjects", icon: BookOpenIcon, permission: PERMISSIONS.ACADEMIC_SUBJECT_LIST },
       { label: "Academic Sessions", href: "/academic-sessions", icon: CalendarDaysIcon, permission: PERMISSIONS.ACADEMIC_SESSION_LIST },

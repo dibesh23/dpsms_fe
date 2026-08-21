@@ -10,6 +10,7 @@ export const PERMISSIONS = {
   TEACHER_CREATE: "teachers:create",
   TEACHER_UPDATE: "teachers:update",
   TEACHER_DELETE: "teachers:delete",
+  TEACHER_ASSIGNMENT_MANAGE: "teachers:assignments:manage",
 
   PARENT_LIST: "parents:list",
   PARENT_CREATE: "parents:create",
@@ -30,6 +31,7 @@ export const PERMISSIONS = {
   ACADEMIC_SESSION_LIST: "academic:sessions:list",
   ACADEMIC_SESSION_CREATE: "academic:sessions:create",
   ACADEMIC_SESSION_UPDATE: "academic:sessions:update",
+  ACADEMIC_SECTION_UPDATE: "academic:sections:update",
 
   TEACHER_OWN_CLASSES_VIEW: "teachers:own-classes:view",
   ATTENDANCE_OWN_VIEW: "attendance:own:view",
