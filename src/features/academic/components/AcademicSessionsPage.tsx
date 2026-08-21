@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
@@ -12,13 +13,15 @@ import { RowActions } from "@/shared/components/ui/row-actions";
 import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
 import { formatDate } from "@/shared/lib/format";
+import { cn } from "@/shared/lib/cn";
+import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { AddSessionForm, type AddSessionValues } from "./AddSessionForm";
 import { academicApi } from "../api/academicApi";
 import {
   CalendarDaysIcon,
-  FileTextIcon,
+  CheckCircle2Icon,
   PlusIcon,
   UserPlusIcon,
 } from "@/shared/components/ui/icons";
@@ -30,6 +33,7 @@ export interface AcademicSession {
   start: string;
   end: string;
   students: number;
+  isActive: boolean;
   status: "Active" | "Upcoming" | "Completed";
 }
 
@@ -42,7 +46,17 @@ const STATUS_FILTERS = [
 const toStatus = (isActive: boolean): AcademicSession["status"] =>
   isActive ? "Active" : "Upcoming";
 
-const COLUMNS: Column<AcademicSession>[] = [
+const COLUMNS = ({
+  canUpdate,
+  activatingId,
+  onSetActive,
+  onPromoteStudents,
+}: {
+  canUpdate: boolean;
+  activatingId: string | null;
+  onSetActive: (session: AcademicSession) => void;
+  onPromoteStudents: (session: AcademicSession) => void;
+}): Column<AcademicSession>[] => [
   {
     key: "name",
     header: "Session",
@@ -81,6 +95,41 @@ const COLUMNS: Column<AcademicSession>[] = [
     ),
   },
   {
+    key: "isActive",
+    header: "Active",
+    render: (session) => (
+      <button
+        type="button"
+        role="switch"
+        aria-checked={session.isActive}
+        aria-label={`Set ${session.name} as active academic year`}
+        disabled={!canUpdate || session.isActive || activatingId === session.id}
+        onClick={() => onSetActive(session)}
+        title={
+          session.isActive
+            ? "Currently active academic year"
+            : canUpdate
+              ? "Set as active"
+              : "You do not have permission to change this"
+        }
+        className={cn(
+          "relative inline-flex h-5 w-9 flex-none items-center rounded-full transition-colors",
+          session.isActive ? "bg-emerald-500" : "bg-neutral-300 hover:bg-neutral-400",
+          (!canUpdate || session.isActive) && "cursor-default",
+          !canUpdate && "opacity-50",
+          activatingId === session.id && "cursor-wait opacity-60",
+        )}
+      >
+        <span
+          className={cn(
+            "inline-block size-4 rounded-full bg-white shadow transition-transform",
+            session.isActive ? "translate-x-[18px]" : "translate-x-0.5",
+          )}
+        />
+      </button>
+    ),
+  },
+  {
     key: "status",
     header: "Status",
     sortValue: (session) => session.status,
@@ -90,11 +139,24 @@ const COLUMNS: Column<AcademicSession>[] = [
     key: "actions",
     header: "",
     align: "right",
-    render: () => (
+    render: (session) => (
       <RowActions
         actions={[
-          { label: "Open session", icon: <FileTextIcon className="size-3.5" /> },
-          { label: "Promote students", icon: <UserPlusIcon className="size-3.5" /> },
+          {
+            label: "Promote students",
+            icon: <UserPlusIcon className="size-3.5" />,
+            onClick: () => onPromoteStudents(session),
+          },
+          ...(canUpdate && !session.isActive
+            ? [
+                {
+                  label:
+                    activatingId === session.id ? "Setting active…" : "Set active",
+                  icon: <CheckCircle2Icon className="size-3.5" />,
+                  onClick: () => onSetActive(session),
+                },
+              ]
+            : []),
         ]}
       />
     ),
@@ -104,8 +166,12 @@ const COLUMNS: Column<AcademicSession>[] = [
 export function AcademicSessionsPage() {
   const [sessions, setSessions] = useState<AcademicSession[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [activatingId, setActivatingId] = useState<string | null>(null);
+  const toast = useToast();
+  const router = useRouter();
   const { can } = useAuth();
   const canCreate = can(PERMISSIONS.ACADEMIC_SESSION_CREATE);
+  const canUpdate = can(PERMISSIONS.ACADEMIC_SESSION_UPDATE);
 
   const load = useCallback(async () => {
     try {
@@ -118,6 +184,7 @@ export function AcademicSessionsPage() {
           start: r.startDate.slice(0, 10),
           end: r.endDate.slice(0, 10),
           students: 0,
+          isActive: r.isActive,
           status: toStatus(r.isActive),
         })),
       );
@@ -129,6 +196,41 @@ export function AcademicSessionsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const handleSetActive = useCallback(
+    async (session: AcademicSession) => {
+      if (session.isActive || activatingId) return;
+      setActivatingId(session.id);
+      try {
+        const record = await academicApi.updateSession(session.id, { isActive: true });
+        setSessions((current) =>
+          current.map((s) => {
+            const nowActive = s.id === record.id;
+            return { ...s, isActive: nowActive, status: toStatus(nowActive) };
+          }),
+        );
+        toast.success(`"${record.label}" is now the active academic year.`);
+      } catch {
+        toast.error("Could not set the academic year active. Please try again.");
+      } finally {
+        setActivatingId(null);
+      }
+    },
+    [activatingId, toast],
+  );
+
+  const handlePromoteStudents = useCallback(
+    (session: AcademicSession) => {
+      if (!session.isActive) {
+        toast.error(
+          `"${session.name}" is not the active academic year. Set it active first.`,
+        );
+        return;
+      }
+      router.push("/students?add=1");
+    },
+    [router, toast],
+  );
 
   const handleAdd = async (values: AddSessionValues): Promise<boolean> => {
     try {
@@ -146,9 +248,13 @@ export function AcademicSessionsPage() {
           start: record.startDate.slice(0, 10),
           end: record.endDate.slice(0, 10),
           students: 0,
+          isActive: record.isActive,
           status: toStatus(record.isActive),
         },
-        ...current,
+        ...current.map((s) => {
+          if (!record.isActive) return s;
+          return { ...s, isActive: false, status: toStatus(false) };
+        }),
       ]);
       setDialogOpen(false);
       return true;
@@ -194,7 +300,12 @@ export function AcademicSessionsPage() {
       </div>
 
       <DataTable
-        columns={COLUMNS}
+        columns={COLUMNS({
+          canUpdate,
+          activatingId,
+          onSetActive: (s) => void handleSetActive(s),
+          onPromoteStudents: handlePromoteStudents,
+        })}
         data={table.pageRows}
         keyExtractor={(session) => session.id}
         sortKey={table.sortKey}

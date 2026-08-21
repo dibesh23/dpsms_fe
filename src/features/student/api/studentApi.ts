@@ -6,6 +6,10 @@ export interface StudentRecord {
   name: string;
   email: string | null;
   phone: string | null;
+  gender?: "MALE" | "FEMALE" | "OTHER" | null;
+  dateOfBirth?: string | null;
+  bloodGroup: string | null;
+  address: string | null;
   grade: string;
   section: string;
   status: "ACTIVE" | "INACTIVE" | "ON_LEAVE";
@@ -25,6 +29,8 @@ export interface StudentCreatePayload {
   phone?: string;
   gender?: "MALE" | "FEMALE" | "OTHER";
   dateOfBirth?: string;
+  bloodGroup?: string;
+  address?: string;
   admissionDate?: string;
   grade: string;
   section?: string;

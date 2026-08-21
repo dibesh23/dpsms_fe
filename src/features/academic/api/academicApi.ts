@@ -97,6 +97,16 @@ export const academicApi = {
     );
     return data.data;
   },
+  async updateSession(
+    id: string,
+    payload: { isActive?: boolean },
+  ): Promise<SessionRecord> {
+    const { data } = await apiClient.patch<{ data: SessionRecord }>(
+      `/academic-sessions/${id}`,
+      payload,
+    );
+    return data.data;
+  },
 };
 
 export default academicApi;

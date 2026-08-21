@@ -29,6 +29,7 @@ export const PERMISSIONS = {
   ACADEMIC_SUBJECT_CREATE: "academic:subjects:create",
   ACADEMIC_SESSION_LIST: "academic:sessions:list",
   ACADEMIC_SESSION_CREATE: "academic:sessions:create",
+  ACADEMIC_SESSION_UPDATE: "academic:sessions:update",
 
   TEACHER_OWN_CLASSES_VIEW: "teachers:own-classes:view",
   ATTENDANCE_OWN_VIEW: "attendance:own:view",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
@@ -101,6 +102,9 @@ const COLUMNS: Column<Student>[] = [
 export function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const shouldOpenAdd = searchParams.get("add") === "1";
   const [credentials, setCredentials] = useState<{
     name: string;
     admissionNumber: string;
@@ -134,12 +138,25 @@ export function StudentsPage() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (shouldOpenAdd && canCreate) {
+      setDialogOpen(true);
+      router.replace("/students");
+    }
+  }, [shouldOpenAdd, canCreate, router]);
+
   const handleAdd = async (values: AddStudentValues): Promise<string | null> => {
     try {
       const record = await studentApi.create({
         fullName: values.fullName,
         email: values.email,
+        phone: values.phone?.trim() || undefined,
+        gender: values.gender || undefined,
+        dateOfBirth: values.dateOfBirth || undefined,
+        bloodGroup: values.bloodGroup?.trim() || undefined,
+        address: values.address?.trim() || undefined,
         grade: values.grade,
+        section: values.section?.trim() || undefined,
         status: (values.status === "On Leave" ? "ON_LEAVE" : values.status.toUpperCase()) as
           | "ACTIVE"
           | "INACTIVE"

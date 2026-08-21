@@ -8,16 +8,21 @@ export function Field({
   hint,
   children,
   className,
+  required,
 }: {
   label: string;
   error?: string;
   hint?: string;
   children: ReactNode;
   className?: string;
+  required?: boolean;
 }) {
   return (
     <label className={cn("block", className)}>
-      <span className="mb-1.5 block text-sm font-medium text-neutral-800">{label}</span>
+      <span className="mb-1.5 block text-sm font-medium text-neutral-800">
+        {label}
+        {required && <span className="ml-0.5 text-red-500">*</span>}
+      </span>
       {children}
       {error ? (
         <span className="mt-1.5 block text-sm text-red-600" role="alert">
