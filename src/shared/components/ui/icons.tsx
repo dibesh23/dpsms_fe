@@ -207,6 +207,13 @@ export const LogOutIcon = createIcon(
 
 export const CheckIcon = createIcon(<path d="M20 6 9 17l-5-5" />);
 
+export const CopyIcon = createIcon(
+  <>
+    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+  </>,
+);
+
 export const ClockIcon = createIcon(
   <>
     <circle cx="12" cy="12" r="10" />
@@ -291,6 +298,13 @@ export const UserIcon = createIcon(
   <>
     <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
     <circle cx="12" cy="7" r="4" />
+  </>,
+);
+
+export const LockIcon = createIcon(
+  <>
+    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
   </>,
 );
 

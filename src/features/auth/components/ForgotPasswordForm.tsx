@@ -7,10 +7,11 @@ import { z } from "zod";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { authApi } from "../api/authApi";
+import { getLastSchool } from "../../../shared/lib/schoolStorage";
 
 const ForgotSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
-  tenantId: z.string().uuid("Invalid tenant ID"),
+  email: z.email("Enter a valid email address").trim().toLowerCase(),
+  tenantId: z.uuid("Invalid tenant ID").optional(),
 });
 type ForgotFormValues = z.infer<typeof ForgotSchema>;
 
@@ -20,18 +21,20 @@ export function ForgotPasswordForm({
   defaultTenantId?: string;
 }) {
   const [submitted, setSubmitted] = useState(false);
+  const knownTenantId = defaultTenantId || getLastSchool()?.tenantId || "";
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<ForgotFormValues>({
     resolver: zodResolver(ForgotSchema),
-    defaultValues: { tenantId: defaultTenantId },
+    defaultValues: { tenantId: knownTenantId },
   });
 
   const onSubmit = async ({ email, tenantId }: ForgotFormValues) => {
     try {
-      await authApi.forgotPassword(email, tenantId);
+      await authApi.forgotPassword(email, tenantId || undefined);
     } catch {
       // deliberately swallow: never reveal whether an account exists
     }

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { cn } from "@/shared/lib/cn";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { PERMISSIONS, ROLE_LABELS } from "@/shared/permissions";
 import { Avatar } from "@/shared/components/ui/avatar";
 import { StatsCard } from "@/shared/components/ui/stats-card";
 import { DashboardWidget } from "@/shared/components/ui/dashboard-widget";
@@ -55,24 +56,28 @@ const QUICK_ACTIONS = [
     description: "Enrol a new student",
     href: "/students",
     icon: UserPlusIcon,
+    permission: PERMISSIONS.STUDENT_CREATE,
   },
   {
     title: "Invite Teacher",
     description: "Send a teacher invite",
     href: "/teachers",
     icon: GraduationCapIcon,
+    permission: PERMISSIONS.TEACHER_CREATE,
   },
   {
     title: "Register Parent",
     description: "Link a guardian account",
     href: "/parents",
     icon: HeartHandshakeIcon,
+    permission: PERMISSIONS.PARENT_CREATE,
   },
   {
     title: "Start New Term",
     description: "Open the 2083/84 session",
     href: "/academic-sessions",
     icon: CalendarDaysIcon,
+    permission: PERMISSIONS.ACADEMIC_SESSION_CREATE,
   },
 ];
 
@@ -99,8 +104,9 @@ function buildMonthGrid() {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, can } = useAuth();
   const firstName = user?.fullName?.split(" ")[0] ?? "Principal";
+  const roleLabel = (user?.role && ROLE_LABELS[user.role]) ?? "Staff";
   const calendar = buildMonthGrid();
   const [summary, setSummary] = useState<DashboardSummary>(EMPTY_SUMMARY);
   const [loading, setLoading] = useState(true);
@@ -135,7 +141,7 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
               Good morning, {firstName}
             </h1>
-            <StatusBadge status="Principal" variant="info" />
+            <StatusBadge status={roleLabel} variant="info" />
           </div>
           <p className="mt-1 text-sm text-neutral-500">
             Here is what is happening at Digital Pathshala today.
@@ -261,7 +267,7 @@ export default function DashboardPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {QUICK_ACTIONS.map((action) => (
+        {QUICK_ACTIONS.filter((action) => can(action.permission)).map((action) => (
           <Link
             key={action.title}
             href={action.href}

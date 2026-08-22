@@ -15,18 +15,55 @@ import { setAccessTokenRef, setRefreshTokenRef } from "../lib/apiClient";
 import type {
   AuthUser,
   LoginPayload,
-  RegisterPayload,
+  RegisterSchoolPayload,
+  RegisterSchoolResponse,
 } from "../../features/auth/types";
+import {
+  PERMISSIONS as P,
+  type PermissionKey,
+} from "../permissions";
 
 export interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login(payload: LoginPayload): Promise<void>;
-  register(payload: RegisterPayload): Promise<void>;
+  registerSchool(payload: RegisterSchoolPayload): Promise<RegisterSchoolResponse>;
   logout(): Promise<void>;
   refreshToken(): Promise<boolean>;
+  can(permission: string): boolean;
+  hasRole(role: AuthUser["role"]): boolean;
 }
+
+const ROLE_FALLBACK_PERMISSIONS: Record<string, readonly PermissionKey[]> = {
+  SUPER_ADMIN: Object.values(P) as readonly PermissionKey[],
+  PRINCIPAL: Object.values(P) as readonly PermissionKey[],
+  TEACHER: [
+    P.DASHBOARD_VIEW,
+    P.TEACHER_OWN_CLASSES_VIEW,
+    P.STUDENT_LIST,
+    P.PARENT_LIST,
+    P.ACADEMIC_CLASS_LIST,
+    P.ACADEMIC_SUBJECT_LIST,
+    P.ACADEMIC_DEPARTMENT_LIST,
+    P.ACADEMIC_SESSION_LIST,
+    P.EXAM_OWN_VIEW,
+    P.ATTENDANCE_OWN_VIEW,
+    P.NOTICE_OWN_VIEW,
+    P.MESSAGING_OWN_VIEW,
+  ],
+  STUDENT: [
+    P.DASHBOARD_VIEW,
+    P.ATTENDANCE_OWN_VIEW,
+    P.EXAM_OWN_VIEW,
+    P.FEE_OWN_VIEW,
+    P.NOTICE_OWN_VIEW,
+    P.TIMETABLE_OWN_VIEW,
+    P.ASSIGNMENT_OWN_VIEW,
+    P.LIVE_CLASS_OWN_VIEW,
+    P.ADMISSION_LETTER_VIEW,
+  ],
+} as const;
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -114,16 +151,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
 
-  const register = useCallback(
-    async (payload: RegisterPayload): Promise<void> => {
-      const result = await authApi.register(payload);
+  const registerSchool = useCallback(
+    async (
+      payload: RegisterSchoolPayload,
+    ): Promise<RegisterSchoolResponse> => {
+      const result = await authApi.registerSchool(payload);
       accessTokenRef.current = result.accessToken;
       setUser(result.user);
-      router.push("/onboarding");
+      if (result.onboardingRequired) {
+        router.push("/onboarding");
+      } else {
+        router.push("/dashboard");
+      }
+      return result;
     },
     [router],
   );
-
 
   const logout = useCallback(async (): Promise<void> => {
     try {
@@ -135,17 +178,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [router]);
 
+  const can = useCallback(
+    (permission: string): boolean => {
+      if (user?.permissions?.includes(permission)) return true;
+      const fallbacks = user?.role
+        ? ROLE_FALLBACK_PERMISSIONS[user.role]
+        : undefined;
+      return fallbacks?.includes(permission as PermissionKey) ?? false;
+    },
+    [user?.permissions, user?.role],
+  );
+
+  const hasRole = useCallback(
+    (role: AuthUser["role"]): boolean => user?.role === role,
+    [user?.role],
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       isAuthenticated: user !== null,
       isLoading,
       login,
-      register,
+      registerSchool,
       logout,
       refreshToken,
+      can,
+      hasRole,
     }),
-    [user, isLoading, login, register, logout, refreshToken],
+    [user, isLoading, login, registerSchool, logout, refreshToken, can, hasRole],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -7,13 +7,20 @@ import { cn } from "@/shared/lib/cn";
 import { Wordmark } from "../ui/wordmark";
 import { Avatar } from "../ui/avatar";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { PERMISSIONS, ROLE_LABELS } from "@/shared/permissions";
 import {
+  BellIcon,
   BookOpenIcon,
+  BookUserIcon,
   BriefcaseIcon,
   Building2Icon,
   CalendarDaysIcon,
+  CheckCircle2Icon,
+  CreditCardIcon,
+  FileTextIcon,
   ClipboardCheckIcon,
   GraduationCapIcon,
+  GroupIcon,
   HeartHandshakeIcon,
   LayoutDashboardIcon,
   LayoutGridIcon,
@@ -25,19 +32,33 @@ import {
 
 const NAV_SECTIONS: Array<{
   label: string;
-  items: Array<{ label: string; href: string; icon: typeof LayoutDashboardIcon }>;
+  roles?: readonly string[];
+  items: Array<{
+    label: string;
+    href: string;
+    icon: typeof LayoutDashboardIcon;
+    permission?: string;
+  }>;
 }> = [
   {
     label: "Management",
-    items: [{ label: "Dashboard", href: "/dashboard", icon: LayoutDashboardIcon }],
+    items: [
+      {
+        label: "Dashboard",
+        href: "/dashboard",
+        icon: LayoutDashboardIcon,
+        permission: PERMISSIONS.DASHBOARD_VIEW,
+      },
+    ],
   },
   {
     label: "People",
+    roles: ["SUPER_ADMIN", "PRINCIPAL"],
     items: [
-      { label: "Students", href: "/students", icon: UsersIcon },
-      { label: "Teachers", href: "/teachers", icon: GraduationCapIcon },
-      { label: "Parents", href: "/parents", icon: HeartHandshakeIcon },
-      { label: "Staff", href: "/staff", icon: BriefcaseIcon },
+      { label: "Students", href: "/students", icon: UsersIcon, permission: PERMISSIONS.STUDENT_LIST },
+      { label: "Teachers", href: "/teachers", icon: GraduationCapIcon, permission: PERMISSIONS.TEACHER_LIST },
+      { label: "Parents", href: "/parents", icon: HeartHandshakeIcon, permission: PERMISSIONS.PARENT_LIST },
+      { label: "Staff", href: "/staff", icon: BriefcaseIcon, permission: PERMISSIONS.STAFF_LIST },
     ],
   },
   {
@@ -49,21 +70,56 @@ const NAV_SECTIONS: Array<{
   },
   {
     label: "Academic",
+    roles: ["SUPER_ADMIN", "PRINCIPAL"],
     items: [
-      { label: "Classes", href: "/classes", icon: LayoutGridIcon },
-      { label: "Departments", href: "/departments", icon: Building2Icon },
-      { label: "Subjects", href: "/subjects", icon: BookOpenIcon },
-      { label: "Academic Sessions", href: "/academic-sessions", icon: CalendarDaysIcon },
+      { label: "Classes", href: "/classes", icon: LayoutGridIcon, permission: PERMISSIONS.ACADEMIC_CLASS_LIST },
+      { label: "Departments", href: "/departments", icon: Building2Icon, permission: PERMISSIONS.ACADEMIC_DEPARTMENT_LIST },
+      { label: "Subjects", href: "/subjects", icon: BookOpenIcon, permission: PERMISSIONS.ACADEMIC_SUBJECT_LIST },
+      { label: "Academic Sessions", href: "/academic-sessions", icon: CalendarDaysIcon, permission: PERMISSIONS.ACADEMIC_SESSION_LIST },
+    ],
+  },
+  {
+    label: "Teaching",
+    roles: ["TEACHER"],
+    items: [
+      { label: "My Classes", href: "/classes", icon: LayoutGridIcon, permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW },
+      { label: "My Students", href: "/students", icon: UsersIcon, permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW },
+      { label: "Subjects", href: "/subjects", icon: BookOpenIcon, permission: PERMISSIONS.ACADEMIC_SUBJECT_LIST },
+      { label: "Attendance", href: "/attendance", icon: CheckCircle2Icon, permission: PERMISSIONS.ATTENDANCE_OWN_VIEW },
+      { label: "Class Tests", href: "/class-tests", icon: FileTextIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
+      { label: "Parents", href: "/parents", icon: HeartHandshakeIcon, permission: PERMISSIONS.PARENT_LIST },
+      { label: "Messaging", href: "/messaging", icon: BellIcon, permission: PERMISSIONS.MESSAGING_OWN_VIEW },
+    ],
+  },
+  {
+    label: "Academics",
+    roles: ["STUDENT"],
+    items: [
+      { label: "Attendance History", href: "/attendance-history", icon: CheckCircle2Icon, permission: PERMISSIONS.ATTENDANCE_OWN_VIEW },
+      { label: "My Timetable", href: "/timetable", icon: CalendarDaysIcon, permission: PERMISSIONS.TIMETABLE_OWN_VIEW },
+      { label: "My Report Card", href: "/report-card", icon: FileTextIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
+      { label: "Test Results", href: "/test-results", icon: BookOpenIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
+      { label: "Exam Result", href: "/exam-results", icon: GraduationCapIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
+      { label: "Home Assignments", href: "/assignments", icon: BookUserIcon, permission: PERMISSIONS.ASSIGNMENT_OWN_VIEW },
+    ],
+  },
+  {
+    label: "Finance",
+    roles: ["STUDENT"],
+    items: [
+      { label: "Fees & Payments", href: "/fees", icon: CreditCardIcon, permission: PERMISSIONS.FEE_OWN_VIEW },
+      { label: "Admission Letter", href: "/admission-letter", icon: FileTextIcon, permission: PERMISSIONS.ADMISSION_LETTER_VIEW },
+    ],
+  },
+  {
+    label: "Other",
+    roles: ["STUDENT"],
+    items: [
+      { label: "Notices", href: "/notices", icon: BellIcon, permission: PERMISSIONS.NOTICE_OWN_VIEW },
+      { label: "Live Class", href: "/live-class", icon: GroupIcon, permission: PERMISSIONS.LIVE_CLASS_OWN_VIEW },
     ],
   },
 ];
-
-const ROLE_LABELS: Record<string, string> = {
-  SUPER_ADMIN: "Administrator",
-  PRINCIPAL: "Principal",
-  TEACHER: "Teacher",
-  STUDENT: "Student",
-};
 
 function roleLabel(role?: string): string {
   return (role && ROLE_LABELS[role]) ?? "Staff";
@@ -71,43 +127,50 @@ function roleLabel(role?: string): string {
 
 function NavList({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { user, can } = useAuth();
   return (
     <nav className="flex-1 overflow-y-auto px-3 pb-4">
-      {NAV_SECTIONS.map((section) => (
-        <div key={section.label}>
-          <p className="px-3 pb-2 pt-5 text-xs font-medium tracking-wider text-neutral-400 uppercase">
-            {section.label}
-          </p>
-          <ul className="space-y-0.5">
-            {section.items.map((item) => {
-              const active = pathname === item.href;
-              const Icon = item.icon;
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={onNavigate}
-                    className={cn(
-                      "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
-                      active
-                        ? "bg-bg-subtle font-medium text-neutral-900"
-                        : "text-neutral-500 hover:bg-bg-subtle/70 hover:text-neutral-900",
-                    )}
-                  >
-                    <Icon
+      {NAV_SECTIONS.map((section) => {
+        const roleMatch = !section.roles || (user?.role && section.roles.includes(user.role));
+        if (!roleMatch) return null;
+        const visibleItems = section.items.filter((item) => can(item.permission));
+        if (visibleItems.length === 0) return null;
+        return (
+          <div key={section.label}>
+            <p className="px-3 pb-2 pt-5 text-xs font-medium tracking-wider text-neutral-400 uppercase">
+              {section.label}
+            </p>
+            <ul className="space-y-0.5">
+              {visibleItems.map((item) => {
+                const active = pathname === item.href;
+                const Icon = item.icon;
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={onNavigate}
                       className={cn(
-                        "size-4 flex-none",
-                        active ? "text-neutral-900" : "text-neutral-400",
+                        "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+                        active
+                          ? "bg-bg-subtle font-medium text-neutral-900"
+                          : "text-neutral-500 hover:bg-bg-subtle/70 hover:text-neutral-900",
                       )}
-                    />
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))}
+                    >
+                      <Icon
+                        className={cn(
+                          "size-4 flex-none",
+                          active ? "text-neutral-900" : "text-neutral-400",
+                        )}
+                      />
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        );
+      })}
     </nav>
   );
 }
