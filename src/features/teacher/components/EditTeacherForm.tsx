@@ -158,7 +158,8 @@ export function editValuesToPayload(values: EditTeacherValues) {
   return {
     fullName: values.fullName.trim(),
     email: values.email.trim(),
-    phone: values.phone.trim() || null,
+    // "" clears the phone server-side; never send null (backend rejects it).
+    phone: values.phone.trim() || "",
     department: values.department.trim(),
     classesPerWeek: Number(values.classesPerWeek),
     status: teacherLabelToStatus(values.status),

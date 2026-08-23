@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Field, Select } from "@/shared/components/ui/form-field";
-import { academicApi, type ClassRecord } from "@/features/academic/api/academicApi";
 
 const GENDERS = [
   { value: "MALE", label: "Male" },
@@ -19,9 +18,11 @@ const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const
 
 const STATUSES = ["Active", "On Leave", "Inactive"] as const;
 
-const AddStudentSchema = z.object({
+// Grade/section are intentionally absent — the backend rejects class/section
+// changes on update; use the transfer flow instead.
+const EditStudentSchema = z.object({
   fullName: z.string().min(1, "Full name is required").max(255),
-  email: z.email("Enter a valid email address"),
+  email: z.union([z.email("Enter a valid email address"), z.literal("")]).optional(),
   phone: z
     .string()
     .trim()
@@ -42,68 +43,41 @@ const AddStudentSchema = z.object({
     .max(500, "Address must be at most 500 characters")
     .optional()
     .or(z.literal("")),
-  grade: z.string().min(1, "Select a grade"),
-  section: z
-    .string()
-    .trim()
-    .max(20, "Section must be at most 20 characters")
-    .optional()
-    .or(z.literal("")),
   status: z.enum(STATUSES),
-  enrolledAt: z.string().min(1, "Enrollment date is required"),
+  admissionDate: z.string().min(1, "Admission date is required"),
 });
 
-export type AddStudentValues = z.infer<typeof AddStudentSchema>;
+export type EditStudentValues = z.infer<typeof EditStudentSchema>;
 
-export function AddStudentForm({
-  onAdd,
+export const STATUS_TO_API = {
+  Active: "ACTIVE",
+  "On Leave": "ON_LEAVE",
+  Inactive: "INACTIVE",
+} as const;
+
+export function EditStudentForm({
+  initial,
+  onSave,
   onClose,
 }: {
-  onAdd: (values: AddStudentValues) => Promise<string | null>;
+  initial: EditStudentValues;
+  onSave: (values: EditStudentValues) => Promise<string | null>;
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
-  const [classes, setClasses] = useState<ClassRecord[]>([]);
-  const [classesLoading, setClassesLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    academicApi
-      .listClasses()
-      .then((records) => {
-        if (!cancelled) setClasses(records);
-      })
-      .catch(() => {
-        if (!cancelled) setClasses([]);
-      })
-      .finally(() => {
-        if (!cancelled) setClassesLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const {
     register,
     handleSubmit,
-    watch,
-    setValue,
     formState: { errors, isSubmitting },
-  } = useForm<AddStudentValues>({
-    resolver: zodResolver(AddStudentSchema),
-    defaultValues: {
-      status: "Active",
-      enrolledAt: new Date().toISOString().slice(0, 10),
-    },
+  } = useForm<EditStudentValues>({
+    resolver: zodResolver(EditStudentSchema),
+    defaultValues: initial,
   });
 
-  const selectedGrade = watch("grade");
-  const availableSections = classes.find((cls) => cls.name === selectedGrade)?.sections ?? [];
-
-  const onSubmit = async (values: AddStudentValues) => {
+  const onSubmit = async (values: EditStudentValues) => {
     setApiError(null);
-    const error = await onAdd(values);
+    const error = await onSave(values);
     if (error) setApiError(error);
   };
 
@@ -121,19 +95,17 @@ export function AddStudentForm({
             autoComplete="name"
             placeholder="Aarav Sharma"
             disabled={isSubmitting}
-            required
             error={errors.fullName?.message}
             {...register("fullName")}
           />
         </Field>
 
-        <Field label="Email" error={errors.email?.message} className="sm:col-span-2" required>
+        <Field label="Email" error={errors.email?.message}>
           <Input
             type="email"
             autoComplete="email"
             placeholder="student@pathshala.edu.np"
             disabled={isSubmitting}
-            required
             error={errors.email?.message}
             {...register("email")}
           />
@@ -182,46 +154,6 @@ export function AddStudentForm({
           </Select>
         </Field>
 
-        <Field label="Grade" error={errors.grade?.message} required>
-          <Select
-            disabled={isSubmitting || classesLoading}
-            required
-            {...register("grade", {
-              onChange: () => setValue("section", ""),
-            })}
-          >
-            <option value="">{classesLoading ? "Loading grades…" : "Select grade"}</option>
-            {classes.map((cls) => (
-              <option key={cls.id} value={cls.name}>
-                {cls.name}
-              </option>
-            ))}
-          </Select>
-        </Field>
-
-        <Field
-          label="Section"
-          error={errors.section?.message}
-          hint={
-            selectedGrade && availableSections.length === 0
-              ? "No sections created for this grade"
-              : undefined
-          }
-        >
-          <Select disabled={isSubmitting} {...register("section")}>
-            <option value="">
-              {selectedGrade && availableSections.length === 0
-                ? "No sections available"
-                : "Select section"}
-            </option>
-            {availableSections.map((section) => (
-              <option key={section} value={section}>
-                {section}
-              </option>
-            ))}
-          </Select>
-        </Field>
-
         <Field label="Status" error={errors.status?.message} required>
           <Select disabled={isSubmitting} required {...register("status")}>
             {STATUSES.map((status) => (
@@ -232,13 +164,13 @@ export function AddStudentForm({
           </Select>
         </Field>
 
-        <Field label="Enrollment date" error={errors.enrolledAt?.message} required>
+        <Field label="Admission date" error={errors.admissionDate?.message} required>
           <Input
             type="date"
             disabled={isSubmitting}
             required
-            error={errors.enrolledAt?.message}
-            {...register("enrolledAt")}
+            error={errors.admissionDate?.message}
+            {...register("admissionDate")}
           />
         </Field>
 
@@ -266,7 +198,7 @@ export function AddStudentForm({
       <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
         <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" />
         <Button
-          text={isSubmitting ? "Adding…" : "Add Student"}
+          text={isSubmitting ? "Saving…" : "Save changes"}
           loading={isSubmitting}
           disabled={isSubmitting}
           className="w-auto"
@@ -274,4 +206,47 @@ export function AddStudentForm({
       </div>
     </form>
   );
+}
+
+// Payload rules mirror the backend contract:
+// - omit a key entirely -> keep the existing value
+// - send "" for phone/bloodGroup/address -> clear the value
+// - email/gender/dateOfBirth can only be set, not cleared, so they are
+//   omitted when empty (sending "" would fail backend validation).
+export function editValuesToPayload(values: EditStudentValues): {
+  fullName: string;
+  status: "ACTIVE" | "INACTIVE" | "ON_LEAVE";
+  admissionDate: string;
+  email?: string;
+  phone?: string;
+  gender?: "MALE" | "FEMALE" | "OTHER";
+  dateOfBirth?: string;
+  bloodGroup?: string;
+  address?: string;
+} {
+  const email = values.email?.trim();
+  const dateOfBirth = values.dateOfBirth;
+  return {
+    fullName: values.fullName.trim(),
+    status: STATUS_TO_API[values.status],
+    admissionDate: values.admissionDate,
+    ...(email ? { email } : {}),
+    phone: values.phone?.trim() || "",
+    ...(values.gender ? { gender: values.gender } : {}),
+    ...(dateOfBirth ? { dateOfBirth } : {}),
+    bloodGroup: values.bloodGroup?.trim() || "",
+    address: values.address?.trim() || "",
+  };
+}
+
+export function apiStatusToLabel(status: string): (typeof STATUSES)[number] {
+  if (status === "ON_LEAVE") return "On Leave";
+  return status === "INACTIVE" ? "Inactive" : "Active";
+}
+
+export function toDateInputValue(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return parsed.toISOString().slice(0, 10);
 }

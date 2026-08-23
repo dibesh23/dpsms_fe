@@ -72,7 +72,7 @@ export interface TeacherDetailRecord {
 export interface TeacherUpdatePayload {
   fullName?: string;
   email?: string;
-  phone?: string | null;
+  phone?: string;
   department?: string;
   classesPerWeek?: number;
   status?: TeacherApiStatus;

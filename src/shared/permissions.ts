@@ -5,6 +5,9 @@ export const PERMISSIONS = {
   STUDENT_CREATE: "students:create",
   STUDENT_UPDATE: "students:update",
   STUDENT_DELETE: "students:delete",
+  STUDENT_TRANSFER: "students:transfer",
+  STUDENT_GUARDIAN_MANAGE: "students:guardians:manage",
+  STUDENT_DOCUMENT_MANAGE: "students:documents:manage",
 
   TEACHER_LIST: "teachers:list",
   TEACHER_CREATE: "teachers:create",
