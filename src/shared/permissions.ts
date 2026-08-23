@@ -16,11 +16,13 @@ export const PERMISSIONS = {
   TEACHER_ASSIGNMENT_MANAGE: "teachers:assignments:manage",
 
   PARENT_LIST: "parents:list",
+  PARENT_READ: "parents:read",
   PARENT_CREATE: "parents:create",
   PARENT_UPDATE: "parents:update",
   PARENT_DELETE: "parents:delete",
 
   STAFF_LIST: "staff:list",
+  STAFF_READ: "staff:read",
   STAFF_CREATE: "staff:create",
   STAFF_UPDATE: "staff:update",
   STAFF_DELETE: "staff:delete",

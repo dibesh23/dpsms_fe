@@ -12,6 +12,7 @@ export interface RowAction {
   onClick?: () => void;
   href?: string;
   danger?: boolean;
+  external?: boolean;
 }
 
 export function RowActions({ actions }: { actions: RowAction[] }) {
@@ -44,7 +45,13 @@ export function RowActions({ actions }: { actions: RowAction[] }) {
             );
             if (action.href) {
               return (
-                <Link key={action.label} href={action.href} onClick={close} className={itemClass}>
+                <Link
+                  key={action.label}
+                  href={action.href}
+                  onClick={close}
+                  className={itemClass}
+                  {...(action.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                >
                   {content}
                 </Link>
               );

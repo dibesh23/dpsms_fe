@@ -97,12 +97,25 @@ const COLUMNS: Column<StaffMember>[] = [
     key: "actions",
     header: "",
     align: "right",
-    render: () => (
+    render: (member) => (
       <RowActions
         actions={[
-          { label: "View profile", icon: <UserPlusIcon className="size-3.5" /> },
-          { label: "Send email", icon: <MailIcon className="size-3.5" /> },
-          { label: "Edit details", icon: <FileTextIcon className="size-3.5" /> },
+          {
+            label: "View profile",
+            icon: <UserPlusIcon className="size-3.5" />,
+            href: `/staff/${member.id}`,
+          },
+          {
+            label: "Send email",
+            icon: <MailIcon className="size-3.5" />,
+            href: `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(member.email)}`,
+            external: true,
+          },
+          {
+            label: "Edit details",
+            icon: <FileTextIcon className="size-3.5" />,
+            href: `/staff/${member.id}`,
+          },
         ]}
       />
     ),
