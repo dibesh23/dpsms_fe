@@ -21,9 +21,9 @@ Multi-tenant SaaS simplicity. One instance serves many schools cheaply, and the 
 ## Operating Context
 
 - Built for Nepali schools; default timezone is Asia/Kathmandu.
-- Roles: SUPER_ADMIN, PRINCIPAL, TEACHER, STUDENT (permissions model, onboarding, and per-role flows).
+- Roles: SUPER_ADMIN, PRINCIPAL, TEACHER, STUDENT (permissions model and per-role flows).
 - Onboarding steps: complete profile, set up school details, invite staff.
-- Auth: local email/password and Google OAuth, refresh-token sessions, password reset, email verification.
+- Auth: local email/password, refresh-token sessions, password reset, and email verification.
 - Fee management covers types, structures, installments, invoices, discounts, scholarships, payments, and receipts; payments are recorded by staff (cash, bank, cheque, other).
 
 ## Capabilities and Constraints
@@ -31,8 +31,8 @@ Multi-tenant SaaS simplicity. One instance serves many schools cheaply, and the 
 Confirmed in the data model (schema.prisma v2.0):
 
 - Multi-tenancy: single database, shared schema, tenantId discriminator per school; schools have a subdomain and optional custom domain.
-- Domains: identity & access (users, roles, permissions, refresh/password-reset/email-verification tokens, onboarding records), academic structure (academic years, classes, shifts, houses, sections, subjects), student domain (students, enrollments, guardians, documents, section history), teacher domain (teachers, school memberships, class and subject assignments), attendance (student and staff), fees, transport assignments, examinations (types, grade scales, exams, results with approval flow), academic-year promotion (batches, records, revert), notices (recipient scopes, attachments), cross-cutting (attachments, audit log, email job queue).
-- Auth: local and Google OAuth; user statuses ACTIVE/INVITED/DISABLED; school statuses ACTIVE/SUSPENDED/TRIAL.
+- Domains: identity & access (users, roles, permissions, refresh/password-reset/email-verification tokens), academic structure (academic years, classes, shifts, houses, sections, subjects), student domain (students, enrollments, guardians, documents, section history), teacher domain (teachers, school memberships, class and subject assignments), attendance (student and staff), fees, transport assignments, examinations (types, grade scales, exams, results with approval flow), academic-year promotion (batches, records, revert), notices (recipient scopes, attachments), cross-cutting (attachments, audit log, email delivery).
+- Auth: local email/password; user statuses ACTIVE/INVITED/DISABLED; school statuses ACTIVE/SUSPENDED/TRIAL.
 - Reserved/future modules (defined in schema but not yet live): parent–student links, terms/semesters, transport routes/stops, hostel, library, online payment transactions/refunds, notification log, biometric attendance.
 - Technical: PostgreSQL via Supabase, Prisma, Redis (rate limiting, queues), Express 5, Next.js 16, React 19, Tailwind CSS v4, TypeScript.
 

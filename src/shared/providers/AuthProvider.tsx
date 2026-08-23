@@ -74,15 +74,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const accessTokenRef = useRef<string | null>(null);
 
-  const refreshingRef = useRef(false);
-
   useEffect(() => {
     setAccessTokenRef(() => accessTokenRef.current);
   }, []);
 
   const refreshToken = useCallback(async (): Promise<boolean> => {
-    if (refreshingRef.current) return false;
-    refreshingRef.current = true;
     try {
       const { accessToken, user: refreshedUser } = await authApi.refresh();
       accessTokenRef.current = accessToken;
@@ -92,8 +88,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       accessTokenRef.current = null;
       setUser(null);
       return false;
-    } finally {
-      refreshingRef.current = false;
     }
   }, []);
 
@@ -134,11 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await authApi.login(payload);
       accessTokenRef.current = result.accessToken;
       setUser(result.user);
-      if (result.onboardingRequired) {
-        router.push("/onboarding");
-      } else {
-        router.push("/dashboard");
-      }
+      router.push("/dashboard");
     },
     [router],
   );
@@ -148,11 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await authApi.registerSchool(payload);
       accessTokenRef.current = result.accessToken;
       setUser(result.user);
-      if (result.onboardingRequired) {
-        router.push("/onboarding");
-      } else {
-        router.push("/dashboard");
-      }
+      router.push("/dashboard");
       return result;
     },
     [router],
@@ -164,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       accessTokenRef.current = null;
       setUser(null);
-      router.push("/login");
+      router.replace("/login");
     }
   }, [router]);
 
