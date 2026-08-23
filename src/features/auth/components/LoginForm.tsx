@@ -9,8 +9,6 @@ import { cn } from "@/shared/lib/cn";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Building2Icon, BriefcaseIcon, GraduationCapIcon } from "@/shared/components/ui/icons";
-import { AuthMethodsSeparator } from "@/shared/components/auth-methods-separator";
-import { GoogleSignInButton } from "./GoogleSignInButton";
 import { useAuth } from "../hooks/useAuth";
 import { saveLastSchool } from "../../../shared/lib/schoolStorage";
 import type { RoleName } from "../types";
@@ -27,7 +25,6 @@ interface LoginFormProps {
   defaultTenantId?: string;
   schoolName?: string | null;
   defaultRole?: RoleName;
-  oauthEnabled?: boolean;
 }
 
 const ROLE_OPTIONS = [
@@ -48,17 +45,10 @@ const ROLE_OPTIONS = [
   },
 ] as const;
 
-export function LoginForm({
-  defaultTenantId = "",
-  schoolName,
-  defaultRole,
-  oauthEnabled = false,
-}: LoginFormProps) {
+export function LoginForm({ defaultTenantId = "", schoolName, defaultRole }: LoginFormProps) {
   const { login } = useAuth();
   const [apiError, setApiError] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<string>(
-    defaultRole ?? "PRINCIPAL",
-  );
+  const [selectedRole, setSelectedRole] = useState<string>(defaultRole ?? "PRINCIPAL");
 
   const {
     register,
@@ -86,19 +76,15 @@ export function LoginForm({
       if (values.tenantId) saveLastSchool({ tenantId: values.tenantId });
     } catch (err: unknown) {
       const msg =
-        (err as { response?: { data?: { error?: { message?: string } } } })
-          ?.response?.data?.error?.message ?? "Invalid email or password.";
+        (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
+          ?.message ?? "Invalid email or password.";
       setApiError(msg);
     }
   };
 
   return (
     <div className="flex w-full flex-col gap-3">
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        noValidate
-        className="flex w-full flex-col gap-y-6"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex w-full flex-col gap-y-6">
         <div className="flex items-center justify-center gap-2">
           {ROLE_OPTIONS.map((role) => {
             const Icon = role.icon;
@@ -184,13 +170,6 @@ export function LoginForm({
           disabled={isSubmitting}
         />
       </form>
-
-      {oauthEnabled && (
-        <>
-          <AuthMethodsSeparator />
-          <GoogleSignInButton tenantId={defaultTenantId} />
-        </>
-      )}
     </div>
   );
 }
