@@ -180,17 +180,19 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <NavList onNavigate={onNavigate} />
 
       <div className="flex-none border-t border-neutral-100 p-3">
-        <Link
-          href="/profile"
-          onClick={onNavigate}
-          className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-bg-subtle/70"
-          aria-label="Open profile"
-        >
-          <Avatar name={user?.fullName ?? "User"} size="sm" />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-neutral-900">{user?.fullName}</p>
-            <p className="truncate text-xs text-neutral-500">{roleLabel(user?.role)}</p>
-          </div>
+        <div className="flex items-center gap-3 rounded-lg px-2 py-2">
+          <Link
+            href="/profile"
+            onClick={onNavigate}
+            className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition-colors hover:bg-bg-subtle/70"
+            aria-label="Open profile"
+          >
+            <Avatar name={user?.fullName ?? "User"} size="sm" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-neutral-900">{user?.fullName}</p>
+              <p className="truncate text-xs text-neutral-500">{roleLabel(user?.role)}</p>
+            </div>
+          </Link>
           <button
             type="button"
             onClick={() => void logout()}
@@ -199,7 +201,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           >
             <LogOutIcon className="size-4" />
           </button>
-        </Link>
+        </div>
       </div>
     </div>
   );

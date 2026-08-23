@@ -80,7 +80,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAccessTokenRef(() => accessTokenRef.current);
   }, []);
 
-
   const refreshToken = useCallback(async (): Promise<boolean> => {
     if (refreshingRef.current) return false;
     refreshingRef.current = true;
@@ -103,7 +102,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRefreshTokenRef(refreshToken);
   }, [refreshToken]);
 
-
   const mountedRef = useRef(false);
   useEffect(() => {
 
@@ -119,7 +117,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(refreshedUser);
         }
       } catch {
-
         if (!cancelled) {
           accessTokenRef.current = null;
           setUser(null);
@@ -135,34 +132,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   }, []);
 
-
   const login = useCallback(
     async (payload: LoginPayload): Promise<void> => {
       const result = await authApi.login(payload);
       accessTokenRef.current = result.accessToken;
       setUser(result.user);
-      if (result.onboardingRequired) {
-        router.push("/onboarding");
-      } else {
-        router.push("/dashboard");
-      }
+      router.push("/dashboard");
     },
     [router],
   );
 
-
   const registerSchool = useCallback(
-    async (
-      payload: RegisterSchoolPayload,
-    ): Promise<RegisterSchoolResponse> => {
+    async (payload: RegisterSchoolPayload): Promise<RegisterSchoolResponse> => {
       const result = await authApi.registerSchool(payload);
       accessTokenRef.current = result.accessToken;
       setUser(result.user);
-      if (result.onboardingRequired) {
-        router.push("/onboarding");
-      } else {
-        router.push("/dashboard");
-      }
+      router.push("/dashboard");
       return result;
     },
     [router],
@@ -174,7 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       accessTokenRef.current = null;
       setUser(null);
-      router.push("/login");
+      router.replace("/login");
     }
   }, [router]);
 
