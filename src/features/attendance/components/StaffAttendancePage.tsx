@@ -12,7 +12,7 @@ import { EmptyState } from "@/shared/components/ui/empty-state";
 import { useToast } from "@/shared/components/ui/toast";
 import {
   attendanceApi,
-  type StaffAttendanceRecord,
+  type StaffRosterEntry,
   type StaffAttendanceStatus,
 } from "../api/attendanceApi";
 import {
@@ -57,7 +57,7 @@ function formatDateShort(date: Date): string {
 export function StaffAttendancePage() {
   const toast = useToast();
   const [selectedDate, setSelectedDate] = useState<string>(toDateString(todayStart()));
-  const [records, setRecords] = useState<StaffAttendanceRecord[]>([]);
+  const [records, setRecords] = useState<StaffRosterEntry[]>([]);
   const [localStatuses, setLocalStatuses] = useState<Map<string, StaffAttendanceStatus>>(new Map());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -93,13 +93,15 @@ export function StaffAttendancePage() {
     setLoading(true);
     try {
       const dateObj = new Date(selectedDate + "T12:00:00Z");
-      const result = await attendanceApi.getStaffAttendanceByDate(dateObj);
+      // Roster = every active teacher, with their status for the date
+      // (null when not yet marked) — works on fresh days too.
+      const result = await attendanceApi.getStaffRoster(dateObj);
       setRecords(result.items);
-      const map = new Map<string, StaffAttendanceStatus>();
+      const map = new Map<string, StaffAttendanceStatus | null>();
       for (const r of result.items) {
-        map.set(r.teacherId, r.status);
+        map.set(r.teacherId, r.status ?? null);
       }
-      setLocalStatuses(map);
+      setLocalStatuses(map as Map<string, StaffAttendanceStatus>);
     } catch {
       setRecords([]);
       setLocalStatuses(new Map());
@@ -139,7 +141,7 @@ export function StaffAttendancePage() {
       const dateObj = new Date(selectedDate + "T12:00:00Z");
       const entries = records.map((r) => ({
         teacherId: r.teacherId,
-        status: localStatuses.get(r.teacherId) ?? r.status,
+        status: localStatuses.get(r.teacherId) ?? r.status ?? "PRESENT",
       }));
       await attendanceApi.bulkMarkStaffAttendance({ date: dateObj, entries });
       toast.success("Staff attendance saved successfully.");
@@ -243,10 +245,7 @@ export function StaffAttendancePage() {
         {loading ? (
           <LoadingState label="Loading attendance…" />
         ) : records.length === 0 ? (
-          <EmptyState
-            title="No staff members found"
-            description="Select a date to view staff attendance."
-          />
+          <EmptyState title="No staff members found" description="No active teachers to display." />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
@@ -269,10 +268,7 @@ export function StaffAttendancePage() {
                 {records.map((record) => {
                   const current = localStatuses.get(record.teacherId) ?? record.status;
                   return (
-                    <tr
-                      key={record.id}
-                      className="transition-colors hover:bg-bg-muted"
-                    >
+                    <tr key={record.teacherId} className="transition-colors hover:bg-bg-muted">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <Avatar name={record.teacherName} size="sm" />

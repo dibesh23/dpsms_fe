@@ -10,6 +10,47 @@ export interface SectionOption {
   label: string;
 }
 
+export interface MySection {
+  sectionId: string;
+  sectionName: string;
+  classId: string;
+  className: string;
+  academicYearId: string;
+}
+
+export interface MySectionsResponse {
+  items: MySection[];
+  academicYearId: string;
+}
+
+export interface RosterEntry {
+  enrollmentId: string;
+  rollNumber: string;
+  studentId: string;
+  studentName: string;
+  status: StudentAttendanceStatus | null; // null = not marked yet
+}
+
+export interface RosterResponse {
+  items: RosterEntry[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface StaffRosterEntry {
+  teacherId: string;
+  teacherName: string;
+  status: StaffAttendanceStatus | null; // null = not marked yet
+}
+
+export interface StaffRosterResponse {
+  items: StaffRosterEntry[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface SectionAttendanceRecord {
   id: string;
   enrollmentId: string;
@@ -95,6 +136,33 @@ export const attendanceApi = {
     return data.data;
   },
 
+  async getMySections(): Promise<MySectionsResponse> {
+    const { data } = await apiClient.get<{ data: MySectionsResponse }>("/attendance/my-sections");
+    return data.data;
+  },
+
+  async getSectionRoster(
+    sectionId: string,
+    date: Date,
+    page = 1,
+    pageSize = 100,
+  ): Promise<RosterResponse> {
+    const { data } = await apiClient.get<{ data: RosterResponse }>("/attendance/roster", {
+      params: { sectionId, date: toDateString(date), page, pageSize },
+    });
+    return data.data;
+  },
+
+  async getStaffRoster(date: Date, page = 1, pageSize = 100): Promise<StaffRosterResponse> {
+    const { data } = await apiClient.get<{ data: StaffRosterResponse }>(
+      "/attendance/staff-roster",
+      {
+        params: { date: toDateString(date), page, pageSize },
+      },
+    );
+    return data.data;
+  },
+
   async getSectionAttendance(
     sectionId: string,
     date: Date,
@@ -108,11 +176,7 @@ export const attendanceApi = {
     return data.data;
   },
 
-  async getStudentStats(
-    from: Date,
-    to: Date,
-    sectionId?: string,
-  ): Promise<StudentAttendanceStats> {
+  async getStudentStats(from: Date, to: Date, sectionId?: string): Promise<StudentAttendanceStats> {
     const params: Record<string, string> = { from: toDateString(from), to: toDateString(to) };
     if (sectionId) params.sectionId = sectionId;
     const { data } = await apiClient.get<{ data: StudentAttendanceStats }>(

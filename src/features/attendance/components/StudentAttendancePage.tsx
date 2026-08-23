@@ -10,10 +10,12 @@ import { Avatar } from "@/shared/components/ui/avatar";
 import { LoadingState } from "@/shared/components/ui/loading-state";
 import { EmptyState } from "@/shared/components/ui/empty-state";
 import { useToast } from "@/shared/components/ui/toast";
+import { StatusBadge, type StatusVariant } from "@/shared/components/ui/status-badge";
+import { useAuth } from "@/shared/providers/AuthProvider";
 import {
   attendanceApi,
   type SectionOption,
-  type SectionAttendanceRecord,
+  type RosterEntry,
   type StudentAttendanceStatus,
 } from "../api/attendanceApi";
 import {
@@ -40,6 +42,13 @@ const STATUS_COLORS: Record<StudentAttendanceStatus, string> = {
   EXCUSED: "border-blue-200 bg-blue-50 text-blue-700",
 };
 
+const STATUS_BADGE_VARIANT: Record<StudentAttendanceStatus, StatusVariant> = {
+  PRESENT: "success",
+  ABSENT: "danger",
+  LATE: "warning",
+  EXCUSED: "info",
+};
+
 function todayStart(): Date {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
@@ -59,11 +68,16 @@ function formatDateShort(date: Date): string {
 
 export function StudentAttendancePage() {
   const toast = useToast();
+  const { user, isLoading: authLoading } = useAuth();
+  // Only teachers mark student attendance; admin/principal get a read-only register.
+  const canMark = user?.role === "TEACHER";
   const [sections, setSections] = useState<SectionOption[]>([]);
   const [selectedSection, setSelectedSection] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<string>(toDateString(todayStart()));
-  const [records, setRecords] = useState<SectionAttendanceRecord[]>([]);
-  const [localStatuses, setLocalStatuses] = useState<Map<string, StudentAttendanceStatus>>(new Map());
+  const [records, setRecords] = useState<RosterEntry[]>([]);
+  const [localStatuses, setLocalStatuses] = useState<Map<string, StudentAttendanceStatus>>(
+    new Map(),
+  );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -78,51 +92,95 @@ export function StudentAttendancePage() {
 
   const loadSections = useCallback(async () => {
     try {
-      const list = await attendanceApi.listSections();
-      setSections(list);
-      if (list.length > 0 && !selectedSection) {
-        setSelectedSection(list[0].id);
+      if (canMark) {
+        // Teachers only see the sections they're assigned to.
+        const result = await attendanceApi.getMySections();
+        const list: SectionOption[] = result.items.map((s) => ({
+          id: s.sectionId,
+          name: s.sectionName,
+          className: s.className,
+          label: `${s.className} · ${s.sectionName}`,
+        }));
+        setSections(list);
+        // Functional update: no dependency on selectedSection, so this
+        // callback stays stable and the effect can't refetch in a loop.
+        if (list.length > 0) {
+          setSelectedSection((prev) => prev || list[0].id);
+        } else {
+          toast.info(
+            "No classes are assigned to you yet. Ask the admin to assign you to a section.",
+          );
+        }
+      } else {
+        // Admin/Principal can pick any section in the school.
+        const list = await attendanceApi.listSections();
+        setSections(list);
+        if (list.length > 0) {
+          setSelectedSection((prev) => prev || list[0].id);
+        } else {
+          toast.info("No sections found. Create classes and sections first.");
+        }
       }
-    } catch {
+    } catch (err) {
       setSections([]);
+      const message =
+        err instanceof Error && "response" in err
+          ? ((err.response as { data?: { error?: { message?: string } } }).data?.error?.message ??
+            "Could not load sections.")
+          : "Could not load sections.";
+      toast.error(message);
     }
-  }, [selectedSection]);
+  }, [canMark, toast]);
 
+  // Wait for auth to resolve before firing any requests — prevents
+  // pointless 401s when the session is missing or still being restored.
   useEffect(() => {
+    if (authLoading || !user) return;
     void loadSections();
-  }, [loadSections]);
+  }, [loadSections, authLoading, user]);
 
+  // Teachers only need their own class's stats; school-wide is for admins.
   const loadStats = useCallback(async () => {
+    // Never run the heavy school-wide aggregation for a teacher —
+    // wait until their class is selected and query that section only.
+    if (canMark && !selectedSection) return;
     setStatsLoading(true);
     try {
       const from = new Date(todayStart());
       from.setDate(1);
       const to = todayStart();
-      const stats = await attendanceApi.getStudentStats(from, to);
+      const stats = await attendanceApi.getStudentStats(
+        from,
+        to,
+        canMark && selectedSection ? selectedSection : undefined,
+      );
       setOverallStats(stats.summary);
     } catch {
       setOverallStats(null);
     } finally {
       setStatsLoading(false);
     }
-  }, []);
+  }, [canMark, selectedSection]);
 
   useEffect(() => {
+    if (authLoading || !user) return;
     void loadStats();
-  }, [loadStats]);
+  }, [loadStats, authLoading, user]);
 
   const loadAttendance = useCallback(async () => {
     if (!selectedSection) return;
     setLoading(true);
     try {
       const dateObj = new Date(selectedDate + "T12:00:00Z");
-      const result = await attendanceApi.getSectionAttendance(selectedSection, dateObj);
+      // Roster = every enrolled student, with their status for the date
+      // (null when not yet marked) — works on fresh days too.
+      const result = await attendanceApi.getSectionRoster(selectedSection, dateObj);
       setRecords(result.items);
-      const map = new Map<string, StudentAttendanceStatus>();
+      const map = new Map<string, StudentAttendanceStatus | null>();
       for (const r of result.items) {
-        map.set(r.enrollmentId, r.status);
+        map.set(r.enrollmentId, r.status ?? null);
       }
-      setLocalStatuses(map);
+      setLocalStatuses(map as Map<string, StudentAttendanceStatus>);
     } catch {
       setRecords([]);
       setLocalStatuses(new Map());
@@ -132,8 +190,9 @@ export function StudentAttendancePage() {
   }, [selectedSection, selectedDate]);
 
   useEffect(() => {
+    if (authLoading || !user) return;
     void loadAttendance();
-  }, [loadAttendance]);
+  }, [loadAttendance, authLoading, user]);
 
   const updateStatus = (enrollmentId: string, status: StudentAttendanceStatus) => {
     setLocalStatuses((prev) => {
@@ -163,7 +222,7 @@ export function StudentAttendancePage() {
       const dateObj = new Date(selectedDate + "T12:00:00Z");
       const entries = records.map((r) => ({
         enrollmentId: r.enrollmentId,
-        status: localStatuses.get(r.enrollmentId) ?? r.status,
+        status: localStatuses.get(r.enrollmentId) ?? r.status ?? "PRESENT",
       }));
       await attendanceApi.bulkMarkStudentAttendance({
         sectionId: selectedSection,
@@ -181,34 +240,45 @@ export function StudentAttendancePage() {
   };
 
   const sectionLabel = sections.find((s) => s.id === selectedSection)?.label ?? "Select section";
-  const presentCount = records.filter((r) => localStatuses.get(r.enrollmentId) === "PRESENT").length;
+  const presentCount = records.filter(
+    (r) => localStatuses.get(r.enrollmentId) === "PRESENT",
+  ).length;
   const absentCount = records.filter((r) => localStatuses.get(r.enrollmentId) === "ABSENT").length;
   const lateCount = records.filter((r) => localStatuses.get(r.enrollmentId) === "LATE").length;
-  const excusedCount = records.filter((r) => localStatuses.get(r.enrollmentId) === "EXCUSED").length;
-  const attendanceRate = records.length > 0 ? Math.round(((presentCount + lateCount) / records.length) * 100) : 0;
+  const excusedCount = records.filter(
+    (r) => localStatuses.get(r.enrollmentId) === "EXCUSED",
+  ).length;
+  const attendanceRate =
+    records.length > 0 ? Math.round(((presentCount + lateCount) / records.length) * 100) : 0;
 
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Student Attendance"
-        description={`${formatDateShort(new Date(selectedDate + "T12:00:00Z"))} · ${sectionLabel}`}
+        title={canMark ? "Student Attendance" : "Class Attendance"}
+        description={
+          canMark
+            ? `${formatDateShort(new Date(selectedDate + "T12:00:00Z"))} · ${sectionLabel}`
+            : `Recorded by class teachers · ${formatDateShort(new Date(selectedDate + "T12:00:00Z"))} · ${sectionLabel}`
+        }
         actions={
-          <div className="flex items-center gap-2">
-            <Button
-              text="Mark All Present"
-              variant="secondary"
-              icon={<CheckCircle2Icon className="size-4" />}
-              onClick={markAllPresent}
-              disabled={loading || records.length === 0}
-            />
-            <Button
-              text="Save"
-              loading={saving}
-              icon={<ClipboardCheckIcon className="size-4" />}
-              onClick={handleSave}
-              disabled={!hasChanges || saving}
-            />
-          </div>
+          canMark ? (
+            <div className="flex items-center gap-2">
+              <Button
+                text="Mark All Present"
+                variant="secondary"
+                icon={<CheckCircle2Icon className="size-4" />}
+                onClick={markAllPresent}
+                disabled={loading || records.length === 0}
+              />
+              <Button
+                text="Save"
+                loading={saving}
+                icon={<ClipboardCheckIcon className="size-4" />}
+                onClick={handleSave}
+                disabled={!hasChanges || saving}
+              />
+            </div>
+          ) : undefined
         }
       />
 
@@ -283,15 +353,19 @@ export function StudentAttendancePage() {
 
       {/* Attendance Table */}
       <DashboardWidget
-        title="Attendance Register"
-        description={`${records.length} students · Select status for each student`}
+        title={canMark ? "Attendance Register" : "Attendance Summary"}
+        description={
+          canMark
+            ? `${records.length} students · Select status for each student`
+            : `${records.length} students · Read-only view of teacher-recorded attendance`
+        }
       >
         {loading ? (
           <LoadingState label="Loading attendance…" />
         ) : records.length === 0 ? (
           <EmptyState
             title="No students found"
-            description="Select a section and date to view attendance."
+            description="No students are enrolled in this section yet."
           />
         ) : (
           <div className="overflow-x-auto">
@@ -304,24 +378,27 @@ export function StudentAttendancePage() {
                   <th className="px-4 py-3 text-xs font-medium tracking-wide text-neutral-400">
                     Roll No.
                   </th>
-                  {STATUS_OPTIONS.map((status) => (
-                    <th
-                      key={status}
-                      className="px-4 py-3 text-center text-xs font-medium tracking-wide text-neutral-400"
-                    >
-                      {STATUS_LABELS[status]}
+                  {canMark ? (
+                    STATUS_OPTIONS.map((status) => (
+                      <th
+                        key={status}
+                        className="px-4 py-3 text-center text-xs font-medium tracking-wide text-neutral-400"
+                      >
+                        {STATUS_LABELS[status]}
+                      </th>
+                    ))
+                  ) : (
+                    <th className="px-4 py-3 text-center text-xs font-medium tracking-wide text-neutral-400">
+                      Status
                     </th>
-                  ))}
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
                 {records.map((record) => {
                   const current = localStatuses.get(record.enrollmentId) ?? record.status;
                   return (
-                    <tr
-                      key={record.id}
-                      className="transition-colors hover:bg-bg-muted"
-                    >
+                    <tr key={record.enrollmentId} className="transition-colors hover:bg-bg-muted">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <Avatar name={record.studentName} size="sm" />
@@ -329,22 +406,35 @@ export function StudentAttendancePage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-neutral-500">{record.rollNumber}</td>
-                      {STATUS_OPTIONS.map((status) => (
-                        <td key={status} className="px-4 py-3 text-center">
-                          <button
-                            type="button"
-                            onClick={() => updateStatus(record.enrollmentId, status)}
-                            className={cn(
-                              "inline-flex h-8 min-w-8 items-center justify-center rounded-lg border px-3 text-xs font-medium transition-all",
-                              current === status
-                                ? STATUS_COLORS[status]
-                                : "border-neutral-200 bg-bg-default text-neutral-400 hover:border-neutral-300 hover:text-neutral-600",
-                            )}
-                          >
-                            {status.charAt(0)}
-                          </button>
+                      {canMark ? (
+                        STATUS_OPTIONS.map((status) => (
+                          <td key={status} className="px-4 py-3 text-center">
+                            <button
+                              type="button"
+                              onClick={() => updateStatus(record.enrollmentId, status)}
+                              className={cn(
+                                "inline-flex h-8 min-w-8 items-center justify-center rounded-lg border px-3 text-xs font-medium transition-all",
+                                current === status
+                                  ? STATUS_COLORS[status]
+                                  : "border-neutral-200 bg-bg-default text-neutral-400 hover:border-neutral-300 hover:text-neutral-600",
+                              )}
+                            >
+                              {status.charAt(0)}
+                            </button>
+                          </td>
+                        ))
+                      ) : (
+                        <td className="px-4 py-3 text-center">
+                          {current ? (
+                            <StatusBadge
+                              status={STATUS_LABELS[current]}
+                              variant={STATUS_BADGE_VARIANT[current]}
+                            />
+                          ) : (
+                            <span className="text-xs text-neutral-400">Not marked</span>
+                          )}
                         </td>
-                      ))}
+                      )}
                     </tr>
                   );
                 })}

@@ -18,10 +18,7 @@ import type {
   RegisterSchoolPayload,
   RegisterSchoolResponse,
 } from "../../features/auth/types";
-import {
-  PERMISSIONS as P,
-  type PermissionKey,
-} from "../permissions";
+import { PERMISSIONS as P, type PermissionKey } from "../permissions";
 
 export interface AuthContextValue {
   user: AuthUser | null;
@@ -49,12 +46,16 @@ const ROLE_FALLBACK_PERMISSIONS: Record<string, readonly PermissionKey[]> = {
     P.ACADEMIC_SESSION_LIST,
     P.EXAM_OWN_VIEW,
     P.ATTENDANCE_OWN_VIEW,
+    P.ATTENDANCE_STUDENT_MARK,
+    P.ATTENDANCE_STUDENT_LIST,
+    P.ATTENDANCE_STAFF_READ,
     P.NOTICE_OWN_VIEW,
     P.MESSAGING_OWN_VIEW,
   ],
   STUDENT: [
     P.DASHBOARD_VIEW,
     P.ATTENDANCE_OWN_VIEW,
+    P.ATTENDANCE_STUDENT_READ,
     P.EXAM_OWN_VIEW,
     P.FEE_OWN_VIEW,
     P.NOTICE_OWN_VIEW,
@@ -75,11 +76,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshingRef = useRef(false);
 
-
   useEffect(() => {
     setAccessTokenRef(() => accessTokenRef.current);
   }, []);
-
 
   const refreshToken = useCallback(async (): Promise<boolean> => {
     if (refreshingRef.current) return false;
@@ -98,15 +97,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-
   useEffect(() => {
     setRefreshTokenRef(refreshToken);
   }, [refreshToken]);
 
-
   const mountedRef = useRef(false);
   useEffect(() => {
-
     if (mountedRef.current) return;
     mountedRef.current = true;
 
@@ -119,7 +115,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(refreshedUser);
         }
       } catch {
-
         if (!cancelled) {
           accessTokenRef.current = null;
           setUser(null);
@@ -132,9 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-
   }, []);
-
 
   const login = useCallback(
     async (payload: LoginPayload): Promise<void> => {
@@ -150,11 +143,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [router],
   );
 
-
   const registerSchool = useCallback(
-    async (
-      payload: RegisterSchoolPayload,
-    ): Promise<RegisterSchoolResponse> => {
+    async (payload: RegisterSchoolPayload): Promise<RegisterSchoolResponse> => {
       const result = await authApi.registerSchool(payload);
       accessTokenRef.current = result.accessToken;
       setUser(result.user);
@@ -181,9 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const can = useCallback(
     (permission: string): boolean => {
       if (user?.permissions?.includes(permission)) return true;
-      const fallbacks = user?.role
-        ? ROLE_FALLBACK_PERMISSIONS[user.role]
-        : undefined;
+      const fallbacks = user?.role ? ROLE_FALLBACK_PERMISSIONS[user.role] : undefined;
       return fallbacks?.includes(permission as PermissionKey) ?? false;
     },
     [user?.permissions, user?.role],

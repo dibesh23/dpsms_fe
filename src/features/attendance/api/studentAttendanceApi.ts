@@ -3,30 +3,43 @@ import { apiClient } from "@/shared/lib/apiClient";
 // Mirrors schema.prisma: StudentAttendance.status
 export type AttendanceStatus = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED";
 
-export interface AttendanceRecord {
+export interface MyAttendanceRecord {
   id: string;
-  date: string; // StudentAttendance.date
-  status: AttendanceStatus; // StudentAttendance.status
-  sectionName: string; // StudentAttendance.section -> Section.name
-  className: string; // Section.class -> Class.name
+  enrollmentId: string;
+  sectionId: string;
+  date: string; // ISO datetime (noon UTC)
+  status: AttendanceStatus;
 }
 
-export interface AttendanceHistorySummary {
-  academicYearLabel: string;
-  totalMarkedDays: number;
-  presentDays: number;
-  absentDays: number;
-  lateDays: number;
-  excusedDays: number;
-  overallPercent: number;
-  records: AttendanceRecord[];
+export interface MyAttendanceSummary {
+  totalMarked: number;
+  present: number;
+  absent: number;
+  late: number;
+  excused: number;
+  attendanceRate: number;
+}
+
+export interface MyAttendanceResponse {
+  enrollmentId: string;
+  sectionId: string;
+  records: MyAttendanceRecord[];
+  summary: MyAttendanceSummary;
+  dateRange: { from: string; to: string };
+}
+
+function toDateString(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 export const studentAttendanceApi = {
-  async getHistory(): Promise<AttendanceHistorySummary> {
-    const { data } = await apiClient.get<{ data: AttendanceHistorySummary }>(
-      "/students/me/attendance",
-    );
+  async getMyAttendance(from: Date, to: Date): Promise<MyAttendanceResponse> {
+    const { data } = await apiClient.get<{ data: MyAttendanceResponse }>("/attendance/me", {
+      params: { from: toDateString(from), to: toDateString(to) },
+    });
     return data.data;
   },
 };
