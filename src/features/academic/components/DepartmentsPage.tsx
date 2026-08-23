@@ -26,6 +26,7 @@ export interface Department {
   name: string;
   headTeacher: { id: string; fullName: string } | null;
   staffCount: number;
+  teacherCount: number;
   subjectCount: number;
   description: string;
 }
@@ -51,6 +52,7 @@ export function DepartmentsPage() {
           name: r.name,
           headTeacher: r.headTeacher,
           staffCount: r.staffCount,
+          teacherCount: r.teacherCount,
           subjectCount: r.subjectCount,
           description: r.description,
         })),
@@ -103,6 +105,7 @@ export function DepartmentsPage() {
           name: record.name,
           headTeacher: record.headTeacher,
           staffCount: 0,
+          teacherCount: 0,
           subjectCount: 0,
           description: record.description,
         },
@@ -132,6 +135,7 @@ export function DepartmentsPage() {
                 name: record.name,
                 headTeacher: record.headTeacher,
                 staffCount: record.staffCount,
+                teacherCount: record.teacherCount,
                 subjectCount: record.subjectCount,
                 description: record.description,
               }
@@ -233,6 +237,9 @@ export function DepartmentsPage() {
                 <div className="flex flex-none gap-2">
                   <span className="rounded-md bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600">
                     {department.staffCount} staff
+                  </span>
+                  <span className="rounded-md bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600">
+                    {department.teacherCount} teachers
                   </span>
                   <span className="rounded-md bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600">
                     {department.subjectCount} subjects

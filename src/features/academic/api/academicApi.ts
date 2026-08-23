@@ -19,6 +19,7 @@ export interface DepartmentRecord {
   headTeacher: DepartmentHeadRecord | null;
   description: string;
   staffCount: number;
+  teacherCount: number;
   subjectCount: number;
 }
 
