@@ -2,8 +2,6 @@ import React, { Suspense } from "react";
 import Link from "next/link";
 import { LoginWithSchoolContext } from "../../../features/auth/components/LoginWithSchoolContext";
 
-const DEFAULT_TENANT_ID = process.env["NEXT_PUBLIC_TENANT_ID"] ?? "";
-
 export default function LoginPage() {
   return (
     <div className="w-full max-w-sm">
@@ -11,7 +9,7 @@ export default function LoginPage() {
 
       <div className="mt-8">
         <Suspense fallback={null}>
-          <LoginWithSchoolContext defaultTenantId={DEFAULT_TENANT_ID} />
+          <LoginWithSchoolContext />
         </Suspense>
       </div>
 
