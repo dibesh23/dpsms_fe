@@ -218,20 +218,16 @@ export function StaffPage() {
         <StatsCard
           label="Total Staff"
           value={String(staff.length)}
-          delta="2 added this term"
           icon={<BriefcaseIcon className="size-4" />}
         />
         <StatsCard
           label="Departments"
           value={String(departments)}
-          delta="Fully staffed"
-          deltaDirection="neutral"
           icon={<FileTextIcon className="size-4" />}
         />
         <StatsCard
           label="On Leave Today"
           value={String(onLeave)}
-          delta="0 open shifts"
           deltaDirection="neutral"
           icon={<ClockIcon className="size-4" />}
         />

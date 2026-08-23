@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
@@ -16,7 +17,13 @@ import { PERMISSIONS } from "@/shared/permissions";
 import { AddSubjectForm, type AddSubjectValues } from "./AddSubjectForm";
 import { EditSubjectForm, type EditSubjectValues, type EditableSubject } from "./EditSubjectForm";
 import { academicApi, type SubjectRecord as SubjectRecordDto } from "../api/academicApi";
-import { BookOpenIcon, PencilIcon, PlusIcon, TrashIcon } from "@/shared/components/ui/icons";
+import {
+  BookOpenIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  ArrowUpRightIcon,
+} from "@/shared/components/ui/icons";
 
 function getApiErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error && "response" in err) {
@@ -30,11 +37,13 @@ function getApiErrorMessage(err: unknown, fallback: string): string {
 const COLUMNS = ({
   canUpdate,
   canDelete,
+  onView,
   onEdit,
   onDelete,
 }: {
   canUpdate: boolean;
   canDelete: boolean;
+  onView: (subject: SubjectRecordDto) => void;
   onEdit: (subject: SubjectRecordDto) => void;
   onDelete: (subject: SubjectRecordDto) => void;
 }): Column<SubjectRecordDto>[] => [
@@ -77,6 +86,11 @@ const COLUMNS = ({
     render: (subject) => (
       <RowActions
         actions={[
+          {
+            label: "View details",
+            icon: <ArrowUpRightIcon className="size-3.5" />,
+            onClick: () => onView(subject),
+          },
           ...(canUpdate
             ? [
                 {
@@ -103,6 +117,7 @@ const COLUMNS = ({
 ];
 
 export function SubjectsPage() {
+  const router = useRouter();
   const [subjects, setSubjects] = useState<SubjectRecordDto[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<EditableSubject | null>(null);
@@ -243,6 +258,7 @@ export function SubjectsPage() {
         columns={COLUMNS({
           canUpdate,
           canDelete,
+          onView: (subject) => router.push(`/subjects/${subject.id}`),
           onEdit: openEdit,
           onDelete: (subject) => setDeleteTarget(subject),
         })}

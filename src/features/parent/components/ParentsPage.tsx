@@ -209,7 +209,6 @@ export function ParentsPage() {
         <StatsCard
           label="Total Guardians"
           value={String(parents.length)}
-          delta="2 added this week"
           icon={<HeartHandshakeIcon className="size-4" />}
         />
         <StatsCard

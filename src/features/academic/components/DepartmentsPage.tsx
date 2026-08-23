@@ -16,12 +16,18 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { AddDepartmentForm, type AddDepartmentValues } from "./AddDepartmentForm";
 import { SetDepartmentHeadForm, type SetDepartmentHeadValues } from "./SetDepartmentHeadForm";
+import {
+  EditDepartmentForm,
+  editValuesToPayload,
+  type EditDepartmentValues,
+} from "./EditDepartmentForm";
 import { academicApi, type DepartmentRecord as DepartmentRecordDto } from "../api/academicApi";
 import { teacherApi } from "@/features/teacher/api/teacherApi";
 import {
   ArrowUpRightIcon,
   BookOpenIcon,
   Building2Icon,
+  PencilIcon,
   PlusIcon,
   TrashIcon,
   UsersIcon,
@@ -40,6 +46,7 @@ export function DepartmentsPage() {
   const [departments, setDepartments] = useState<DepartmentRecordDto[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [headTarget, setHeadTarget] = useState<DepartmentRecordDto | null>(null);
+  const [editTarget, setEditTarget] = useState<DepartmentRecordDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DepartmentRecordDto | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [teachers, setTeachers] = useState<Array<{ id: string; name: string; department: string }>>(
@@ -122,6 +129,27 @@ export function DepartmentsPage() {
         if (message) return message;
       }
       return "Could not update the department head. Check the details and try again.";
+    }
+  };
+
+  const handleSaveEdit = async (values: EditDepartmentValues): Promise<string | null> => {
+    if (!editTarget) return "Could not save changes. Try again.";
+    try {
+      const record = await academicApi.updateDepartment(editTarget.id, editValuesToPayload(values));
+      setDepartments((current) =>
+        current.map((department) => (department.id === record.id ? record : department)),
+      );
+      setEditTarget(null);
+      toast.success("Department updated successfully.");
+      return null;
+    } catch (err) {
+      if (err instanceof Error && "response" in err) {
+        const response = (err as { response?: { data?: { error?: { message?: string } } } })
+          .response;
+        const message = response?.data?.error?.message;
+        if (message) return message;
+      }
+      return "Could not update the department. Check the details and try again.";
     }
   };
 
@@ -237,6 +265,11 @@ export function DepartmentsPage() {
                     ...(canUpdate
                       ? [
                           {
+                            label: "Edit",
+                            icon: <PencilIcon className="size-3.5" />,
+                            onClick: () => setEditTarget(department),
+                          },
+                          {
                             label: "Set Head",
                             icon: <UsersIcon className="size-3.5" />,
                             onClick: () => void openHeadDialog(department),
@@ -300,6 +333,24 @@ export function DepartmentsPage() {
           description="Create a new academic department."
         >
           <AddDepartmentForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+        </Dialog>
+      )}
+
+      {canUpdate && editTarget && (
+        <Dialog
+          open
+          onClose={() => setEditTarget(null)}
+          title="Edit Department"
+          description={`Update "${editTarget.name}".`}
+        >
+          <EditDepartmentForm
+            initial={{
+              name: editTarget.name,
+              description: editTarget.description ?? "",
+            }}
+            onSave={handleSaveEdit}
+            onClose={() => setEditTarget(null)}
+          />
         </Dialog>
       )}
 

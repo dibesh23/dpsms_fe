@@ -19,13 +19,14 @@ import {
   type SessionRecord as SessionRecordDto,
   type ClassRecord as ClassRecordDto,
 } from "../api/academicApi";
-import { LayoutGridIcon } from "@/shared/components/ui/icons";
+import { LayoutGridIcon, PencilIcon } from "@/shared/components/ui/icons";
 import {
   ArrowLeftIcon,
   CalendarDaysIcon,
   CheckCircle2Icon,
   TrashIcon,
 } from "@/shared/components/ui/icons";
+import { EditSessionForm, type EditSessionValues } from "./EditSessionForm";
 
 function getApiErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error && "response" in err) {
@@ -49,6 +50,7 @@ export function SessionDetailPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [yearClasses, setYearClasses] = useState<ClassRecordDto[]>([]);
   const [activating, setActivating] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
 
@@ -82,6 +84,23 @@ export function SessionDetailPage() {
       toast.error(getApiErrorMessage(err, "Could not set the academic year active."));
     } finally {
       setActivating(false);
+    }
+  };
+
+  const handleSaveEdit = async (values: EditSessionValues): Promise<string | null> => {
+    if (!sessionId) return "Could not save changes. Try again.";
+    try {
+      const record = await academicApi.updateSession(sessionId, {
+        label: values.label,
+        startDate: values.startDate,
+        endDate: values.endDate,
+      });
+      setSession(record);
+      setEditOpen(false);
+      toast.success("Academic year updated successfully.");
+      return null;
+    } catch (err) {
+      return getApiErrorMessage(err, "Could not update the academic year. Try again.");
     }
   };
 
@@ -146,6 +165,15 @@ export function SessionDetailPage() {
         description={`Created ${formatDate(session.createdAt)}`}
         actions={
           <>
+            {canUpdate && (
+              <Button
+                variant="secondary"
+                text="Edit"
+                icon={<PencilIcon className="size-4" />}
+                className="w-auto"
+                onClick={() => setEditOpen(true)}
+              />
+            )}
             {canUpdate && !session.isActive && (
               <Button
                 variant="secondary"
@@ -250,6 +278,25 @@ export function SessionDetailPage() {
           Only the active academic year can receive enrollments and exams. Sessions that are active
           or already contain classes, enrollments, or exams cannot be removed.
         </p>
+      )}
+
+      {canUpdate && editOpen && (
+        <Dialog
+          open
+          onClose={() => setEditOpen(false)}
+          title="Edit Academic Year"
+          description={`Update "${session.label}".`}
+        >
+          <EditSessionForm
+            initial={{
+              label: session.label,
+              startDate: session.startDate.slice(0, 10),
+              endDate: session.endDate.slice(0, 10),
+            }}
+            onSave={handleSaveEdit}
+            onClose={() => setEditOpen(false)}
+          />
+        </Dialog>
       )}
 
       {canDelete && (

@@ -25,6 +25,7 @@ import { teacherApi } from "@/features/teacher/api/teacherApi";
 import { StatusBadge } from "@/shared/components/ui/status-badge";
 import { EditClassForm, type EditClassValues } from "./EditClassForm";
 import { AddSectionForm } from "./AddSectionForm";
+import { EditSectionForm, editValuesToPayload, type EditSectionValues } from "./EditSectionForm";
 import { AddClassSubjectForm } from "./AddClassSubjectForm";
 import {
   ArrowLeftIcon,
@@ -60,6 +61,7 @@ export function ClassDetailPage() {
   const canUpdate = can(PERMISSIONS.ACADEMIC_CLASS_UPDATE);
   const canDelete = can(PERMISSIONS.ACADEMIC_CLASS_DELETE);
   const canCreateSection = can(PERMISSIONS.ACADEMIC_SECTION_CREATE);
+  const canUpdateSection = can(PERMISSIONS.ACADEMIC_SECTION_UPDATE);
   const canDeleteSection = can(PERMISSIONS.ACADEMIC_SECTION_DELETE);
   const canManageSubjects = can(PERMISSIONS.ACADEMIC_CLASS_SUBJECT_MANAGE);
 
@@ -77,6 +79,7 @@ export function ClassDetailPage() {
   const [addSectionOpen, setAddSectionOpen] = useState(false);
   const [sectionTarget, setSectionTarget] = useState<SectionRecord | null>(null);
   const [sectionDeleting, setSectionDeleting] = useState(false);
+  const [editSectionTarget, setEditSectionTarget] = useState<SectionRecord | null>(null);
   const [addSubjectOpen, setAddSubjectOpen] = useState(false);
   const [subjectTarget, setSubjectTarget] = useState<ClassSubjectRecord | null>(null);
   const [subjectDeleting, setSubjectDeleting] = useState(false);
@@ -182,6 +185,37 @@ export function ClassDetailPage() {
       return null;
     } catch (err) {
       return getApiErrorMessage(err, "Could not add the section. Try again.");
+    }
+  };
+
+  const handleEditSection = async (values: EditSectionValues): Promise<string | null> => {
+    if (!editSectionTarget) return "Could not save changes. Try again.";
+    try {
+      const record = await academicApi.updateSection(
+        editSectionTarget.id,
+        editValuesToPayload(values),
+      );
+      setSections((current) =>
+        current.map((section) => (section.id === record.id ? record : section)),
+      );
+      setSchoolClass((current) =>
+        current
+          ? {
+              ...current,
+              sections: current.sections.map((name) =>
+                name === editSectionTarget.name ? record.name : name,
+              ),
+            }
+          : current,
+      );
+      setEditSectionTarget(null);
+      toast.success(`Section "${record.name}" updated.`);
+      return null;
+    } catch (err) {
+      return getApiErrorMessage(
+        err,
+        "Could not update the section. Check the details and try again.",
+      );
     }
   };
 
@@ -376,15 +410,28 @@ export function ClassDetailPage() {
                         : "Not assigned"}
                     </p>
                   </div>
-                  {canDeleteSection && (
+                  {(canUpdateSection || canDeleteSection) && (
                     <RowActions
                       actions={[
-                        {
-                          label: "Remove section",
-                          icon: <TrashIcon className="size-3.5" />,
-                          danger: true,
-                          onClick: () => setSectionTarget(section),
-                        },
+                        ...(canUpdateSection
+                          ? [
+                              {
+                                label: "Edit",
+                                icon: <PencilIcon className="size-3.5" />,
+                                onClick: () => setEditSectionTarget(section),
+                              },
+                            ]
+                          : []),
+                        ...(canDeleteSection
+                          ? [
+                              {
+                                label: "Remove section",
+                                icon: <TrashIcon className="size-3.5" />,
+                                danger: true,
+                                onClick: () => setSectionTarget(section),
+                              },
+                            ]
+                          : []),
                       ]}
                     />
                   )}
@@ -572,6 +619,25 @@ export function ClassDetailPage() {
             teachers={teachers}
             onCreate={handleCreateSection}
             onClose={() => setAddSectionOpen(false)}
+          />
+        </Dialog>
+      )}
+
+      {canUpdateSection && editSectionTarget && (
+        <Dialog
+          open
+          onClose={() => setEditSectionTarget(null)}
+          title="Edit Section"
+          description={`Update section "${editSectionTarget.name}" of ${schoolClass.name}.`}
+        >
+          <EditSectionForm
+            initial={{
+              name: editSectionTarget.name,
+              capacity:
+                editSectionTarget.capacity === null ? "" : String(editSectionTarget.capacity),
+            }}
+            onSave={handleEditSection}
+            onClose={() => setEditSectionTarget(null)}
           />
         </Dialog>
       )}

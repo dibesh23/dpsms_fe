@@ -263,7 +263,10 @@ export const academicApi = {
     const { data } = await apiClient.post<{ data: SessionRecord }>("/academic-sessions", payload);
     return data.data;
   },
-  async updateSession(id: string, payload: { isActive?: boolean }): Promise<SessionRecord> {
+  async updateSession(
+    id: string,
+    payload: { label?: string; startDate?: string; endDate?: string; isActive?: boolean },
+  ): Promise<SessionRecord> {
     const { data } = await apiClient.patch<{ data: SessionRecord }>(
       `/academic-sessions/${id}`,
       payload,

@@ -185,13 +185,12 @@ export function TeachersPage() {
     () => new Set(teachers.map((teacher) => teacher.department)).size,
     [teachers],
   );
-  const weeklyLoad = useMemo(
-    () =>
-      Math.round(
-        teachers.reduce((sum, teacher) => sum + teacher.classesPerWeek, 0) / teachers.length,
-      ),
-    [teachers],
-  );
+  const weeklyLoad = useMemo(() => {
+    if (teachers.length === 0) return 0;
+    return Math.round(
+      teachers.reduce((sum, teacher) => sum + teacher.classesPerWeek, 0) / teachers.length,
+    );
+  }, [teachers]);
 
   return (
     <div className="space-y-4">
@@ -214,20 +213,16 @@ export function TeachersPage() {
         <StatsCard
           label="Total Teachers"
           value={String(teachers.length)}
-          delta="3 new this term"
           icon={<GraduationCapIcon className="size-4" />}
         />
         <StatsCard
           label="Departments"
           value={String(departments)}
-          delta="Fully staffed"
-          deltaDirection="neutral"
           icon={<UsersIcon className="size-4" />}
         />
         <StatsCard
           label="Avg. Weekly Load"
           value={`${weeklyLoad} classes`}
-          delta="16 – 28 per teacher"
           deltaDirection="neutral"
           icon={<GraduationCapIcon className="size-4" />}
         />
@@ -341,7 +336,7 @@ export function TeachersPage() {
           open={dialogOpen}
           onClose={() => setDialogOpen(false)}
           title="Invite Teacher"
-          description="Create a faculty account for the 2082/83 academic year."
+          description="Create a faculty account for the current academic year."
         >
           <AddTeacherForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
         </Dialog>

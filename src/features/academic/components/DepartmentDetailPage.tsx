@@ -19,6 +19,11 @@ import { staffApi, type StaffRecord } from "@/features/staff/api/staffApi";
 import { StatusBadge } from "@/shared/components/ui/status-badge";
 import { SetDepartmentHeadForm, type SetDepartmentHeadValues } from "./SetDepartmentHeadForm";
 import {
+  EditDepartmentForm,
+  editValuesToPayload,
+  type EditDepartmentValues,
+} from "./EditDepartmentForm";
+import {
   ArrowLeftIcon,
   BookOpenIcon,
   Building2Icon,
@@ -63,6 +68,7 @@ export function DepartmentDetailPage() {
   const [teachers, setTeachers] = useState<TeacherRecord[]>([]);
   const [staff, setStaff] = useState<StaffRecord[]>([]);
   const [headOpen, setHeadOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
 
@@ -104,6 +110,21 @@ export function DepartmentDetailPage() {
     () => (department ? teachers.filter((t) => t.department === department.name) : []),
     [teachers, department],
   );
+
+  const handleSaveEdit = async (values: EditDepartmentValues): Promise<string | null> => {
+    if (!departmentId) return "Could not save changes. Try again.";
+    try {
+      setDepartment(await academicApi.updateDepartment(departmentId, editValuesToPayload(values)));
+      setEditOpen(false);
+      toast.success("Department updated successfully.");
+      return null;
+    } catch (err) {
+      return getApiErrorMessage(
+        err,
+        "Could not update the department. Check the details and try again.",
+      );
+    }
+  };
 
   const departmentStaff = useMemo(
     () => (department ? staff.filter((s) => s.department === department.name) : []),
@@ -200,8 +221,17 @@ export function DepartmentDetailPage() {
             {canUpdate && (
               <Button
                 variant="secondary"
-                text="Set Head"
+                text="Edit"
                 icon={<PencilIcon className="size-4" />}
+                className="w-auto"
+                onClick={() => setEditOpen(true)}
+              />
+            )}
+            {canUpdate && (
+              <Button
+                variant="secondary"
+                text="Set Head"
+                icon={<UsersIcon className="size-4" />}
                 className="w-auto"
                 onClick={() => setHeadOpen(true)}
               />
@@ -325,6 +355,24 @@ export function DepartmentDetailPage() {
           </ul>
         )}
       </section>
+
+      {canUpdate && editOpen && (
+        <Dialog
+          open
+          onClose={() => setEditOpen(false)}
+          title="Edit Department"
+          description={`Update "${department.name}".`}
+        >
+          <EditDepartmentForm
+            initial={{
+              name: department.name,
+              description: department.description ?? "",
+            }}
+            onSave={handleSaveEdit}
+            onClose={() => setEditOpen(false)}
+          />
+        </Dialog>
+      )}
 
       {canUpdate && (
         <Dialog

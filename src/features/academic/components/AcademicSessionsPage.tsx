@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
@@ -19,23 +18,22 @@ import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { AddSessionForm, type AddSessionValues } from "./AddSessionForm";
+import { EditSessionForm, type EditSessionValues } from "./EditSessionForm";
 import { academicApi } from "../api/academicApi";
 import {
   ArrowUpRightIcon,
   CalendarDaysIcon,
   CheckCircle2Icon,
+  PencilIcon,
   PlusIcon,
   TrashIcon,
-  UserPlusIcon,
 } from "@/shared/components/ui/icons";
 
 export interface AcademicSession {
   id: string;
   name: string;
-  term: string;
   start: string;
   end: string;
-  students: number;
   isActive: boolean;
   status: "Active" | "Upcoming" | "Completed";
 }
@@ -54,14 +52,14 @@ const COLUMNS = ({
   canDelete,
   activatingId,
   onSetActive,
-  onPromoteStudents,
+  onEdit,
   onDelete,
 }: {
   canUpdate: boolean;
   canDelete: boolean;
   activatingId: string | null;
   onSetActive: (session: AcademicSession) => void;
-  onPromoteStudents: (session: AcademicSession) => void;
+  onEdit: (session: AcademicSession) => void;
   onDelete: (session: AcademicSession) => void;
 }): Column<AcademicSession>[] => [
   {
@@ -80,7 +78,6 @@ const COLUMNS = ({
           >
             {session.name}
           </Link>
-          <p className="text-xs text-neutral-400">{session.term}</p>
         </div>
       </div>
     ),
@@ -96,15 +93,6 @@ const COLUMNS = ({
     header: "End Date",
     sortValue: (session) => session.end,
     render: (session) => <span className="text-neutral-500">{formatDate(session.end)}</span>,
-  },
-  {
-    key: "students",
-    header: "Students",
-    sortValue: (session) => session.students,
-    align: "right",
-    render: (session) => (
-      <span className="font-medium text-neutral-700">{session.students.toLocaleString()}</span>
-    ),
   },
   {
     key: "isActive",
@@ -159,11 +147,15 @@ const COLUMNS = ({
             icon: <ArrowUpRightIcon className="size-3.5" />,
             href: `/academic-sessions/${session.id}`,
           },
-          {
-            label: "Promote students",
-            icon: <UserPlusIcon className="size-3.5" />,
-            onClick: () => onPromoteStudents(session),
-          },
+          ...(canUpdate
+            ? [
+                {
+                  label: "Edit",
+                  icon: <PencilIcon className="size-3.5" />,
+                  onClick: () => onEdit(session),
+                },
+              ]
+            : []),
           ...(canUpdate && !session.isActive
             ? [
                 {
@@ -193,10 +185,10 @@ export function AcademicSessionsPage() {
   const [sessions, setSessions] = useState<AcademicSession[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activatingId, setActivatingId] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<AcademicSession | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AcademicSession | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const toast = useToast();
-  const router = useRouter();
   const { can } = useAuth();
   const canCreate = can(PERMISSIONS.ACADEMIC_SESSION_CREATE);
   const canUpdate = can(PERMISSIONS.ACADEMIC_SESSION_UPDATE);
@@ -209,10 +201,8 @@ export function AcademicSessionsPage() {
         records.map((r) => ({
           id: r.id,
           name: r.label,
-          term: "",
           start: r.startDate.slice(0, 10),
           end: r.endDate.slice(0, 10),
-          students: 0,
           isActive: r.isActive,
           status: toStatus(r.isActive),
         })),
@@ -247,18 +237,6 @@ export function AcademicSessionsPage() {
     },
     [activatingId, toast],
   );
-
-  const handlePromoteStudents = useCallback(
-    (session: AcademicSession) => {
-      if (!session.isActive) {
-        toast.error(`"${session.name}" is not the active academic year. Set it active first.`);
-        return;
-      }
-      router.push("/students?add=1");
-    },
-    [router, toast],
-  );
-
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;
     setDeleteBusy(true);
@@ -288,10 +266,8 @@ export function AcademicSessionsPage() {
         {
           id: record.id,
           name: record.label,
-          term: "",
           start: record.startDate.slice(0, 10),
           end: record.endDate.slice(0, 10),
-          students: 0,
           isActive: record.isActive,
           status: toStatus(record.isActive),
         },
@@ -310,11 +286,33 @@ export function AcademicSessionsPage() {
   const table = useTable<AcademicSession>({
     data: sessions,
     pageSize: 6,
-    getSearchText: (session) => `${session.name} ${session.term} ${session.status}`,
+    getSearchText: (session) => `${session.name} ${session.status}`,
     filterMatch: (session, value) => session.status === value,
     sortValue: (session, key) => String(session[key as keyof AcademicSession] ?? ""),
     defaultSortKey: "start",
   });
+
+  const handleSaveEdit = async (values: EditSessionValues): Promise<string | null> => {
+    if (!editTarget) return "Could not save changes. Try again.";
+    try {
+      const record = await academicApi.updateSession(editTarget.id, {
+        label: values.label,
+        startDate: values.startDate,
+        endDate: values.endDate,
+      });
+      setSessions((current) =>
+        current.map((s) => (s.id === record.id ? { ...s, name: record.label } : s)),
+      );
+      setEditTarget(null);
+      toast.success("Academic year updated successfully.");
+      return null;
+    } catch (err) {
+      return err instanceof Error && "response" in err
+        ? ((err as { response?: { data?: { error?: { message?: string } } } }).response?.data?.error
+            ?.message ?? "Could not update the academic year. Try again.")
+        : "Could not update the academic year. Try again.";
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -349,7 +347,7 @@ export function AcademicSessionsPage() {
           canDelete,
           activatingId,
           onSetActive: (s) => void handleSetActive(s),
-          onPromoteStudents: handlePromoteStudents,
+          onEdit: (session) => setEditTarget(session),
           onDelete: (session) => setDeleteTarget(session),
         })}
         data={table.pageRows}
@@ -380,6 +378,25 @@ export function AcademicSessionsPage() {
           description="Create a new academic session."
         >
           <AddSessionForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+        </Dialog>
+      )}
+
+      {canUpdate && editTarget && (
+        <Dialog
+          open
+          onClose={() => setEditTarget(null)}
+          title="Edit Academic Year"
+          description={`Update "${editTarget.name}".`}
+        >
+          <EditSessionForm
+            initial={{
+              label: editTarget.name,
+              startDate: editTarget.start,
+              endDate: editTarget.end,
+            }}
+            onSave={handleSaveEdit}
+            onClose={() => setEditTarget(null)}
+          />
         </Dialog>
       )}
 

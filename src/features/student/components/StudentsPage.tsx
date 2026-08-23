@@ -338,7 +338,7 @@ export function StudentsPage() {
     <div className="space-y-4">
       <PageHeader
         title="Students"
-        description={`${students.length} records · Admissions for the 2082/83 academic year`}
+        description={`${students.length} records · Admissions for the current academic year`}
         actions={
           canCreate ? (
             <Button
