@@ -8,10 +8,15 @@ export interface ClassRecord {
   sortOrder: number;
 }
 
+export interface DepartmentHeadRecord {
+  id: string;
+  fullName: string;
+}
+
 export interface DepartmentRecord {
   id: string;
   name: string;
-  head: string;
+  headTeacher: DepartmentHeadRecord | null;
   description: string;
   staffCount: number;
   subjectCount: number;
@@ -70,11 +75,22 @@ export const academicApi = {
   },
   async createDepartment(payload: {
     name: string;
-    headName?: string;
     description?: string;
   }): Promise<DepartmentRecord> {
     const { data } = await apiClient.post<{ data: DepartmentRecord }>(
       "/departments",
+      payload,
+    );
+    return data.data;
+  },
+  // The head teacher must already belong to the department, so heads are
+  // assigned after creation; passing null clears an assigned head.
+  async updateDepartment(
+    id: string,
+    payload: { headTeacherId?: string | null },
+  ): Promise<DepartmentRecord> {
+    const { data } = await apiClient.patch<{ data: DepartmentRecord }>(
+      `/departments/${id}`,
       payload,
     );
     return data.data;

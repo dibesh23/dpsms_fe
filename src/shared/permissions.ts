@@ -26,6 +26,7 @@ export const PERMISSIONS = {
   ACADEMIC_CLASS_CREATE: "academic:classes:create",
   ACADEMIC_DEPARTMENT_LIST: "academic:departments:list",
   ACADEMIC_DEPARTMENT_CREATE: "academic:departments:create",
+  ACADEMIC_DEPARTMENT_UPDATE: "academic:departments:update",
   ACADEMIC_SUBJECT_LIST: "academic:subjects:list",
   ACADEMIC_SUBJECT_CREATE: "academic:subjects:create",
   ACADEMIC_SESSION_LIST: "academic:sessions:list",

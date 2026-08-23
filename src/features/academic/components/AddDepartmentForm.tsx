@@ -10,7 +10,6 @@ import { Field } from "@/shared/components/ui/form-field";
 
 const AddDepartmentSchema = z.object({
   name: z.string().min(1, "Department name is required").max(100),
-  headName: z.string().max(255).optional(),
   description: z.string().max(500).optional(),
 });
 
@@ -48,16 +47,6 @@ export function AddDepartmentForm({
           disabled={isSubmitting}
           error={errors.name?.message}
           {...register("name")}
-        />
-      </Field>
-
-      <Field label="Department head" error={errors.headName?.message}>
-        <Input
-          type="text"
-          placeholder="Sunita K.C."
-          disabled={isSubmitting}
-          error={errors.headName?.message}
-          {...register("headName")}
         />
       </Field>
 
