@@ -23,3 +23,8 @@ test("plain login does not reuse a cached or environment tenant", async () => {
   assert.doesNotMatch(page, /NEXT_PUBLIC_TENANT_ID/);
   assert.match(context, /setResolvedTenantId\(null\)/);
 });
+
+test("plain login accepts an empty hidden tenant field", async () => {
+  const source = await read("src/features/auth/components/LoginForm.tsx");
+  assert.match(source, /value === "" \|\| z\.uuid\(\)\.safeParse\(value\)\.success/);
+});

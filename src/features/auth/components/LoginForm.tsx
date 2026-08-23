@@ -16,7 +16,10 @@ import type { RoleName } from "../types";
 const LoginSchema = z.object({
   email: z.email("Enter a valid email address").trim().toLowerCase(),
   password: z.string().min(1, "Password is required"),
-  tenantId: z.uuid("Invalid tenant ID").optional(),
+  tenantId: z
+    .string()
+    .refine((value) => value === "" || z.uuid().safeParse(value).success, "Invalid tenant ID")
+    .optional(),
 });
 
 type LoginFormValues = z.infer<typeof LoginSchema>;
