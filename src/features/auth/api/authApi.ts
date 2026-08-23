@@ -5,18 +5,12 @@ import type {
   RegisterSchoolPayload,
   RegisterSchoolResponse,
   AuthUser,
-  OnboardingStatusResult,
   SessionInfo,
 } from "../types";
 
 export const authApi = {
-  async registerSchool(
-    payload: RegisterSchoolPayload,
-  ): Promise<RegisterSchoolResponse> {
-    const { data } = await apiClient.post<RegisterSchoolResponse>(
-      "/auth/register",
-      payload,
-    );
+  async registerSchool(payload: RegisterSchoolPayload): Promise<RegisterSchoolResponse> {
+    const { data } = await apiClient.post<RegisterSchoolResponse>("/auth/register", payload);
     return data;
   },
 
@@ -29,9 +23,7 @@ export const authApi = {
     }
   },
 
-  async resolveTenant(
-    subdomain: string,
-  ): Promise<{ tenantId: string; name: string } | null> {
+  async resolveTenant(subdomain: string): Promise<{ tenantId: string; name: string } | null> {
     try {
       const { data } = await apiClient.get<{
         tenantId: string;
@@ -45,10 +37,7 @@ export const authApi = {
   },
 
   async login(payload: LoginPayload): Promise<LoginResponse> {
-    const { data } = await apiClient.post<LoginResponse>(
-      "/auth/login",
-      payload,
-    );
+    const { data } = await apiClient.post<LoginResponse>("/auth/login", payload);
     return data;
   },
 
@@ -69,10 +58,7 @@ export const authApi = {
   },
 
   async forgotPassword(email: string, tenantId?: string): Promise<void> {
-    await apiClient.post(
-      "/auth/forgot-password",
-      tenantId ? { email, tenantId } : { email },
-    );
+    await apiClient.post("/auth/forgot-password", tenantId ? { email, tenantId } : { email });
   },
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
@@ -84,25 +70,8 @@ export const authApi = {
     return data;
   },
 
-  async getOnboardingStatus(): Promise<OnboardingStatusResult> {
-    const { data } =
-      await apiClient.get<OnboardingStatusResult>("/onboarding/status");
-    return data;
-  },
-
-  async completeOnboardingStep(
-    stepKey: string,
-  ): Promise<OnboardingStatusResult> {
-    const { data } = await apiClient.post<OnboardingStatusResult>(
-      `/onboarding/steps/${stepKey}/complete`,
-    );
-    return data;
-  },
-
   async listSessions(): Promise<{ sessions: SessionInfo[] }> {
-    const { data } = await apiClient.get<{ sessions: SessionInfo[] }>(
-      "/sessions",
-    );
+    const { data } = await apiClient.get<{ sessions: SessionInfo[] }>("/sessions");
     return data;
   },
 

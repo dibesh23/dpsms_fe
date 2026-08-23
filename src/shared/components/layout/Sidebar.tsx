@@ -39,80 +39,80 @@ const NAV_SECTIONS: Array<{
     permission: string;
   }>;
 }> = [
-  {
-    label: "Management",
-    items: [
-      {
-        label: "Dashboard",
-        href: "/dashboard",
-        icon: LayoutDashboardIcon,
-        permission: PERMISSIONS.DASHBOARD_VIEW,
-      },
-    ],
-  },
-  {
-    label: "People",
-    roles: ["SUPER_ADMIN", "PRINCIPAL"],
-    items: [
-      { label: "Students", href: "/students", icon: UsersIcon, permission: PERMISSIONS.STUDENT_LIST },
-      { label: "Teachers", href: "/teachers", icon: GraduationCapIcon, permission: PERMISSIONS.TEACHER_LIST },
-      { label: "Parents", href: "/parents", icon: HeartHandshakeIcon, permission: PERMISSIONS.PARENT_LIST },
-      { label: "Staff", href: "/staff", icon: BriefcaseIcon, permission: PERMISSIONS.STAFF_LIST },
-    ],
-  },
-  {
-    label: "Academic",
-    roles: ["SUPER_ADMIN", "PRINCIPAL"],
-    items: [
-      { label: "Classes", href: "/classes", icon: LayoutGridIcon, permission: PERMISSIONS.ACADEMIC_CLASS_LIST },
-      { label: "Teacher Assignments", href: "/teacher-assignments", icon: BookUserIcon, permission: PERMISSIONS.TEACHER_ASSIGNMENT_MANAGE },
-      { label: "Departments", href: "/departments", icon: Building2Icon, permission: PERMISSIONS.ACADEMIC_DEPARTMENT_LIST },
-      { label: "Subjects", href: "/subjects", icon: BookOpenIcon, permission: PERMISSIONS.ACADEMIC_SUBJECT_LIST },
-      { label: "Academic Sessions", href: "/academic-sessions", icon: CalendarDaysIcon, permission: PERMISSIONS.ACADEMIC_SESSION_LIST },
-    ],
-  },
-  {
-    label: "Teaching",
-    roles: ["TEACHER"],
-    items: [
-      { label: "My Classes", href: "/classes", icon: LayoutGridIcon, permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW },
-      { label: "My Students", href: "/students", icon: UsersIcon, permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW },
-      { label: "Subjects", href: "/subjects", icon: BookOpenIcon, permission: PERMISSIONS.ACADEMIC_SUBJECT_LIST },
-      { label: "Attendance", href: "/attendance", icon: CheckCircle2Icon, permission: PERMISSIONS.ATTENDANCE_OWN_VIEW },
-      { label: "Class Tests", href: "/class-tests", icon: FileTextIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
-      { label: "Parents", href: "/parents", icon: HeartHandshakeIcon, permission: PERMISSIONS.PARENT_LIST },
-      { label: "Messaging", href: "/messaging", icon: BellIcon, permission: PERMISSIONS.MESSAGING_OWN_VIEW },
-    ],
-  },
-  {
-    label: "Academics",
-    roles: ["STUDENT"],
-    items: [
-      { label: "Attendance History", href: "/attendance-history", icon: CheckCircle2Icon, permission: PERMISSIONS.ATTENDANCE_OWN_VIEW },
-      { label: "My Timetable", href: "/timetable", icon: CalendarDaysIcon, permission: PERMISSIONS.TIMETABLE_OWN_VIEW },
-      { label: "My Report Card", href: "/report-card", icon: FileTextIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
-      { label: "Test Results", href: "/test-results", icon: BookOpenIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
-      { label: "Exam Result", href: "/exam-results", icon: GraduationCapIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
-      { label: "Home Assignments", href: "/assignments", icon: BookUserIcon, permission: PERMISSIONS.ASSIGNMENT_OWN_VIEW },
-    ],
-  },
-  {
-    label: "Finance",
-    roles: ["STUDENT"],
-    items: [
-      { label: "Fees & Payments", href: "/fees", icon: CreditCardIcon, permission: PERMISSIONS.FEE_OWN_VIEW },
-      { label: "Admission Letter", href: "/admission-letter", icon: FileTextIcon, permission: PERMISSIONS.ADMISSION_LETTER_VIEW },
-    ],
-  },
-  {
-    label: "Other",
-    roles: ["STUDENT"],
-    items: [
-      { label: "Notices", href: "/notices", icon: BellIcon, permission: PERMISSIONS.NOTICE_OWN_VIEW },
-      { label: "Live Class", href: "/live-class", icon: GroupIcon, permission: PERMISSIONS.LIVE_CLASS_OWN_VIEW },
-    ],
-  },
-];
+    {
+      label: "Management",
+      items: [
+        {
+          label: "Dashboard",
+          href: "/dashboard",
+          icon: LayoutDashboardIcon,
+          permission: PERMISSIONS.DASHBOARD_VIEW,
+        },
+      ],
+    },
+    {
+      label: "People",
+      roles: ["SUPER_ADMIN", "PRINCIPAL"],
+      items: [
+        { label: "Students", href: "/students", icon: UsersIcon, permission: PERMISSIONS.STUDENT_LIST },
+        { label: "Teachers", href: "/teachers", icon: GraduationCapIcon, permission: PERMISSIONS.TEACHER_LIST },
+        { label: "Parents", href: "/parents", icon: HeartHandshakeIcon, permission: PERMISSIONS.PARENT_LIST },
+        { label: "Staff", href: "/staff", icon: BriefcaseIcon, permission: PERMISSIONS.STAFF_LIST },
+      ],
+    },
+    {
+      label: "Academic",
+      roles: ["SUPER_ADMIN", "PRINCIPAL"],
+      items: [
+        { label: "Classes", href: "/classes", icon: LayoutGridIcon, permission: PERMISSIONS.ACADEMIC_CLASS_LIST },
+        { label: "Teacher Assignments", href: "/teacher-assignments", icon: BookUserIcon, permission: PERMISSIONS.TEACHER_ASSIGNMENT_MANAGE },
+        { label: "Departments", href: "/departments", icon: Building2Icon, permission: PERMISSIONS.ACADEMIC_DEPARTMENT_LIST },
+        { label: "Subjects", href: "/subjects", icon: BookOpenIcon, permission: PERMISSIONS.ACADEMIC_SUBJECT_LIST },
+        { label: "Academic Sessions", href: "/academic-sessions", icon: CalendarDaysIcon, permission: PERMISSIONS.ACADEMIC_SESSION_LIST },
+      ],
+    },
+    {
+      label: "Teaching",
+      roles: ["TEACHER"],
+      items: [
+        { label: "My Classes", href: "/classes", icon: LayoutGridIcon, permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW },
+        { label: "My Students", href: "/students", icon: UsersIcon, permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW },
+        { label: "Subjects", href: "/subjects", icon: BookOpenIcon, permission: PERMISSIONS.ACADEMIC_SUBJECT_LIST },
+        { label: "Attendance", href: "/attendance", icon: CheckCircle2Icon, permission: PERMISSIONS.ATTENDANCE_OWN_VIEW },
+        { label: "Class Tests", href: "/class-tests", icon: FileTextIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
+        { label: "Parents", href: "/parents", icon: HeartHandshakeIcon, permission: PERMISSIONS.PARENT_LIST },
+        { label: "Messaging", href: "/messaging", icon: BellIcon, permission: PERMISSIONS.MESSAGING_OWN_VIEW },
+      ],
+    },
+    {
+      label: "Academics",
+      roles: ["STUDENT"],
+      items: [
+        { label: "Attendance History", href: "/attendance-history", icon: CheckCircle2Icon, permission: PERMISSIONS.ATTENDANCE_OWN_VIEW },
+        { label: "My Timetable", href: "/timetable", icon: CalendarDaysIcon, permission: PERMISSIONS.TIMETABLE_OWN_VIEW },
+        { label: "My Report Card", href: "/report-card", icon: FileTextIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
+        { label: "Test Results", href: "/test-results", icon: BookOpenIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
+        { label: "Exam Result", href: "/exam-results", icon: GraduationCapIcon, permission: PERMISSIONS.EXAM_OWN_VIEW },
+        { label: "Home Assignments", href: "/assignments", icon: BookUserIcon, permission: PERMISSIONS.ASSIGNMENT_OWN_VIEW },
+      ],
+    },
+    {
+      label: "Finance",
+      roles: ["STUDENT"],
+      items: [
+        { label: "Fees & Payments", href: "/fees", icon: CreditCardIcon, permission: PERMISSIONS.FEE_OWN_VIEW },
+        { label: "Admission Letter", href: "/admission-letter", icon: FileTextIcon, permission: PERMISSIONS.ADMISSION_LETTER_VIEW },
+      ],
+    },
+    {
+      label: "Other",
+      roles: ["STUDENT"],
+      items: [
+        { label: "Notices", href: "/notices", icon: BellIcon, permission: PERMISSIONS.NOTICE_OWN_VIEW },
+        { label: "Live Class", href: "/live-class", icon: GroupIcon, permission: PERMISSIONS.LIVE_CLASS_OWN_VIEW },
+      ],
+    },
+  ];
 
 function roleLabel(role?: string): string {
   return (role && ROLE_LABELS[role]) ?? "Staff";
@@ -181,17 +181,19 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <NavList onNavigate={onNavigate} />
 
       <div className="flex-none border-t border-neutral-100 p-3">
-        <Link
-          href="/profile"
-          onClick={onNavigate}
-          className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-bg-subtle/70"
-          aria-label="Open profile"
-        >
-          <Avatar name={user?.fullName ?? "User"} size="sm" />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-neutral-900">{user?.fullName}</p>
-            <p className="truncate text-xs text-neutral-500">{roleLabel(user?.role)}</p>
-          </div>
+        <div className="flex items-center gap-3 rounded-lg px-2 py-2">
+          <Link
+            href="/profile"
+            onClick={onNavigate}
+            className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition-colors hover:bg-bg-subtle/70"
+            aria-label="Open profile"
+          >
+            <Avatar name={user?.fullName ?? "User"} size="sm" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-neutral-900">{user?.fullName}</p>
+              <p className="truncate text-xs text-neutral-500">{roleLabel(user?.role)}</p>
+            </div>
+          </Link>
           <button
             type="button"
             onClick={() => void logout()}
@@ -200,7 +202,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           >
             <LogOutIcon className="size-4" />
           </button>
-        </Link>
+        </div>
       </div>
     </div>
   );

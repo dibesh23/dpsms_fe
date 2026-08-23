@@ -1,16 +1,12 @@
 "use client";
 
-import axios, {
-  type AxiosInstance,
-  type InternalAxiosRequestConfig,
-} from "axios";
-
+import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 
 let accessTokenRef: (() => string | null) | null = null;
 
 let refreshTokenRef: (() => Promise<boolean>) | null = null;
 
-let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
 
 export function setAccessTokenRef(getter: () => string | null): void {
   accessTokenRef = getter;
@@ -20,15 +16,13 @@ export function setRefreshTokenRef(fn: () => Promise<boolean>): void {
   refreshTokenRef = fn;
 }
 
-const API_BASE_URL =
-  process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:4000";
+const API_BASE_URL = process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:4000";
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: `${API_BASE_URL}/api`,
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
-
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = accessTokenRef?.();
@@ -38,7 +32,6 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
-
 apiClient.interceptors.response.use(
   (res) => res,
   async (error) => {
@@ -46,25 +39,22 @@ apiClient.interceptors.response.use(
       _retry?: boolean;
     };
 
-
     const isRefreshEndpoint = originalConfig?.url?.includes("/auth/refresh");
 
     if (
       error.response?.status === 401 &&
       !originalConfig._retry &&
-      !isRefreshing &&
       !isRefreshEndpoint &&
       refreshTokenRef
     ) {
       originalConfig._retry = true;
-      isRefreshing = true;
-
       try {
-        const refreshed = await refreshTokenRef();
-        isRefreshing = false;
+        refreshPromise ??= refreshTokenRef().finally(() => {
+          refreshPromise = null;
+        });
+        const refreshed = await refreshPromise;
 
         if (refreshed) {
-
           const newToken = accessTokenRef?.();
           if (newToken) {
             originalConfig.headers["Authorization"] = `Bearer ${newToken}`;
@@ -72,7 +62,7 @@ apiClient.interceptors.response.use(
           return apiClient(originalConfig);
         }
       } catch {
-        isRefreshing = false;
+        refreshPromise = null;
       }
     }
 

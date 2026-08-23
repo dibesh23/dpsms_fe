@@ -15,12 +15,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (isLoading) return;
     if (!isAuthenticated) {
       router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
-      return;
     }
-    if (user?.onboardingRequired) {
-      router.replace("/onboarding");
-    }
-  }, [isLoading, isAuthenticated, user?.onboardingRequired, router, pathname]);
+  }, [isLoading, isAuthenticated, router, pathname]);
 
   if (isLoading) {
     return (

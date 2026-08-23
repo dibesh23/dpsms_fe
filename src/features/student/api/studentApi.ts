@@ -25,7 +25,7 @@ export interface StudentListResult {
 
 export interface StudentCreatePayload {
   fullName: string;
-  email?: string;
+  email: string;
   phone?: string;
   gender?: "MALE" | "FEMALE" | "OTHER";
   dateOfBirth?: string;

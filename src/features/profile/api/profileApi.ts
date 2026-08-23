@@ -29,7 +29,6 @@ export interface ProfileRecord {
   phone: string | null;
   role: string;
   status: string;
-  authProvider: string;
   tenantId: string;
   school: SchoolInfo;
   teacher: TeacherProfile | null;
@@ -43,14 +42,8 @@ export const profileApi = {
     const { data } = await apiClient.get<{ data: ProfileRecord }>("/profile");
     return data.data;
   },
-  async updateProfile(payload: {
-    fullName?: string;
-    phone?: string;
-  }): Promise<ProfileRecord> {
-    const { data } = await apiClient.patch<{ data: ProfileRecord }>(
-      "/profile",
-      payload,
-    );
+  async updateProfile(payload: { fullName?: string; phone?: string }): Promise<ProfileRecord> {
+    const { data } = await apiClient.patch<{ data: ProfileRecord }>("/profile", payload);
     return data.data;
   },
   async changePassword(payload: {
