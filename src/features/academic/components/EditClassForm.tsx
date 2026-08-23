@@ -8,18 +8,19 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Field } from "@/shared/components/ui/form-field";
 
-const AddDepartmentSchema = z.object({
-  name: z.string().min(1, "Department name is required").max(100),
-  description: z.string().max(500).optional(),
+const EditClassSchema = z.object({
+  name: z.string().trim().min(1, "Class name is required").max(50),
 });
 
-export type AddDepartmentValues = z.infer<typeof AddDepartmentSchema>;
+export type EditClassValues = z.infer<typeof EditClassSchema>;
 
-export function AddDepartmentForm({
-  onAdd,
+export function EditClassForm({
+  currentName,
+  onUpdate,
   onClose,
 }: {
-  onAdd: (values: AddDepartmentValues) => Promise<boolean>;
+  currentName: string;
+  onUpdate: (values: EditClassValues) => Promise<string | null>;
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
@@ -28,35 +29,26 @@ export function AddDepartmentForm({
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<AddDepartmentValues>({
-    resolver: zodResolver(AddDepartmentSchema),
+  } = useForm<EditClassValues>({
+    resolver: zodResolver(EditClassSchema),
+    defaultValues: { name: currentName },
   });
 
-  const onSubmit = async (values: AddDepartmentValues) => {
+  const onSubmit = async (values: EditClassValues) => {
     setApiError(null);
-    const ok = await onAdd(values);
-    if (!ok) setApiError("Could not add the department. Check the details and try again.");
+    const error = await onUpdate(values);
+    if (error) setApiError(error);
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-      <Field label="Department name" error={errors.name?.message}>
+      <Field label="Class name" error={errors.name?.message} required>
         <Input
           type="text"
-          placeholder="Science & Math"
+          placeholder="Grade 12"
           disabled={isSubmitting}
           error={errors.name?.message}
           {...register("name")}
-        />
-      </Field>
-
-      <Field label="Description" error={errors.description?.message}>
-        <Input
-          type="text"
-          placeholder="What this department covers…"
-          disabled={isSubmitting}
-          error={errors.description?.message}
-          {...register("description")}
         />
       </Field>
 
@@ -72,7 +64,7 @@ export function AddDepartmentForm({
       <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
         <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" />
         <Button
-          text={isSubmitting ? "Adding…" : "Add Department"}
+          text={isSubmitting ? "Saving…" : "Save Changes"}
           loading={isSubmitting}
           disabled={isSubmitting}
           className="w-auto"

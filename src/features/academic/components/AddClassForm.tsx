@@ -51,11 +51,7 @@ export function AddClassForm({
         />
       </Field>
 
-      <Field
-        label="Sections"
-        error={errors.sections?.message}
-        hint="Comma-separated, e.g. A, B"
-      >
+      <Field label="Sections" error={errors.sections?.message} hint="Comma-separated, e.g. A, B">
         <Input
           type="text"
           placeholder="A, B"

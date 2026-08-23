@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import Link from "next/link";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
@@ -8,55 +9,51 @@ import { StatsCard } from "@/shared/components/ui/stats-card";
 import { Avatar } from "@/shared/components/ui/avatar";
 import { EmptyState } from "@/shared/components/ui/empty-state";
 import { Dialog } from "@/shared/components/ui/dialog";
+import { RowActions } from "@/shared/components/ui/row-actions";
 import { useTable } from "@/shared/hooks/useTable";
 import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { AddDepartmentForm, type AddDepartmentValues } from "./AddDepartmentForm";
-import {
-  SetDepartmentHeadForm,
-  type SetDepartmentHeadValues,
-} from "./SetDepartmentHeadForm";
-import { academicApi } from "../api/academicApi";
+import { SetDepartmentHeadForm, type SetDepartmentHeadValues } from "./SetDepartmentHeadForm";
+import { academicApi, type DepartmentRecord as DepartmentRecordDto } from "../api/academicApi";
 import { teacherApi } from "@/features/teacher/api/teacherApi";
-import { BookOpenIcon, Building2Icon, PlusIcon, UsersIcon } from "@/shared/components/ui/icons";
+import {
+  ArrowUpRightIcon,
+  BookOpenIcon,
+  Building2Icon,
+  PlusIcon,
+  TrashIcon,
+  UsersIcon,
+} from "@/shared/components/ui/icons";
 
-export interface Department {
-  id: string;
-  name: string;
-  headTeacher: { id: string; fullName: string } | null;
-  staffCount: number;
-  teacherCount: number;
-  subjectCount: number;
-  description: string;
+function getApiErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error && "response" in err) {
+    const response = (err as { response?: { data?: { error?: { message?: string } } } }).response;
+    const message = response?.data?.error?.message;
+    if (message) return message;
+  }
+  return fallback;
 }
 
 export function DepartmentsPage() {
-  const [departments, setDepartments] = useState<Department[]>([]);
+  const [departments, setDepartments] = useState<DepartmentRecordDto[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [headTarget, setHeadTarget] = useState<Department | null>(null);
-  const [teachers, setTeachers] = useState<
-    Array<{ id: string; name: string; department: string }>
-  >([]);
+  const [headTarget, setHeadTarget] = useState<DepartmentRecordDto | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DepartmentRecordDto | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [teachers, setTeachers] = useState<Array<{ id: string; name: string; department: string }>>(
+    [],
+  );
   const toast = useToast();
   const { can } = useAuth();
   const canCreate = can(PERMISSIONS.ACADEMIC_DEPARTMENT_CREATE);
   const canUpdate = can(PERMISSIONS.ACADEMIC_DEPARTMENT_UPDATE);
+  const canDelete = can(PERMISSIONS.ACADEMIC_DEPARTMENT_DELETE);
 
   const load = useCallback(async () => {
     try {
-      const records = await academicApi.listDepartments();
-      setDepartments(
-        records.map((r) => ({
-          id: r.id,
-          name: r.name,
-          headTeacher: r.headTeacher,
-          staffCount: r.staffCount,
-          teacherCount: r.teacherCount,
-          subjectCount: r.subjectCount,
-          description: r.description,
-        })),
-      );
+      setDepartments(await academicApi.listDepartments());
     } catch {
       setDepartments([]);
     }
@@ -66,14 +63,12 @@ export function DepartmentsPage() {
     void load();
   }, [load]);
 
-  const openHeadDialog = async (department: Department) => {
+  const openHeadDialog = async (department: DepartmentRecordDto) => {
     setHeadTarget(department);
     if (teachers.length === 0) {
       try {
         const records = await teacherApi.list();
-        setTeachers(
-          records.map((t) => ({ id: t.id, name: t.name, department: t.department })),
-        );
+        setTeachers(records.map((t) => ({ id: t.id, name: t.name, department: t.department })));
       } catch {
         setTeachers([]);
       }
@@ -82,9 +77,7 @@ export function DepartmentsPage() {
 
   const headOptions = useMemo(() => {
     if (!headTarget) return [];
-    const inDepartment = teachers.filter(
-      (t) => t.department === headTarget.name,
-    );
+    const inDepartment = teachers.filter((t) => t.department === headTarget.name);
     // Keep the current head selectable even if their membership drifted.
     const current = headTarget.headTeacher;
     if (current && !inDepartment.some((t) => t.id === current.id)) {
@@ -95,61 +88,36 @@ export function DepartmentsPage() {
 
   const handleAdd = async (values: AddDepartmentValues): Promise<boolean> => {
     try {
-      const record = await academicApi.createDepartment({
+      await academicApi.createDepartment({
         name: values.name,
         description: values.description?.trim() || undefined,
       });
-      setDepartments((current) => [
-        {
-          id: record.id,
-          name: record.name,
-          headTeacher: record.headTeacher,
-          staffCount: 0,
-          teacherCount: 0,
-          subjectCount: 0,
-          description: record.description,
-        },
-        ...current,
-      ]);
+      await load();
       setDialogOpen(false);
       toast.success("Department added successfully.");
       return true;
-    } catch {
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Could not add the department. Try again."));
       return false;
     }
   };
 
-  const handleUpdateHead = async (
-    values: SetDepartmentHeadValues,
-  ): Promise<string | null> => {
+  const handleUpdateHead = async (values: SetDepartmentHeadValues): Promise<string | null> => {
     if (!headTarget) return "Could not update the department head. Try again.";
     try {
       const record = await academicApi.updateDepartment(headTarget.id, {
         headTeacherId: values.headTeacherId || null,
       });
       setDepartments((current) =>
-        current.map((department) =>
-          department.id === record.id
-            ? {
-                id: record.id,
-                name: record.name,
-                headTeacher: record.headTeacher,
-                staffCount: record.staffCount,
-                teacherCount: record.teacherCount,
-                subjectCount: record.subjectCount,
-                description: record.description,
-              }
-            : department,
-        ),
+        current.map((department) => (department.id === record.id ? record : department)),
       );
       setHeadTarget(null);
       toast.success("Department head updated successfully.");
       return null;
     } catch (err) {
       if (err instanceof Error && "response" in err) {
-        const response = (
-          err as { response?: { data?: { error?: { message?: string } } } }
-        ).response;
+        const response = (err as { response?: { data?: { error?: { message?: string } } } })
+          .response;
         const message = response?.data?.error?.message;
         if (message) return message;
       }
@@ -157,12 +125,32 @@ export function DepartmentsPage() {
     }
   };
 
-  const table = useTable<Department>({
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteBusy(true);
+    try {
+      await academicApi.deleteDepartment(deleteTarget.id);
+      setDepartments((current) => current.filter((d) => d.id !== deleteTarget.id));
+      toast.success(`Department "${deleteTarget.name}" removed.`);
+      setDeleteTarget(null);
+    } catch (err) {
+      toast.error(
+        getApiErrorMessage(
+          err,
+          "Could not remove the department. Teachers or staff may still be assigned to it.",
+        ),
+      );
+    } finally {
+      setDeleteBusy(false);
+    }
+  };
+
+  const table = useTable<DepartmentRecordDto>({
     data: departments,
     pageSize: 6,
     getSearchText: (department) =>
       `${department.name} ${department.headTeacher?.fullName ?? ""} ${department.description}`,
-    sortValue: (department, key) => String(department[key as keyof Department] ?? ""),
+    sortValue: (department, key) => String(department[key as keyof DepartmentRecordDto] ?? ""),
     defaultSortKey: "name",
   });
 
@@ -231,24 +219,56 @@ export function DepartmentsPage() {
               className="flex flex-col rounded-lg border border-neutral-200 bg-bg-default p-5 transition-colors hover:border-neutral-300"
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="flex size-10 items-center justify-center rounded-lg border border-neutral-200 bg-bg-subtle text-neutral-600">
-                  <Building2Icon className="size-5" />
-                </div>
-                <div className="flex flex-none gap-2">
-                  <span className="rounded-md bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600">
-                    {department.staffCount} staff
+                <Link href={`/departments/${department.id}`} className="group flex min-w-0 gap-3">
+                  <span className="flex size-10 flex-none items-center justify-center rounded-lg border border-neutral-200 bg-bg-subtle text-neutral-600">
+                    <Building2Icon className="size-5" />
                   </span>
-                  <span className="rounded-md bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600">
-                    {department.teacherCount} teachers
-                  </span>
-                  <span className="rounded-md bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600">
-                    {department.subjectCount} subjects
-                  </span>
-                </div>
+                  <h3 className="truncate pt-2 font-medium text-neutral-900 group-hover:underline">
+                    {department.name}
+                  </h3>
+                </Link>
+                <RowActions
+                  actions={[
+                    {
+                      label: "View details",
+                      icon: <ArrowUpRightIcon className="size-3.5" />,
+                      href: `/departments/${department.id}`,
+                    },
+                    ...(canUpdate
+                      ? [
+                          {
+                            label: "Set Head",
+                            icon: <UsersIcon className="size-3.5" />,
+                            onClick: () => void openHeadDialog(department),
+                          },
+                        ]
+                      : []),
+                    ...(canDelete
+                      ? [
+                          {
+                            label: "Remove",
+                            icon: <TrashIcon className="size-3.5" />,
+                            danger: true,
+                            onClick: () => setDeleteTarget(department),
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
               </div>
-              <h3 className="mt-3 font-medium text-neutral-900">{department.name}</h3>
-              <p className="mt-1 text-sm text-neutral-500">{department.description}</p>
-              <div className="mt-4 flex items-center justify-between gap-2 border-t border-neutral-100 pt-4">
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <span className="rounded-md bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600">
+                  {department.staffCount} staff
+                </span>
+                <span className="rounded-md bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600">
+                  {department.teacherCount} teachers
+                </span>
+                <span className="rounded-md bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600">
+                  {department.subjectCount} subjects
+                </span>
+              </div>
+              <p className="mt-2 line-clamp-2 text-sm text-neutral-500">{department.description}</p>
+              <div className="mt-auto flex items-center justify-between gap-2 border-t border-neutral-100 pt-4">
                 <div className="flex min-w-0 items-center gap-2">
                   <Avatar name={department.headTeacher?.fullName ?? ""} size="sm" />
                   <div className="min-w-0">
@@ -302,6 +322,39 @@ export function DepartmentsPage() {
               onClose={() => setHeadTarget(null)}
             />
           )}
+        </Dialog>
+      )}
+
+      {canDelete && (
+        <Dialog
+          open={deleteTarget !== null}
+          onClose={() => setDeleteTarget(null)}
+          title="Remove Department"
+          description={
+            deleteTarget ? `Remove "${deleteTarget.name}"? This action cannot be undone.` : ""
+          }
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-neutral-600">
+              Departments with active teachers or staff assigned cannot be removed.
+            </p>
+            <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
+              <Button
+                variant="secondary"
+                text="Cancel"
+                onClick={() => setDeleteTarget(null)}
+                className="w-auto"
+              />
+              <Button
+                variant="danger"
+                text={deleteBusy ? "Removing…" : "Remove Department"}
+                loading={deleteBusy}
+                disabled={deleteBusy}
+                className="w-auto"
+                onClick={() => void handleDelete()}
+              />
+            </div>
+          </div>
         </Dialog>
       )}
     </div>

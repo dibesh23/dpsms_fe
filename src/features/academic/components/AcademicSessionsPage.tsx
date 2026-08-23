@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
@@ -20,9 +21,11 @@ import { PERMISSIONS } from "@/shared/permissions";
 import { AddSessionForm, type AddSessionValues } from "./AddSessionForm";
 import { academicApi } from "../api/academicApi";
 import {
+  ArrowUpRightIcon,
   CalendarDaysIcon,
   CheckCircle2Icon,
   PlusIcon,
+  TrashIcon,
   UserPlusIcon,
 } from "@/shared/components/ui/icons";
 
@@ -48,14 +51,18 @@ const toStatus = (isActive: boolean): AcademicSession["status"] =>
 
 const COLUMNS = ({
   canUpdate,
+  canDelete,
   activatingId,
   onSetActive,
   onPromoteStudents,
+  onDelete,
 }: {
   canUpdate: boolean;
+  canDelete: boolean;
   activatingId: string | null;
   onSetActive: (session: AcademicSession) => void;
   onPromoteStudents: (session: AcademicSession) => void;
+  onDelete: (session: AcademicSession) => void;
 }): Column<AcademicSession>[] => [
   {
     key: "name",
@@ -67,7 +74,12 @@ const COLUMNS = ({
           <CalendarDaysIcon className="size-4" />
         </span>
         <div className="min-w-0">
-          <p className="truncate font-medium text-neutral-900">{session.name}</p>
+          <Link
+            href={`/academic-sessions/${session.id}`}
+            className="truncate font-medium text-neutral-900 hover:underline"
+          >
+            {session.name}
+          </Link>
           <p className="text-xs text-neutral-400">{session.term}</p>
         </div>
       </div>
@@ -143,6 +155,11 @@ const COLUMNS = ({
       <RowActions
         actions={[
           {
+            label: "View details",
+            icon: <ArrowUpRightIcon className="size-3.5" />,
+            href: `/academic-sessions/${session.id}`,
+          },
+          {
             label: "Promote students",
             icon: <UserPlusIcon className="size-3.5" />,
             onClick: () => onPromoteStudents(session),
@@ -150,10 +167,19 @@ const COLUMNS = ({
           ...(canUpdate && !session.isActive
             ? [
                 {
-                  label:
-                    activatingId === session.id ? "Setting active…" : "Set active",
+                  label: activatingId === session.id ? "Setting active…" : "Set active",
                   icon: <CheckCircle2Icon className="size-3.5" />,
                   onClick: () => onSetActive(session),
+                },
+              ]
+            : []),
+          ...(canDelete && !session.isActive
+            ? [
+                {
+                  label: "Remove",
+                  icon: <TrashIcon className="size-3.5" />,
+                  danger: true,
+                  onClick: () => onDelete(session),
                 },
               ]
             : []),
@@ -167,11 +193,14 @@ export function AcademicSessionsPage() {
   const [sessions, setSessions] = useState<AcademicSession[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activatingId, setActivatingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AcademicSession | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const toast = useToast();
   const router = useRouter();
   const { can } = useAuth();
   const canCreate = can(PERMISSIONS.ACADEMIC_SESSION_CREATE);
   const canUpdate = can(PERMISSIONS.ACADEMIC_SESSION_UPDATE);
+  const canDelete = can(PERMISSIONS.ACADEMIC_SESSION_DELETE);
 
   const load = useCallback(async () => {
     try {
@@ -222,15 +251,30 @@ export function AcademicSessionsPage() {
   const handlePromoteStudents = useCallback(
     (session: AcademicSession) => {
       if (!session.isActive) {
-        toast.error(
-          `"${session.name}" is not the active academic year. Set it active first.`,
-        );
+        toast.error(`"${session.name}" is not the active academic year. Set it active first.`);
         return;
       }
       router.push("/students?add=1");
     },
     [router, toast],
   );
+
+  const handleDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    setDeleteBusy(true);
+    try {
+      await academicApi.deleteSession(deleteTarget.id);
+      setSessions((current) => current.filter((s) => s.id !== deleteTarget.id));
+      toast.success(`Academic year "${deleteTarget.name}" removed.`);
+      setDeleteTarget(null);
+    } catch {
+      toast.error(
+        "Could not remove the academic year. It may still have classes, enrollments, or exams.",
+      );
+    } finally {
+      setDeleteBusy(false);
+    }
+  }, [deleteTarget, toast]);
 
   const handleAdd = async (values: AddSessionValues): Promise<boolean> => {
     try {
@@ -302,9 +346,11 @@ export function AcademicSessionsPage() {
       <DataTable
         columns={COLUMNS({
           canUpdate,
+          canDelete,
           activatingId,
           onSetActive: (s) => void handleSetActive(s),
           onPromoteStudents: handlePromoteStudents,
+          onDelete: (session) => setDeleteTarget(session),
         })}
         data={table.pageRows}
         keyExtractor={(session) => session.id}
@@ -334,6 +380,40 @@ export function AcademicSessionsPage() {
           description="Create a new academic session."
         >
           <AddSessionForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+        </Dialog>
+      )}
+
+      {canDelete && (
+        <Dialog
+          open={deleteTarget !== null}
+          onClose={() => setDeleteTarget(null)}
+          title="Remove Academic Year"
+          description={
+            deleteTarget ? `Remove "${deleteTarget.name}"? This action cannot be undone.` : ""
+          }
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-neutral-600">
+              The backend rejects removal while this year is active or has classes, enrollments, or
+              exams attached.
+            </p>
+            <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
+              <Button
+                variant="secondary"
+                text="Cancel"
+                onClick={() => setDeleteTarget(null)}
+                className="w-auto"
+              />
+              <Button
+                variant="danger"
+                text={deleteBusy ? "Removing…" : "Remove Session"}
+                loading={deleteBusy}
+                disabled={deleteBusy}
+                className="w-auto"
+                onClick={() => void handleDelete()}
+              />
+            </div>
+          </div>
         </Dialog>
       )}
     </div>

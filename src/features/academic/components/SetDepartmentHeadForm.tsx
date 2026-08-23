@@ -44,8 +44,7 @@ export function SetDepartmentHeadForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       <p className="text-sm text-neutral-500">
-        Head of{" "}
-        <span className="font-medium text-neutral-800">{department.name}</span>
+        Head of <span className="font-medium text-neutral-800">{department.name}</span>
       </p>
 
       <Field
