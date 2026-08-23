@@ -131,7 +131,7 @@ export default function DashboardPage() {
     icon: STAT_ICONS[stat.label],
   }));
 
-  const academicYearLabel = summary.academicYear || "2082/83";
+  const academicYearLabel = summary.academicYear || "—";
 
   return (
     <div className="space-y-4">

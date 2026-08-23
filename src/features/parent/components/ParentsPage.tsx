@@ -86,12 +86,29 @@ const COLUMNS: Column<Parent>[] = [
     key: "actions",
     header: "",
     align: "right",
-    render: () => (
+    render: (parent) => (
       <RowActions
         actions={[
-          { label: "View profile", icon: <UserPlusIcon className="size-3.5" /> },
-          { label: "Send SMS", icon: <MailIcon className="size-3.5" /> },
-          { label: "Edit details", icon: <PhoneIcon className="size-3.5" /> },
+          {
+            label: "View profile",
+            icon: <UserPlusIcon className="size-3.5" />,
+            href: `/parents/${parent.id}`,
+          },
+          ...(parent.email
+            ? [
+                {
+                  label: "Send email",
+                  icon: <MailIcon className="size-3.5" />,
+                  href: `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(parent.email)}`,
+                  external: true,
+                },
+              ]
+            : []),
+          {
+            label: "Edit details",
+            icon: <PhoneIcon className="size-3.5" />,
+            href: `/parents/${parent.id}`,
+          },
         ]}
       />
     ),
@@ -192,7 +209,6 @@ export function ParentsPage() {
         <StatsCard
           label="Total Guardians"
           value={String(parents.length)}
-          delta="2 added this week"
           icon={<HeartHandshakeIcon className="size-4" />}
         />
         <StatsCard

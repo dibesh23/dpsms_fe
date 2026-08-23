@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
@@ -10,21 +11,26 @@ import { StatusBadge } from "@/shared/components/ui/status-badge";
 import { Avatar } from "@/shared/components/ui/avatar";
 import { EmptyState } from "@/shared/components/ui/empty-state";
 import { Dialog } from "@/shared/components/ui/dialog";
+import { RowActions } from "@/shared/components/ui/row-actions";
 import { useTable } from "@/shared/hooks/useTable";
 import { AddTeacherForm, type AddTeacherValues } from "./AddTeacherForm";
+import { EditTeacherForm, editValuesToPayload, type EditTeacherValues } from "./EditTeacherForm";
 import { CredentialsRevealDialog } from "@/shared/components/ui/credentials-reveal-dialog";
-import { teacherApi } from "../api/teacherApi";
+import { teacherApi, type TeacherRecord } from "../api/teacherApi";
 import {
   GraduationCapIcon,
   MailIcon,
+  PencilIcon,
   PhoneIcon,
   PlusIcon,
+  TrashIcon,
   UsersIcon,
 } from "@/shared/components/ui/icons";
 import { cn } from "@/shared/lib/cn";
 import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
+import { teacherLabelToStatus, teacherStatusToLabel } from "../utils";
 
 export interface Teacher {
   id: string;
@@ -34,7 +40,7 @@ export interface Teacher {
   email: string;
   phone: string;
   classesPerWeek: number;
-  status: "Active" | "On Leave" | "Invited";
+  status: "Active" | "On Leave" | "Invited" | "Inactive";
 }
 
 const DEPARTMENT_FILTERS = [
@@ -45,20 +51,23 @@ const DEPARTMENT_FILTERS = [
   { value: "Sports", label: "Sports" },
 ];
 
-const toStatus = (status: string): Teacher["status"] => {
-  if (status === "ON_LEAVE") return "On Leave";
-  if (status === "INVITED") return "Invited";
-  return "Active";
-};
-
-const toApiStatus = (
-  status: Teacher["status"],
-): "ACTIVE" | "ON_LEAVE" | "INVITED" | "INACTIVE" =>
-  status === "On Leave" ? "ON_LEAVE" : status === "Invited" ? "INVITED" : "ACTIVE";
+const toTeacher = (record: TeacherRecord): Teacher => ({
+  id: record.id,
+  name: record.name,
+  subject: record.subject,
+  department: record.department,
+  email: record.email,
+  phone: record.phone ?? "",
+  classesPerWeek: record.classesPerWeek,
+  status: teacherStatusToLabel(record.status),
+});
 
 export function TeachersPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Teacher | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<Teacher | null>(null);
+  const [removing, setRemoving] = useState(false);
   const [credentials, setCredentials] = useState<{
     name: string;
     email: string;
@@ -67,22 +76,13 @@ export function TeachersPage() {
   const toast = useToast();
   const { can } = useAuth();
   const canCreate = can(PERMISSIONS.TEACHER_CREATE);
+  const canUpdate = can(PERMISSIONS.TEACHER_UPDATE);
+  const canDelete = can(PERMISSIONS.TEACHER_DELETE);
 
   const load = useCallback(async () => {
     try {
       const records = await teacherApi.list();
-      setTeachers(
-        records.map((r) => ({
-          id: r.id,
-          name: r.name,
-          subject: r.subject,
-          department: r.department,
-          email: r.email,
-          phone: r.phone ?? "",
-          classesPerWeek: r.classesPerWeek,
-          status: toStatus(r.status),
-        })),
-      );
+      setTeachers(records.map(toTeacher));
     } catch {
       setTeachers([]);
     }
@@ -101,21 +101,9 @@ export function TeachersPage() {
         department: values.department,
         phone: values.phone,
         classesPerWeek: Number(values.classesPerWeek) || 0,
-        status: toApiStatus(values.status),
+        status: teacherLabelToStatus(values.status),
       });
-      setTeachers((current) => [
-        {
-          id: record.id,
-          name: record.name,
-          subject: record.subject,
-          department: record.department,
-          email: record.email,
-          phone: record.phone ?? "",
-          classesPerWeek: record.classesPerWeek,
-          status: toStatus(record.status),
-        },
-        ...current,
-      ]);
+      setTeachers((current) => [toTeacher(record), ...current]);
       setDialogOpen(false);
       if (record.credentials) {
         setCredentials({
@@ -129,6 +117,53 @@ export function TeachersPage() {
       return true;
     } catch {
       return false;
+    }
+  };
+
+  const handleEdit = async (values: EditTeacherValues): Promise<string | null> => {
+    if (!editTarget) return "Could not save changes. Try again.";
+    try {
+      const record = await teacherApi.update(editTarget.id, editValuesToPayload(values));
+      setTeachers((current) =>
+        current.map((teacher) =>
+          teacher.id === editTarget.id
+            ? {
+                ...teacher,
+                name: record.fullName,
+                department: record.department?.name ?? "",
+                email: record.user.email,
+                phone: record.phone ?? "",
+                classesPerWeek: record.classesPerWeek,
+                status: teacherStatusToLabel(record.status),
+              }
+            : teacher,
+        ),
+      );
+      setEditTarget(null);
+      toast.success("Teacher updated successfully.");
+      return null;
+    } catch (err) {
+      if (err instanceof Error && "response" in err) {
+        const message = (err as { response?: { data?: { error?: { message?: string } } } }).response
+          ?.data?.error?.message;
+        if (message) return message;
+      }
+      return "Could not update the teacher. Check the details and try again.";
+    }
+  };
+
+  const handleRemove = async () => {
+    if (!removeTarget) return;
+    setRemoving(true);
+    try {
+      await teacherApi.remove(removeTarget.id);
+      toast.success("Teacher removed successfully.");
+      await load();
+      setRemoveTarget(null);
+    } catch {
+      toast.error("Could not remove the teacher. Try again.");
+    } finally {
+      setRemoving(false);
     }
   };
 
@@ -150,13 +185,12 @@ export function TeachersPage() {
     () => new Set(teachers.map((teacher) => teacher.department)).size,
     [teachers],
   );
-  const weeklyLoad = useMemo(
-    () =>
-      Math.round(
-        teachers.reduce((sum, teacher) => sum + teacher.classesPerWeek, 0) / teachers.length,
-      ),
-    [teachers],
-  );
+  const weeklyLoad = useMemo(() => {
+    if (teachers.length === 0) return 0;
+    return Math.round(
+      teachers.reduce((sum, teacher) => sum + teacher.classesPerWeek, 0) / teachers.length,
+    );
+  }, [teachers]);
 
   return (
     <div className="space-y-4">
@@ -179,20 +213,16 @@ export function TeachersPage() {
         <StatsCard
           label="Total Teachers"
           value={String(teachers.length)}
-          delta="3 new this term"
           icon={<GraduationCapIcon className="size-4" />}
         />
         <StatsCard
           label="Departments"
           value={String(departments)}
-          delta="Fully staffed"
-          deltaDirection="neutral"
           icon={<UsersIcon className="size-4" />}
         />
         <StatsCard
           label="Avg. Weekly Load"
           value={`${weeklyLoad} classes`}
-          delta="16 – 28 per teacher"
           deltaDirection="neutral"
           icon={<GraduationCapIcon className="size-4" />}
         />
@@ -223,13 +253,15 @@ export function TeachersPage() {
               className="flex flex-col rounded-lg border border-neutral-200 bg-bg-default p-5 transition-colors hover:border-neutral-300"
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
+                <Link href={`/teachers/${teacher.id}`} className="flex min-w-0 items-center gap-3">
                   <Avatar name={teacher.name} size="lg" />
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-neutral-900">{teacher.name}</p>
-                    <p className="text-xs text-neutral-500">{teacher.subject}</p>
+                    <p className="truncate font-medium text-neutral-900 transition-colors hover:underline">
+                      {teacher.name}
+                    </p>
+                    <p className="truncate text-xs text-neutral-500">{teacher.subject || "—"}</p>
                   </div>
-                </div>
+                </Link>
                 <StatusBadge status={teacher.status} />
               </div>
               <div className="mt-4 space-y-2 text-sm">
@@ -237,7 +269,7 @@ export function TeachersPage() {
                   <span className="w-4 flex-none text-neutral-400">
                     <GraduationCapIcon className="size-4" />
                   </span>
-                  {teacher.department}
+                  <span className="truncate">{teacher.department || "—"}</span>
                 </p>
                 <p className="flex items-center gap-2 text-neutral-500">
                   <span className="w-4 flex-none text-neutral-400">
@@ -249,19 +281,48 @@ export function TeachersPage() {
                   <span className="w-4 flex-none text-neutral-400">
                     <PhoneIcon className="size-4" />
                   </span>
-                  {teacher.phone}
+                  {teacher.phone || "—"}
                 </p>
               </div>
               <div className="mt-4 flex items-center justify-between border-t border-neutral-100 pt-4">
                 <span className="text-xs text-neutral-400">
                   {teacher.classesPerWeek} classes / week
                 </span>
-                <span className={cn("h-1.5 w-24 overflow-hidden rounded-full bg-neutral-100")}>
-                  <span
-                    className="block h-full rounded-full bg-neutral-900"
-                    style={{
-                      width: `${Math.min(100, (teacher.classesPerWeek / 30) * 100)}%`,
-                    }}
+                <span className="flex items-center gap-2">
+                  <span className={cn("h-1.5 w-24 overflow-hidden rounded-full bg-neutral-100")}>
+                    <span
+                      className="block h-full rounded-full bg-neutral-900"
+                      style={{
+                        width: `${Math.min(100, (teacher.classesPerWeek / 30) * 100)}%`,
+                      }}
+                    />
+                  </span>
+                  <RowActions
+                    actions={[
+                      {
+                        label: "View details",
+                        href: `/teachers/${teacher.id}`,
+                      },
+                      ...(canUpdate
+                        ? [
+                            {
+                              label: "Edit teacher",
+                              icon: <PencilIcon className="size-4" />,
+                              onClick: () => setEditTarget(teacher),
+                            },
+                          ]
+                        : []),
+                      ...(canDelete
+                        ? [
+                            {
+                              label: "Remove teacher",
+                              icon: <TrashIcon className="size-4" />,
+                              danger: true,
+                              onClick: () => setRemoveTarget(teacher),
+                            },
+                          ]
+                        : []),
+                    ]}
                   />
                 </span>
               </div>
@@ -275,9 +336,63 @@ export function TeachersPage() {
           open={dialogOpen}
           onClose={() => setDialogOpen(false)}
           title="Invite Teacher"
-          description="Create a faculty account for the 2082/83 academic year."
+          description="Create a faculty account for the current academic year."
         >
           <AddTeacherForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+        </Dialog>
+      )}
+
+      {canUpdate && editTarget && (
+        <Dialog
+          open={editTarget !== null}
+          onClose={() => setEditTarget(null)}
+          title="Edit Teacher"
+          description={`Update ${editTarget.name}'s account details.`}
+        >
+          <EditTeacherForm
+            initial={{
+              fullName: editTarget.name,
+              email: editTarget.email,
+              phone: editTarget.phone,
+              department: editTarget.department,
+              classesPerWeek: String(editTarget.classesPerWeek),
+              status: editTarget.status,
+            }}
+            onSave={handleEdit}
+            onClose={() => setEditTarget(null)}
+          />
+        </Dialog>
+      )}
+
+      {canDelete && removeTarget && (
+        <Dialog
+          open={removeTarget !== null}
+          onClose={() => setRemoveTarget(null)}
+          title={`Remove ${removeTarget.name}?`}
+          description="This action cannot be undone."
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-neutral-600">
+              This will mark the teacher as inactive and revoke their access to the school. Their
+              past records and assignments stay intact.
+            </p>
+            <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
+              <Button
+                variant="secondary"
+                text="Cancel"
+                onClick={() => setRemoveTarget(null)}
+                className="w-auto"
+              />
+              <Button
+                variant="danger"
+                text={removing ? "Removing…" : "Remove"}
+                loading={removing}
+                disabled={removing}
+                className="w-auto"
+                onClick={() => void handleRemove()}
+              />
+            </div>
+          </div>
         </Dialog>
       )}
 

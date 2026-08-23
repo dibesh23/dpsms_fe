@@ -28,6 +28,8 @@ export interface ParentCreatePayload {
   studentNames?: string[];
 }
 
+export type ParentUpdatePayload = Partial<ParentCreatePayload>;
+
 export const parentApi = {
   async list(): Promise<ParentRecord[]> {
     const { data } = await apiClient.get<{ data: ParentListResult }>("/parents");
@@ -37,6 +39,20 @@ export const parentApi = {
   async create(payload: ParentCreatePayload): Promise<ParentRecord> {
     const { data } = await apiClient.post<{ data: ParentRecord }>("/parents", payload);
     return data.data;
+  },
+
+  async get(id: string): Promise<ParentRecord> {
+    const { data } = await apiClient.get<{ data: ParentRecord }>(`/parents/${id}`);
+    return data.data;
+  },
+
+  async update(id: string, payload: ParentUpdatePayload): Promise<ParentRecord> {
+    const { data } = await apiClient.patch<{ data: ParentRecord }>(`/parents/${id}`, payload);
+    return data.data;
+  },
+
+  async remove(id: string): Promise<void> {
+    await apiClient.delete(`/parents/${id}`);
   },
 };
 
