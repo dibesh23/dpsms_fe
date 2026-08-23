@@ -13,3 +13,13 @@ test("concurrent unauthorized requests share one refresh", async () => {
   const source = await read("src/shared/lib/apiClient.ts");
   assert.match(source, /refreshPromise \?\?=/);
 });
+
+test("plain login does not reuse a cached or environment tenant", async () => {
+  const [context, page] = await Promise.all([
+    read("src/features/auth/components/LoginWithSchoolContext.tsx"),
+    read("src/app/(auth)/login/page.tsx"),
+  ]);
+  assert.doesNotMatch(context, /getLastSchool/);
+  assert.doesNotMatch(page, /NEXT_PUBLIC_TENANT_ID/);
+  assert.match(context, /setResolvedTenantId\(null\)/);
+});

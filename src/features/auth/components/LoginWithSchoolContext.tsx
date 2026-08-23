@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { LoadingSpinner } from "@/shared/components/ui/icons";
 import { authApi } from "../api/authApi";
 import { LoginForm } from "./LoginForm";
-import { getLastSchool, saveLastSchool } from "../../../shared/lib/schoolStorage";
+import { saveLastSchool } from "../../../shared/lib/schoolStorage";
 import type { RoleName } from "../types";
 
 const ROLE_FROM_PARAM: Record<string, RoleName | undefined> = {
@@ -14,18 +14,16 @@ const ROLE_FROM_PARAM: Record<string, RoleName | undefined> = {
   student: "STUDENT",
 };
 
-export function LoginWithSchoolContext({ defaultTenantId }: { defaultTenantId: string }) {
+export function LoginWithSchoolContext() {
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered");
   const subdomain = searchParams.get("subdomain");
   const tenantIdParam = searchParams.get("tenantId");
   const roleParam = searchParams.get("role");
 
-  const [resolvedTenantId, setResolvedTenantId] = useState<string | null>(() =>
-    tenantIdParam ? tenantIdParam : (getLastSchool()?.tenantId ?? null),
-  );
+  const [resolvedTenantId, setResolvedTenantId] = useState<string | null>(tenantIdParam);
   const [resolving, setResolving] = useState(!tenantIdParam && !!subdomain);
-  const [schoolName, setSchoolName] = useState<string | null>(() => getLastSchool()?.name ?? null);
+  const [schoolName, setSchoolName] = useState<string | null>(null);
   const [resolutionError, setResolutionError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,7 +34,10 @@ export function LoginWithSchoolContext({ defaultTenantId }: { defaultTenantId: s
       return;
     }
     if (!subdomain) {
-      setResolvedTenantId(getLastSchool()?.tenantId ?? (defaultTenantId || null));
+      // A plain /login must not silently bind authentication to a previously
+      // visited school. The API can resolve a unique email/role combination.
+      setResolvedTenantId(null);
+      setSchoolName(null);
       setResolving(false);
       return;
     }
@@ -57,7 +58,7 @@ export function LoginWithSchoolContext({ defaultTenantId }: { defaultTenantId: s
             name: tenant.name,
           });
         } else {
-          setResolvedTenantId(getLastSchool()?.tenantId ?? (defaultTenantId || null));
+          setResolvedTenantId(null);
           setResolutionError(
             "We couldn't find that school. Double-check the subdomain and try again.",
           );
@@ -66,13 +67,14 @@ export function LoginWithSchoolContext({ defaultTenantId }: { defaultTenantId: s
       })
       .catch(() => {
         if (cancelled) return;
-        setResolvedTenantId(getLastSchool()?.tenantId ?? (defaultTenantId || null));
+        setResolvedTenantId(null);
+        setResolutionError("We couldn't verify that school. Please try again.");
         setResolving(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [subdomain, tenantIdParam, defaultTenantId]);
+  }, [subdomain, tenantIdParam]);
 
   return (
     <div className="flex w-full flex-col gap-3">
@@ -103,7 +105,7 @@ export function LoginWithSchoolContext({ defaultTenantId }: { defaultTenantId: s
         </div>
       ) : (
         <LoginForm
-          defaultTenantId={resolvedTenantId ?? defaultTenantId}
+          defaultTenantId={resolvedTenantId ?? ""}
           schoolName={schoolName}
           defaultRole={roleParam ? ROLE_FROM_PARAM[roleParam] : undefined}
         />
