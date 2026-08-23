@@ -141,9 +141,7 @@ export function StudentsPage() {
         email: values.email,
         grade: values.grade,
         status: (values.status === "On Leave" ? "ON_LEAVE" : values.status.toUpperCase()) as
-          | "ACTIVE"
-          | "INACTIVE"
-          | "ON_LEAVE",
+          "ACTIVE" | "INACTIVE" | "ON_LEAVE",
         admissionDate: values.enrolledAt,
       });
       setStudents((current) => [

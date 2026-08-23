@@ -1,4 +1,3 @@
-
 export type RoleName = "SUPER_ADMIN" | "PRINCIPAL" | "TEACHER" | "STUDENT";
 export type UserStatus = "ACTIVE" | "INVITED" | "DISABLED";
 
@@ -9,7 +8,6 @@ export interface AuthUser {
   role: RoleName;
   tenantId: string;
   status: UserStatus;
-  onboardingRequired: boolean;
   permissions: string[];
 }
 
@@ -31,29 +29,15 @@ export interface RegisterSchoolPayload {
 export interface LoginResponse {
   accessToken: string;
   user: AuthUser;
-  onboardingRequired: boolean;
 }
 
 export interface RegisterSchoolResponse {
   accessToken: string;
   user: AuthUser;
-  onboardingRequired: boolean;
   tenantId: string;
   schoolName: string;
   subdomain: string;
   message: string;
-}
-
-export interface OnboardingStepState {
-  key: string;
-  status: "PENDING" | "COMPLETED";
-  completedAt: string | null;
-}
-
-export interface OnboardingStatusResult {
-  steps: OnboardingStepState[];
-  completedAt: string | null;
-  nextStep: string | null;
 }
 
 export interface SessionInfo {

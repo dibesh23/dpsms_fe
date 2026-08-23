@@ -3,22 +3,15 @@ import Link from "next/link";
 import { LoginWithSchoolContext } from "../../../features/auth/components/LoginWithSchoolContext";
 
 const DEFAULT_TENANT_ID = process.env["NEXT_PUBLIC_TENANT_ID"] ?? "";
-const OAUTH_ENABLED =
-  process.env["NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED"] === "true";
 
 export default function LoginPage() {
   return (
     <div className="w-full max-w-sm">
-      <h3 className="text-center text-xl font-semibold">
-        Log in to your account
-      </h3>
+      <h3 className="text-center text-xl font-semibold">Log in to your account</h3>
 
       <div className="mt-8">
         <Suspense fallback={null}>
-          <LoginWithSchoolContext
-            defaultTenantId={DEFAULT_TENANT_ID}
-            oauthEnabled={OAUTH_ENABLED}
-          />
+          <LoginWithSchoolContext defaultTenantId={DEFAULT_TENANT_ID} />
         </Suspense>
       </div>
 

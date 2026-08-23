@@ -1,0 +1,15 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test from "node:test";
+
+const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
+
+test("login UI does not expose OAuth", async () => {
+  const source = await read("src/features/auth/components/LoginForm.tsx");
+  assert.doesNotMatch(source, /GoogleSignIn|oauthEnabled/i);
+});
+
+test("concurrent unauthorized requests share one refresh", async () => {
+  const source = await read("src/shared/lib/apiClient.ts");
+  assert.match(source, /refreshPromise \?\?=/);
+});
