@@ -52,6 +52,12 @@ export interface StudentProfileSummary {
   guardians: GuardianSummary[];
 }
 
+export interface DayAttendancePoint {
+  /** Local calendar date, YYYY-MM-DD */
+  date: string;
+  status: DayAttendanceStatus;
+}
+
 export interface AttendanceSummary {
   /** % PRESENT out of all marked days, current academic year */
   overallPercent: number;
@@ -59,7 +65,12 @@ export interface AttendanceSummary {
   monthPercent: number;
   monthLabel: string;
   todayStatus: DayAttendanceStatus;
-  yesterdayStatus: DayAttendanceStatus;
+  /** Marked rows in the current academic year — 0 means no attendance data yet */
+  totalMarkedDays: number;
+  /** Marked rows in the current calendar month — 0 means the month gauge has no denominator */
+  totalMarkedDaysThisMonth: number;
+  /** Last 30 calendar days ending today, oldest first; NOT_MARKED where no row exists */
+  recentDays: DayAttendancePoint[];
   presentDaysThisMonth: number;
   lateDaysThisMonth: number;
   excusedDaysThisMonth: number;
