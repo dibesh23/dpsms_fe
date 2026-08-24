@@ -105,6 +105,12 @@ const NAV_SECTIONS: Array<{
         permission: PERMISSIONS.ACADEMIC_CLASS_LIST,
       },
       {
+        label: "Teacher Assignments",
+        href: "/teacher-assignments",
+        icon: BookUserIcon,
+        permission: PERMISSIONS.TEACHER_ASSIGNMENT_MANAGE,
+      },
+      {
         label: "Departments",
         href: "/departments",
         icon: Building2Icon,
