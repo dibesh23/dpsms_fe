@@ -130,7 +130,7 @@ const NAV_SECTIONS: Array<{
     items: [
       {
         label: "My Classes",
-        href: "/classes",
+        href: "/my-classes",
         icon: LayoutGridIcon,
         permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW,
       },
