@@ -314,7 +314,12 @@ function NavList({ onNavigate, expanded = true }: { onNavigate?: () => void; exp
                           active ? "text-black" : "text-neutral-600",
                         )}
                       />
-                      <span className={cn("whitespace-nowrap", !expanded && "invisible group-hover/sidebar:visible")}>
+                      <span
+                        className={cn(
+                          "whitespace-nowrap",
+                          !expanded && "invisible group-hover/sidebar:visible",
+                        )}
+                      >
                         {item.label}
                       </span>
                     </Link>
@@ -329,7 +334,15 @@ function NavList({ onNavigate, expanded = true }: { onNavigate?: () => void; exp
   );
 }
 
-function SidebarContent({ onNavigate, expanded = true, onToggle }: { onNavigate?: () => void; expanded?: boolean; onToggle?: () => void }) {
+function SidebarContent({
+  onNavigate,
+  expanded = true,
+  onToggle,
+}: {
+  onNavigate?: () => void;
+  expanded?: boolean;
+  onToggle?: () => void;
+}) {
   const { user, logout } = useAuth();
   return (
     <div className="flex h-full flex-col">
@@ -338,7 +351,12 @@ function SidebarContent({ onNavigate, expanded = true, onToggle }: { onNavigate?
           <Wordmark textClassName={cn(!expanded && "invisible group-hover/sidebar:visible")} />
         </Link>
         {onToggle && (
-          <button type="button" onClick={onToggle} aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"} className="absolute right-0 flex h-8 w-8 translate-x-1/2 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-800 shadow-sm transition hover:bg-neutral-100">
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
+            className="absolute right-0 flex h-8 w-8 translate-x-1/2 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-800 shadow-sm transition hover:bg-neutral-100"
+          >
             <MenuIcon className="size-4" />
           </button>
         )}
@@ -348,9 +366,16 @@ function SidebarContent({ onNavigate, expanded = true, onToggle }: { onNavigate?
 
       <div className="flex-none border-t border-neutral-100 p-3">
         <div className="flex items-center gap-3 overflow-hidden rounded-lg px-2 py-2">
-          <Link href="/profile" onClick={onNavigate} className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition-colors hover:bg-bg-subtle/70" aria-label="Open profile">
+          <Link
+            href="/profile"
+            onClick={onNavigate}
+            className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition-colors hover:bg-bg-subtle/70"
+            aria-label="Open profile"
+          >
             <Avatar name={user?.fullName ?? "User"} size="sm" />
-            <div className={cn("min-w-0 flex-1", !expanded && "invisible group-hover/sidebar:visible")}>
+            <div
+              className={cn("min-w-0 flex-1", !expanded && "invisible group-hover/sidebar:visible")}
+            >
               <p className="truncate text-sm font-medium text-neutral-900">{user?.fullName}</p>
               <p className="truncate text-xs text-neutral-500">{roleLabel(user?.role)}</p>
             </div>
@@ -359,7 +384,10 @@ function SidebarContent({ onNavigate, expanded = true, onToggle }: { onNavigate?
             type="button"
             onClick={() => void logout()}
             aria-label="Log out"
-            className={cn("flex h-8 w-8 flex-none items-center justify-center rounded-md text-neutral-700 transition-colors hover:bg-bg-subtle hover:text-black", !expanded && "invisible group-hover/sidebar:visible")}
+            className={cn(
+              "flex h-8 w-8 flex-none items-center justify-center rounded-md text-neutral-700 transition-colors hover:bg-bg-subtle hover:text-black",
+              !expanded && "invisible group-hover/sidebar:visible",
+            )}
           >
             <LogOutIcon className="size-4" />
           </button>
@@ -369,14 +397,38 @@ function SidebarContent({ onNavigate, expanded = true, onToggle }: { onNavigate?
   );
 }
 
-export function Sidebar() {
+export function Sidebar({
+  onDesktopExpandedChange,
+}: {
+  onDesktopExpandedChange?: (expanded: boolean) => void;
+}) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const desktopExpanded = expanded || hovered;
+
+  const setDesktopHover = (value: boolean) => {
+    setHovered(value);
+    onDesktopExpandedChange?.(expanded || value);
+  };
+
+  const toggleDesktopSidebar = () => {
+    const nextExpanded = !expanded;
+    setExpanded(nextExpanded);
+    onDesktopExpandedChange?.(nextExpanded || hovered);
+  };
 
   return (
     <>
-      <aside className={cn("group/sidebar fixed inset-y-0 left-0 z-30 hidden border-r border-neutral-200 bg-bg-default shadow-sm transition-[width] duration-200 hover:w-60 lg:block", expanded ? "w-60" : "w-20")}>
-        <SidebarContent expanded={expanded} onToggle={() => setExpanded((value) => !value)} />
+      <aside
+        className={cn(
+          "group/sidebar fixed inset-y-0 left-0 z-30 hidden border-r border-neutral-200 bg-bg-default shadow-sm transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] lg:block",
+          desktopExpanded ? "w-60" : "w-20",
+        )}
+        onMouseEnter={() => setDesktopHover(true)}
+        onMouseLeave={() => setDesktopHover(false)}
+      >
+        <SidebarContent expanded={desktopExpanded} onToggle={toggleDesktopSidebar} />
       </aside>
 
       <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-neutral-100 bg-bg-default/80 px-4 backdrop-blur lg:hidden">
