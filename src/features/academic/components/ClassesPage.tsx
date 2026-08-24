@@ -1,57 +1,55 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
 import { StatsCard } from "@/shared/components/ui/stats-card";
-import { Avatar } from "@/shared/components/ui/avatar";
 import { EmptyState } from "@/shared/components/ui/empty-state";
 import { Dialog } from "@/shared/components/ui/dialog";
+import { RowActions } from "@/shared/components/ui/row-actions";
 import { useTable } from "@/shared/hooks/useTable";
-import { cn } from "@/shared/lib/cn";
+import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { AddClassForm, type AddClassValues } from "./AddClassForm";
-import { academicApi } from "../api/academicApi";
+import { EditClassForm, type EditClassValues } from "./EditClassForm";
+import { academicApi, type ClassRecord as ClassRecordDto } from "../api/academicApi";
 import {
+  ArrowUpRightIcon,
   LayoutGridIcon,
-  MapPinIcon,
+  PencilIcon,
   PlusIcon,
+  TrashIcon,
   UserPlusIcon,
   UsersIcon,
 } from "@/shared/components/ui/icons";
 
-export interface SchoolClass {
-  id: string;
-  name: string;
-  sections: string[];
-  students: number;
-  teacher: string;
-  room: string;
-  attendance: number;
+function getApiErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error && "response" in err) {
+    const response = (err as { response?: { data?: { error?: { message?: string } } } }).response;
+    const message = response?.data?.error?.message;
+    if (message) return message;
+  }
+  return fallback;
 }
 
 export function ClassesPage() {
-  const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [classes, setClasses] = useState<ClassRecordDto[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<ClassRecordDto | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ClassRecordDto | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const toast = useToast();
   const { can } = useAuth();
   const canCreate = can(PERMISSIONS.ACADEMIC_CLASS_CREATE);
+  const canUpdate = can(PERMISSIONS.ACADEMIC_CLASS_UPDATE);
+  const canDelete = can(PERMISSIONS.ACADEMIC_CLASS_DELETE);
 
   const load = useCallback(async () => {
     try {
-      const records = await academicApi.listClasses();
-      setClasses(
-        records.map((r) => ({
-          id: r.id,
-          name: r.name,
-          sections: r.sections,
-          students: r.students,
-          teacher: "",
-          room: "",
-          attendance: 0,
-        })),
-      );
+      setClasses(await academicApi.listClasses());
     } catch {
       setClasses([]);
     }
@@ -64,34 +62,56 @@ export function ClassesPage() {
   const handleAdd = async (values: AddClassValues): Promise<boolean> => {
     try {
       const sections = values.sections
-        ? values.sections.split(",").map((s) => s.trim()).filter(Boolean)
+        ? values.sections
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
         : ["A"];
-      const record = await academicApi.createClass({ name: values.name, sections });
-      setClasses((current) => [
-        {
-          id: record.id,
-          name: record.name,
-          sections: record.sections,
-          students: 0,
-          teacher: "",
-          room: "",
-          attendance: 0,
-        },
-        ...current,
-      ]);
+      await academicApi.createClass({ name: values.name, sections });
+      await load();
       setDialogOpen(false);
+      toast.success("Class added successfully.");
       return true;
-    } catch {
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Could not add the class. Try again."));
       return false;
     }
   };
 
-  const table = useTable<SchoolClass>({
+  const handleRename = async (values: { name: string }): Promise<string | null> => {
+    if (!renameTarget) return "Class is not loaded yet.";
+    try {
+      const record = await academicApi.updateClass(renameTarget.id, values);
+      setClasses((current) => current.map((c) => (c.id === record.id ? record : c)));
+      setRenameTarget(null);
+      toast.success("Class renamed successfully.");
+      return null;
+    } catch (err) {
+      return getApiErrorMessage(err, "Could not rename the class. Try again.");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteBusy(true);
+    try {
+      await academicApi.deleteClass(deleteTarget.id);
+      setClasses((current) => current.filter((c) => c.id !== deleteTarget.id));
+      toast.success(`Class "${deleteTarget.name}" removed.`);
+      setDeleteTarget(null);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Could not remove the class. Try again."));
+    } finally {
+      setDeleteBusy(false);
+    }
+  };
+
+  const table = useTable<ClassRecordDto>({
     data: classes,
     pageSize: 6,
     getSearchText: (schoolClass) =>
-      `${schoolClass.name} ${schoolClass.sections.join(" ")} ${schoolClass.teacher} ${schoolClass.room}`,
-    sortValue: (schoolClass, key) => String(schoolClass[key as keyof SchoolClass] ?? ""),
+      `${schoolClass.name} ${schoolClass.sections.join(" ")} ${schoolClass.academicYearLabel}`,
+    sortValue: (schoolClass, key) => String(schoolClass[key as keyof ClassRecordDto] ?? ""),
     defaultSortKey: "name",
   });
 
@@ -119,14 +139,14 @@ export function ClassesPage() {
         <StatsCard
           label="Total Classes"
           value={String(classes.length)}
-          delta="Across all grades"
+          delta="In the active year"
           deltaDirection="neutral"
           icon={<LayoutGridIcon className="size-4" />}
         />
         <StatsCard
           label="Sections"
           value={String(totalSections)}
-          delta="2 per grade on average"
+          delta="Across all classes"
           deltaDirection="neutral"
           icon={<UserPlusIcon className="size-4" />}
         />
@@ -155,68 +175,68 @@ export function ClassesPage() {
               key={schoolClass.id}
               className="flex flex-col rounded-lg border border-neutral-200 bg-bg-default p-5 transition-colors hover:border-neutral-300"
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-medium text-neutral-900">{schoolClass.name}</p>
-                  <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    {schoolClass.sections.map((section) => (
-                      <span
-                        key={section}
-                        className="rounded-md border border-neutral-200 bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600"
-                      >
-                        Section {section}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <span
-                  className={cn(
-                    "text-xs font-semibold",
-                    schoolClass.attendance >= 95
-                      ? "text-emerald-600"
-                      : schoolClass.attendance >= 90
-                        ? "text-amber-600"
-                        : "text-red-600",
-                  )}
-                >
-                  {schoolClass.attendance}%
-                </span>
+              <div className="flex items-start justify-between gap-2">
+                <Link href={`/classes/${schoolClass.id}`} className="group min-w-0 flex-1">
+                  <p className="truncate font-medium text-neutral-900 group-hover:underline">
+                    {schoolClass.name}
+                  </p>
+                  <p className="mt-0.5 text-xs text-neutral-400">
+                    {schoolClass.academicYearLabel || "—"}
+                  </p>
+                </Link>
+                <RowActions
+                  actions={[
+                    {
+                      label: "View details",
+                      icon: <ArrowUpRightIcon className="size-3.5" />,
+                      href: `/classes/${schoolClass.id}`,
+                    },
+                    ...(canUpdate
+                      ? [
+                          {
+                            label: "Rename",
+                            icon: <PencilIcon className="size-3.5" />,
+                            onClick: () => setRenameTarget(schoolClass),
+                          },
+                        ]
+                      : []),
+                    ...(canDelete
+                      ? [
+                          {
+                            label: "Remove",
+                            icon: <TrashIcon className="size-3.5" />,
+                            danger: true,
+                            onClick: () => setDeleteTarget(schoolClass),
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+              <Link href={`/classes/${schoolClass.id}`} className="mt-1.5 flex flex-wrap gap-1.5">
+                {schoolClass.sections.map((section) => (
+                  <span
+                    key={section}
+                    className="rounded-md border border-neutral-200 bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600 transition-colors hover:border-neutral-300"
+                  >
+                    Section {section}
+                  </span>
+                ))}
+              </Link>
+
+              <div className="mt-auto flex items-center justify-between border-t border-neutral-100 pt-4 text-sm">
                 <div>
                   <p className="text-xs text-neutral-400">Students</p>
                   <p className="mt-0.5 font-medium text-neutral-800">{schoolClass.students}</p>
                 </div>
-                <div>
-                  <p className="text-xs text-neutral-400">Attendance today</p>
-                  <p className="mt-0.5 font-medium text-neutral-800">{schoolClass.attendance}%</p>
-                </div>
-              </div>
-
-              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-neutral-100">
-                <div
-                  className={cn(
-                    "h-full rounded-full",
-                    schoolClass.attendance >= 95
-                      ? "bg-emerald-500"
-                      : schoolClass.attendance >= 90
-                        ? "bg-amber-500"
-                        : "bg-red-500",
-                  )}
-                  style={{ width: `${schoolClass.attendance}%` }}
-                />
-              </div>
-
-              <div className="mt-4 flex items-center justify-between border-t border-neutral-100 pt-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <Avatar name={schoolClass.teacher} size="sm" />
-                  <span className="truncate text-neutral-600">{schoolClass.teacher}</span>
-                </div>
-                <span className="flex flex-none items-center gap-1 text-xs text-neutral-400">
-                  <MapPinIcon className="size-3.5" />
-                  {schoolClass.room}
-                </span>
+                <Link
+                  href={`/classes/${schoolClass.id}`}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-neutral-500 transition-colors hover:text-neutral-900"
+                >
+                  Manage class
+                  <ArrowUpRightIcon className="size-3.5" />
+                </Link>
               </div>
             </div>
           ))}
@@ -231,6 +251,59 @@ export function ClassesPage() {
           description="Create a class with one or more sections."
         >
           <AddClassForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+        </Dialog>
+      )}
+
+      {canUpdate && (
+        <Dialog
+          open={renameTarget !== null}
+          onClose={() => setRenameTarget(null)}
+          title="Rename Class"
+          description="Changing the name applies to the whole academic year."
+        >
+          {renameTarget && (
+            <EditClassForm
+              currentName={renameTarget.name}
+              onUpdate={handleRename}
+              onClose={() => setRenameTarget(null)}
+            />
+          )}
+        </Dialog>
+      )}
+
+      {canDelete && (
+        <Dialog
+          open={deleteTarget !== null}
+          onClose={() => setDeleteTarget(null)}
+          title="Remove Class"
+          description={
+            deleteTarget
+              ? `This will remove "${deleteTarget.name}" and its sections. This action cannot be undone.`
+              : ""
+          }
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-neutral-600">
+              The backend rejects removal when students are still enrolled or dependent records
+              exist.
+            </p>
+            <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
+              <Button
+                variant="secondary"
+                text="Cancel"
+                onClick={() => setDeleteTarget(null)}
+                className="w-auto"
+              />
+              <Button
+                variant="danger"
+                text={deleteBusy ? "Removing…" : "Remove Class"}
+                loading={deleteBusy}
+                disabled={deleteBusy}
+                className="w-auto"
+                onClick={() => void handleDelete()}
+              />
+            </div>
+          </div>
         </Dialog>
       )}
     </div>

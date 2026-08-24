@@ -97,12 +97,25 @@ const COLUMNS: Column<StaffMember>[] = [
     key: "actions",
     header: "",
     align: "right",
-    render: () => (
+    render: (member) => (
       <RowActions
         actions={[
-          { label: "View profile", icon: <UserPlusIcon className="size-3.5" /> },
-          { label: "Send email", icon: <MailIcon className="size-3.5" /> },
-          { label: "Edit details", icon: <FileTextIcon className="size-3.5" /> },
+          {
+            label: "View profile",
+            icon: <UserPlusIcon className="size-3.5" />,
+            href: `/staff/${member.id}`,
+          },
+          {
+            label: "Send email",
+            icon: <MailIcon className="size-3.5" />,
+            href: `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(member.email)}`,
+            external: true,
+          },
+          {
+            label: "Edit details",
+            icon: <FileTextIcon className="size-3.5" />,
+            href: `/staff/${member.id}`,
+          },
         ]}
       />
     ),
@@ -205,20 +218,16 @@ export function StaffPage() {
         <StatsCard
           label="Total Staff"
           value={String(staff.length)}
-          delta="2 added this term"
           icon={<BriefcaseIcon className="size-4" />}
         />
         <StatsCard
           label="Departments"
           value={String(departments)}
-          delta="Fully staffed"
-          deltaDirection="neutral"
           icon={<FileTextIcon className="size-4" />}
         />
         <StatsCard
           label="On Leave Today"
           value={String(onLeave)}
-          delta="0 open shifts"
           deltaDirection="neutral"
           icon={<ClockIcon className="size-4" />}
         />

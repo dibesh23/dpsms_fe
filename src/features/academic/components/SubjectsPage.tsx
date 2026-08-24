@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
 import { FilterDropdown } from "@/shared/components/ui/filter-dropdown";
 import { DataTable, type Column } from "@/shared/components/ui/data-table";
 import { Pagination } from "@/shared/components/ui/pagination";
-import { StatusBadge } from "@/shared/components/ui/status-badge";
 import { RowActions } from "@/shared/components/ui/row-actions";
 import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
@@ -15,34 +15,38 @@ import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { AddSubjectForm, type AddSubjectValues } from "./AddSubjectForm";
-import { academicApi } from "../api/academicApi";
+import { EditSubjectForm, type EditSubjectValues, type EditableSubject } from "./EditSubjectForm";
+import { academicApi, type SubjectRecord as SubjectRecordDto } from "../api/academicApi";
 import {
   BookOpenIcon,
-  FileTextIcon,
-  GraduationCapIcon,
-  MailIcon,
+  PencilIcon,
   PlusIcon,
+  TrashIcon,
+  ArrowUpRightIcon,
 } from "@/shared/components/ui/icons";
 
-export interface Subject {
-  id: string;
-  name: string;
-  code: string;
-  department: string;
-  teacher: string;
-  classes: string;
-  credit: number;
-  status: "Active" | "Invited";
+function getApiErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error && "response" in err) {
+    const response = (err as { response?: { data?: { error?: { message?: string } } } }).response;
+    const message = response?.data?.error?.message;
+    if (message) return message;
+  }
+  return fallback;
 }
 
-const DEPARTMENT_FILTERS = [
-  { value: "Science & Math", label: "Science & Math" },
-  { value: "Languages", label: "Languages" },
-  { value: "Humanities", label: "Humanities" },
-  { value: "Commerce", label: "Commerce" },
-];
-
-const COLUMNS: Column<Subject>[] = [
+const COLUMNS = ({
+  canUpdate,
+  canDelete,
+  onView,
+  onEdit,
+  onDelete,
+}: {
+  canUpdate: boolean;
+  canDelete: boolean;
+  onView: (subject: SubjectRecordDto) => void;
+  onEdit: (subject: SubjectRecordDto) => void;
+  onDelete: (subject: SubjectRecordDto) => void;
+}): Column<SubjectRecordDto>[] => [
   {
     key: "name",
     header: "Subject",
@@ -54,7 +58,7 @@ const COLUMNS: Column<Subject>[] = [
         </span>
         <div className="min-w-0">
           <p className="truncate font-medium text-neutral-900">{subject.name}</p>
-          <p className="text-xs text-neutral-400">{subject.code}</p>
+          <p className="text-xs text-neutral-400">{subject.code || "—"}</p>
         </div>
       </div>
     ),
@@ -66,40 +70,46 @@ const COLUMNS: Column<Subject>[] = [
     render: (subject) => <span className="text-neutral-600">{subject.department || "—"}</span>,
   },
   {
-    key: "teacher",
-    header: "Teacher",
-    sortValue: (subject) => subject.teacher,
-    render: (subject) => <span className="text-neutral-600">{subject.teacher || "Unassigned"}</span>,
-  },
-  {
-    key: "classes",
-    header: "Classes",
-    sortValue: (subject) => subject.classes,
-    render: (subject) => <span className="text-neutral-500">{subject.classes}</span>,
-  },
-  {
-    key: "credit",
-    header: "Credit",
-    sortValue: (subject) => subject.credit,
-    align: "right",
-    render: (subject) => <span className="font-medium text-neutral-700">{subject.credit}</span>,
-  },
-  {
-    key: "status",
-    header: "Status",
-    sortValue: (subject) => subject.status,
-    render: (subject) => <StatusBadge status={subject.status} />,
+    key: "type",
+    header: "Type",
+    sortValue: (subject) => subject.type,
+    render: (subject) => (
+      <span className="rounded-md bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600">
+        {subject.type === "ELECTIVE" ? "Elective" : "Compulsory"}
+      </span>
+    ),
   },
   {
     key: "actions",
     header: "",
     align: "right",
-    render: () => (
+    render: (subject) => (
       <RowActions
         actions={[
-          { label: "View syllabus", icon: <FileTextIcon className="size-3.5" /> },
-          { label: "Assign teacher", icon: <GraduationCapIcon className="size-3.5" /> },
-          { label: "Send email", icon: <MailIcon className="size-3.5" /> },
+          {
+            label: "View details",
+            icon: <ArrowUpRightIcon className="size-3.5" />,
+            onClick: () => onView(subject),
+          },
+          ...(canUpdate
+            ? [
+                {
+                  label: "Edit details",
+                  icon: <PencilIcon className="size-3.5" />,
+                  onClick: () => onEdit(subject),
+                },
+              ]
+            : []),
+          ...(canDelete
+            ? [
+                {
+                  label: "Remove",
+                  icon: <TrashIcon className="size-3.5" />,
+                  danger: true,
+                  onClick: () => onDelete(subject),
+                },
+              ]
+            : []),
         ]}
       />
     ),
@@ -107,27 +117,21 @@ const COLUMNS: Column<Subject>[] = [
 ];
 
 export function SubjectsPage() {
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const router = useRouter();
+  const [subjects, setSubjects] = useState<SubjectRecordDto[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<EditableSubject | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<SubjectRecordDto | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const toast = useToast();
   const { can } = useAuth();
   const canCreate = can(PERMISSIONS.ACADEMIC_SUBJECT_CREATE);
+  const canUpdate = can(PERMISSIONS.ACADEMIC_SUBJECT_UPDATE);
+  const canDelete = can(PERMISSIONS.ACADEMIC_SUBJECT_DELETE);
 
   const load = useCallback(async () => {
     try {
-      const records = await academicApi.listSubjects();
-      setSubjects(
-        records.map((r) => ({
-          id: r.id,
-          name: r.name,
-          code: r.code,
-          department: r.department,
-          teacher: "",
-          classes: "",
-          credit: 0,
-          status: r.type === "ELECTIVE" ? "Invited" : "Active",
-        })),
-      );
+      setSubjects(await academicApi.listSubjects());
     } catch {
       setSubjects([]);
     }
@@ -139,48 +143,95 @@ export function SubjectsPage() {
 
   const handleAdd = async (values: AddSubjectValues): Promise<boolean> => {
     try {
-      const record = await academicApi.createSubject({
+      await academicApi.createSubject({
         name: values.name,
         code: values.code?.trim() || undefined,
         type: values.type,
         department: values.department?.trim() || undefined,
       });
-      setSubjects((current) => [
-        {
-          id: record.id,
-          name: record.name,
-          code: record.code,
-          department: record.department,
-          teacher: "",
-          classes: "",
-          credit: 0,
-          status: "Active",
-        },
-        ...current,
-      ]);
+      await load();
       setDialogOpen(false);
       toast.success("Subject added successfully.");
       return true;
-    } catch {
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Could not add the subject. Try again."));
       return false;
     }
   };
 
-  const table = useTable<Subject>({
+  const handleUpdate = async (values: EditSubjectValues): Promise<string | null> => {
+    if (!editTarget) return "Subject is not loaded yet.";
+    try {
+      await academicApi.updateSubject(editTarget.id, values);
+      await load();
+      setEditTarget(null);
+      toast.success("Subject updated successfully.");
+      return null;
+    } catch (err) {
+      return getApiErrorMessage(err, "Could not update the subject. Try again.");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteBusy(true);
+    try {
+      await academicApi.deleteSubject(deleteTarget.id);
+      setSubjects((current) => current.filter((s) => s.id !== deleteTarget.id));
+      toast.success(`Subject "${deleteTarget.name}" removed.`);
+      setDeleteTarget(null);
+    } catch (err) {
+      toast.error(
+        getApiErrorMessage(
+          err,
+          "Could not remove the subject. It may still be assigned to teachers or classes.",
+        ),
+      );
+    } finally {
+      setDeleteBusy(false);
+    }
+  };
+
+  const departments = useMemo(() => {
+    const names = new Set<string>();
+    for (const subject of subjects) {
+      if (subject.department) names.add(subject.department);
+    }
+    return [...names].sort((a, b) => a.localeCompare(b));
+  }, [subjects]);
+
+  const departmentOptions = useMemo(
+    () => [
+      { value: "", label: "All departments" },
+      ...departments.map((d) => ({ value: d, label: d })),
+    ],
+    [departments],
+  );
+
+  const table = useTable<SubjectRecordDto>({
     data: subjects,
     pageSize: 8,
-    getSearchText: (subject) =>
-      `${subject.name} ${subject.code} ${subject.department} ${subject.teacher}`,
-    filterMatch: (subject, value) => subject.department === value,
-    sortValue: (subject, key) => String(subject[key as keyof Subject] ?? ""),
+    getSearchText: (subject) => `${subject.name} ${subject.code} ${subject.department}`,
+    filterMatch: (subject, value) => (value === "" ? true : subject.department === value),
+    sortValue: (subject, key) => String(subject[key as keyof SubjectRecordDto] ?? ""),
     defaultSortKey: "name",
   });
+
+  function openEdit(subject: SubjectRecordDto) {
+    setEditTarget({
+      id: subject.id,
+      name: subject.name,
+      code: subject.code,
+      type: subject.type === "ELECTIVE" ? "ELECTIVE" : "COMPULSORY",
+      department: subject.department,
+    });
+  }
 
   return (
     <div className="space-y-4">
       <PageHeader
         title="Subjects"
-        description="Subjects offered and their assigned faculty"
+        description="Subjects offered across the curriculum"
         actions={
           canCreate ? (
             <Button
@@ -196,7 +247,7 @@ export function SubjectsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <FilterDropdown
           label="Filter by department"
-          options={DEPARTMENT_FILTERS}
+          options={departmentOptions}
           value={table.filter}
           onChange={table.setFilter}
         />
@@ -204,7 +255,13 @@ export function SubjectsPage() {
       </div>
 
       <DataTable
-        columns={COLUMNS}
+        columns={COLUMNS({
+          canUpdate,
+          canDelete,
+          onView: (subject) => router.push(`/subjects/${subject.id}`),
+          onEdit: openEdit,
+          onDelete: (subject) => setDeleteTarget(subject),
+        })}
         data={table.pageRows}
         keyExtractor={(subject) => subject.id}
         sortKey={table.sortKey}
@@ -233,6 +290,55 @@ export function SubjectsPage() {
           description="Create a new subject."
         >
           <AddSubjectForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
+        </Dialog>
+      )}
+
+      {canUpdate && (
+        <Dialog
+          open={editTarget !== null}
+          onClose={() => setEditTarget(null)}
+          title="Edit Subject"
+          description="Update the subject details or move it to another department."
+        >
+          {editTarget && (
+            <EditSubjectForm
+              subject={editTarget}
+              departments={departments}
+              onUpdate={handleUpdate}
+              onClose={() => setEditTarget(null)}
+            />
+          )}
+        </Dialog>
+      )}
+
+      {canDelete && (
+        <Dialog
+          open={deleteTarget !== null}
+          onClose={() => setDeleteTarget(null)}
+          title="Remove Subject"
+          description={deleteTarget ? `Remove "${deleteTarget.name}" from the catalog?` : ""}
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-neutral-600">
+              Subjects with active teacher assignments or class mappings cannot be removed.
+            </p>
+            <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
+              <Button
+                variant="secondary"
+                text="Cancel"
+                onClick={() => setDeleteTarget(null)}
+                className="w-auto"
+              />
+              <Button
+                variant="danger"
+                text={deleteBusy ? "Removing…" : "Remove Subject"}
+                loading={deleteBusy}
+                disabled={deleteBusy}
+                className="w-auto"
+                onClick={() => void handleDelete()}
+              />
+            </div>
+          </div>
         </Dialog>
       )}
     </div>
