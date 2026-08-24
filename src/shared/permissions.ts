@@ -53,6 +53,12 @@ export const PERMISSIONS = {
   ACADEMIC_CLASS_SUBJECT_MANAGE: "academic:class-subjects:manage",
 
   TEACHER_OWN_CLASSES_VIEW: "teachers:own-classes:view",
+  ATTENDANCE_STUDENT_MARK: "attendance:student:mark",
+  ATTENDANCE_STUDENT_LIST: "attendance:student:list",
+  ATTENDANCE_STUDENT_READ: "attendance:student:read",
+  ATTENDANCE_STAFF_MARK: "attendance:staff:mark",
+  ATTENDANCE_STAFF_LIST: "attendance:staff:list",
+  ATTENDANCE_STAFF_READ: "attendance:staff:read",
   ATTENDANCE_OWN_VIEW: "attendance:own:view",
   EXAM_OWN_VIEW: "exam:own:view",
   FEE_OWN_VIEW: "fees:own:view",

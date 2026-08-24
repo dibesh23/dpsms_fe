@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { StatsCard } from "@/shared/components/ui/stats-card";
-import { SearchBar } from "@/shared/components/ui/search-bar";
 import { FilterDropdown } from "@/shared/components/ui/filter-dropdown";
 import { DataTable, type Column } from "@/shared/components/ui/data-table";
 import { Pagination } from "@/shared/components/ui/pagination";
@@ -12,8 +11,8 @@ import { useTable } from "@/shared/hooks/useTable";
 import { formatDate } from "@/shared/lib/format";
 import {
   studentAttendanceApi,
-  type AttendanceHistorySummary,
-  type AttendanceRecord,
+  type MyAttendanceResponse,
+  type MyAttendanceRecord,
   type AttendanceStatus,
 } from "../api/studentAttendanceApi";
 import {
@@ -44,39 +43,64 @@ const STATUS_FILTERS: { value: AttendanceStatus; label: string }[] = [
   { value: "EXCUSED", label: "Excused" },
 ];
 
-const EMPTY_SUMMARY: AttendanceHistorySummary = {
-  academicYearLabel: "",
-  totalMarkedDays: 0,
-  presentDays: 0,
-  absentDays: 0,
-  lateDays: 0,
-  excusedDays: 0,
-  overallPercent: 0,
+const EMPTY_RESPONSE: MyAttendanceResponse = {
+  enrollmentId: "",
+  sectionId: "",
   records: [],
+  summary: {
+    totalMarked: 0,
+    present: 0,
+    absent: 0,
+    late: 0,
+    excused: 0,
+    attendanceRate: 0,
+  },
+  dateRange: { from: "", to: "" },
 };
+
+function toDateString(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function daysAgoStart(days: number): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - days);
+  return d;
+}
 
 const WEEKDAY_FORMAT: Intl.DateTimeFormatOptions = { weekday: "short" };
 
 export function StudentAttendanceHistoryPage() {
-  const [summary, setSummary] = useState<AttendanceHistorySummary>(EMPTY_SUMMARY);
+  const [data, setData] = useState<MyAttendanceResponse>(EMPTY_RESPONSE);
   const [loading, setLoading] = useState(true);
+  const [fromDate, setFromDate] = useState<string>(toDateString(daysAgoStart(29)));
+  const [toDate, setToDate] = useState<string>(toDateString(daysAgoStart(0)));
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
-      const data = await studentAttendanceApi.getHistory();
-      setSummary(data);
+      const from = new Date(fromDate + "T00:00:00");
+      const to = new Date(toDate + "T00:00:00");
+      const result = await studentAttendanceApi.getMyAttendance(from, to);
+      setData(result);
     } catch {
-      setSummary(EMPTY_SUMMARY);
+      setData(EMPTY_RESPONSE);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fromDate, toDate]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  const COLUMNS: Column<AttendanceRecord>[] = useMemo(
+  const summary = data.summary;
+
+  const COLUMNS: Column<MyAttendanceRecord>[] = useMemo(
     () => [
       {
         key: "date",
@@ -92,36 +116,27 @@ export function StudentAttendanceHistoryPage() {
         ),
       },
       {
-        key: "class",
-        header: "Class",
-        sortValue: (record) => `${record.className} ${record.sectionName}`,
-        render: (record) => (
-          <span className="text-neutral-600">
-            {record.className}
-            {record.sectionName ? ` - ${record.sectionName}` : ""}
-          </span>
-        ),
-      },
-      {
         key: "status",
         header: "Status",
         sortValue: (record) => record.status,
         render: (record) => (
-          <StatusBadge status={STATUS_LABEL[record.status]} variant={STATUS_VARIANT[record.status]} />
+          <StatusBadge
+            status={STATUS_LABEL[record.status]}
+            variant={STATUS_VARIANT[record.status]}
+          />
         ),
       },
     ],
     [],
   );
 
-  const table = useTable<AttendanceRecord>({
-    data: summary.records,
+  const table = useTable<MyAttendanceRecord>({
+    data: data.records,
     pageSize: 10,
-    getSearchText: (record) => `${record.date} ${record.className} ${record.sectionName}`,
+    getSearchText: (record) => `${record.date} ${record.status}`,
     filterMatch: (record, value) => record.status === value,
     sortValue: (record, key) => {
       if (key === "status") return record.status;
-      if (key === "class") return `${record.className} ${record.sectionName}`;
       return record.date;
     },
     defaultSortKey: "date",
@@ -131,9 +146,9 @@ export function StudentAttendanceHistoryPage() {
     () =>
       STATUS_FILTERS.map((option) => ({
         ...option,
-        label: `${option.label} (${summary.records.filter((r) => r.status === option.value).length})`,
+        label: `${option.label} (${data.records.filter((r) => r.status === option.value).length})`,
       })),
-    [summary.records],
+    [data.records],
   );
 
   return (
@@ -141,46 +156,69 @@ export function StudentAttendanceHistoryPage() {
       <PageHeader
         title="Attendance History"
         description={
-          summary.academicYearLabel
-            ? `Academic Year ${summary.academicYearLabel} · ${summary.totalMarkedDays} days marked`
-            : `${summary.totalMarkedDays} days marked`
+          fromDate && toDate
+            ? `${formatDate(fromDate)} – ${formatDate(toDate)} · ${summary.totalMarked} days marked`
+            : `${summary.totalMarked} days marked`
         }
       />
 
       <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <StatsCard
           label="Overall Attendance"
-          value={loading ? "—" : `${summary.overallPercent}%`}
+          value={loading ? "—" : `${summary.attendanceRate}%`}
           icon={<CheckCircle2Icon className="size-4" />}
         />
         <StatsCard
           label="Present Days"
-          value={loading ? "—" : String(summary.presentDays)}
+          value={loading ? "—" : String(summary.present)}
           icon={<CalendarDaysIcon className="size-4" />}
         />
         <StatsCard
           label="Absent Days"
-          value={loading ? "—" : String(summary.absentDays)}
+          value={loading ? "—" : String(summary.absent)}
           icon={<AlertTriangleIcon className="size-4" />}
         />
         <StatsCard
           label="Late / Excused"
-          value={loading ? "—" : String(summary.lateDays + summary.excusedDays)}
+          value={loading ? "—" : String(summary.late + summary.excused)}
           icon={<ClockIcon className="size-4" />}
         />
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <label htmlFor="history-from" className="text-sm font-medium text-neutral-700">
+              From
+            </label>
+            <input
+              id="history-from"
+              type="date"
+              value={fromDate}
+              max={toDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="h-9 rounded-lg border border-neutral-200 bg-bg-default px-3 text-sm text-neutral-900 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-100"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="history-to" className="text-sm font-medium text-neutral-700">
+              To
+            </label>
+            <input
+              id="history-to"
+              type="date"
+              value={toDate}
+              min={fromDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="h-9 rounded-lg border border-neutral-200 bg-bg-default px-3 text-sm text-neutral-900 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-100"
+            />
+          </div>
+        </div>
         <FilterDropdown
           label="Filter by status"
           options={filters}
           value={table.filter}
           onChange={table.setFilter}
-        />
-        <SearchBar
-          value={table.query}
-          onChange={table.setQuery}
-          placeholder="Search by date or class…"
         />
       </div>
 
