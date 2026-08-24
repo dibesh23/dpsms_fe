@@ -136,7 +136,7 @@ const NAV_SECTIONS: Array<{
       },
       {
         label: "My Students",
-        href: "/students",
+        href: "/my-students",
         icon: UsersIcon,
         permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW,
       },
