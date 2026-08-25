@@ -82,10 +82,10 @@ function SubmissionRow({ notice }: { notice: AdminNotice }) {
 const CreateSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(255),
   body: z.string().trim().min(1, "Body is required"),
-  isUrgent: z.boolean().optional().default(false),
+  isUrgent: z.boolean(),
   scheduledAt: z.string().optional(),
 });
-type CreateForm = z.infer<typeof CreateSchema>;
+type CreateForm = z.output<typeof CreateSchema>;
 
 // ── Expandable body ───────────────────────────────────────────────────────────
 
