@@ -68,7 +68,7 @@ const FILTER_OPTIONS = [
 const CreateSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(255),
   body: z.string().trim().min(1, "Body is required"),
-  isUrgent: z.boolean().default(false),
+  isUrgent: z.boolean().optional().default(false),
   scheduledAt: z.string().optional(),
 });
 type CreateForm = z.infer<typeof CreateSchema>;
