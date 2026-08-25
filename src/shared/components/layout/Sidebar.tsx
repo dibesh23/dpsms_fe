@@ -132,6 +132,18 @@ const NAV_SECTIONS: Array<{
     ],
   },
   {
+    label: "Communication",
+    roles: ["SUPER_ADMIN", "PRINCIPAL"],
+    items: [
+      {
+        label: "Notices",
+        href: "/notices",
+        icon: BellIcon,
+        permission: PERMISSIONS.NOTICE_LIST,
+      },
+    ],
+  },
+  {
     label: "Administration",
     roles: ["SUPER_ADMIN", "PRINCIPAL"],
     items: [
@@ -182,6 +194,12 @@ const NAV_SECTIONS: Array<{
         href: "/parents",
         icon: HeartHandshakeIcon,
         permission: PERMISSIONS.PARENT_LIST,
+      },
+      {
+        label: "Notices",
+        href: "/notices",
+        icon: BellIcon,
+        permission: PERMISSIONS.NOTICE_OWN_VIEW,
       },
       {
         label: "Messaging",

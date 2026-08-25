@@ -12,9 +12,12 @@ export default function DashboardRoute() {
     return <LoadingState label="Loading your dashboard…" />;
   }
 
+  // STUDENT gets their own detailed academic dashboard
   if (user?.role === "STUDENT") {
     return <StudentDashboardPage />;
   }
 
+  // TEACHER, PRINCIPAL, SUPER_ADMIN all get the admin dashboard
+  // (DashboardPage already has DashboardNoticesWidget which respects role)
   return <DashboardPage />;
 }
