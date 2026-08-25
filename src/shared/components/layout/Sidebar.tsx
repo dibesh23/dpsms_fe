@@ -141,8 +141,8 @@ const NAV_SECTIONS: Array<{
         permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW,
       },
       {
-        label: "Subjects",
-        href: "/subjects",
+        label: "My Subjects",
+        href: "/my-subjects",
         icon: BookOpenIcon,
         permission: PERMISSIONS.ACADEMIC_SUBJECT_LIST,
       },
@@ -157,12 +157,6 @@ const NAV_SECTIONS: Array<{
         href: "/class-tests",
         icon: FileTextIcon,
         permission: PERMISSIONS.EXAM_OWN_VIEW,
-      },
-      {
-        label: "Parents",
-        href: "/parents",
-        icon: HeartHandshakeIcon,
-        permission: PERMISSIONS.PARENT_LIST,
       },
       {
         label: "Messaging",
