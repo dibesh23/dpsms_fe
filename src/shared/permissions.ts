@@ -68,6 +68,9 @@ export const PERMISSIONS = {
   LIVE_CLASS_OWN_VIEW: "live-class:own:view",
   ADMISSION_LETTER_VIEW: "admission-letter:own:view",
   MESSAGING_OWN_VIEW: "messaging:own:view",
+
+  AUDIT_LOG_READ: "audit:logs:read",
+  AUDIT_LOG_EXPORT: "audit:logs:export",
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

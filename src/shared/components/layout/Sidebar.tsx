@@ -26,6 +26,7 @@ import {
   LayoutGridIcon,
   LogOutIcon,
   MenuIcon,
+  ShieldIcon,
   UsersIcon,
   XIcon,
 } from "../ui/icons";
@@ -105,6 +106,12 @@ const NAV_SECTIONS: Array<{
         permission: PERMISSIONS.ACADEMIC_CLASS_LIST,
       },
       {
+        label: "Teacher Assignments",
+        href: "/teacher-assignments",
+        icon: BookUserIcon,
+        permission: PERMISSIONS.TEACHER_ASSIGNMENT_MANAGE,
+      },
+      {
         label: "Departments",
         href: "/departments",
         icon: Building2Icon,
@@ -121,6 +128,18 @@ const NAV_SECTIONS: Array<{
         href: "/academic-sessions",
         icon: CalendarDaysIcon,
         permission: PERMISSIONS.ACADEMIC_SESSION_LIST,
+      },
+    ],
+  },
+  {
+    label: "Administration",
+    roles: ["SUPER_ADMIN", "PRINCIPAL"],
+    items: [
+      {
+        label: "Audit Logs",
+        href: "/audit-logs",
+        icon: ShieldIcon,
+        permission: PERMISSIONS.AUDIT_LOG_READ,
       },
     ],
   },
@@ -250,11 +269,11 @@ function roleLabel(role?: string): string {
   return (role && ROLE_LABELS[role]) ?? "Staff";
 }
 
-function NavList({ onNavigate }: { onNavigate?: () => void }) {
+function NavList({ onNavigate, expanded = true }: { onNavigate?: () => void; expanded?: boolean }) {
   const pathname = usePathname();
   const { user, can } = useAuth();
   return (
-    <nav className="flex-1 overflow-y-auto px-3 pb-4">
+    <nav className="flex-1 overflow-x-hidden overflow-y-auto px-3 pb-4">
       {NAV_SECTIONS.map((section) => {
         const roleMatch = !section.roles || (user?.role && section.roles.includes(user.role));
         if (!roleMatch) return null;
@@ -262,8 +281,10 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
         if (visibleItems.length === 0) return null;
         return (
           <div key={section.label}>
-            <p className="px-3 pb-2 pt-5 text-xs font-medium tracking-wider text-neutral-400 uppercase">
-              {section.label}
+            <p className="h-9 overflow-hidden px-3 pb-2 pt-5 text-xs font-medium tracking-wider whitespace-nowrap text-neutral-600 uppercase">
+              <span className={cn(!expanded && "invisible group-hover/sidebar:visible")}>
+                {section.label}
+              </span>
             </p>
             <ul className="space-y-0.5">
               {visibleItems.map((item) => {
@@ -275,19 +296,26 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
                       href={item.href}
                       onClick={onNavigate}
                       className={cn(
-                        "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
                         active
-                          ? "bg-bg-subtle font-medium text-neutral-900"
-                          : "text-neutral-500 hover:bg-bg-subtle/70 hover:text-neutral-900",
+                          ? "bg-neutral-100 font-medium text-black"
+                          : "font-medium text-neutral-700 hover:bg-bg-subtle hover:text-black",
                       )}
                     >
                       <Icon
                         className={cn(
-                          "size-4 flex-none",
-                          active ? "text-neutral-900" : "text-neutral-400",
+                          "size-5 flex-none",
+                          active ? "text-black" : "text-neutral-600",
                         )}
                       />
-                      {item.label}
+                      <span
+                        className={cn(
+                          "whitespace-nowrap",
+                          !expanded && "invisible group-hover/sidebar:visible",
+                        )}
+                      >
+                        {item.label}
+                      </span>
                     </Link>
                   </li>
                 );
@@ -300,56 +328,106 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarContent({
+  onNavigate,
+  expanded = true,
+  onToggle,
+}: {
+  onNavigate?: () => void;
+  expanded?: boolean;
+  onToggle?: () => void;
+}) {
   const { user, logout } = useAuth();
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-16 flex-none items-center border-b border-neutral-100 px-5">
+      <div className="relative flex h-16 flex-none items-center border-b border-neutral-200 px-5">
         <Link href="/dashboard" onClick={onNavigate} aria-label="Digital Pathshala dashboard">
-          <Wordmark className="h-6" />
+          <Wordmark textClassName={cn(!expanded && "invisible group-hover/sidebar:visible")} />
         </Link>
+        {onToggle && (
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
+            className="absolute right-0 flex h-8 w-8 translate-x-1/2 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-800 shadow-sm transition hover:bg-neutral-100"
+          >
+            <MenuIcon className="size-4" />
+          </button>
+        )}
       </div>
 
-      <NavList onNavigate={onNavigate} />
+      <NavList onNavigate={onNavigate} expanded={expanded} />
 
       <div className="flex-none border-t border-neutral-100 p-3">
-        <Link
-          href="/profile"
-          onClick={onNavigate}
-          className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-bg-subtle/70"
-          aria-label="Open profile"
-        >
-          <Avatar name={user?.fullName ?? "User"} size="sm" />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-neutral-900">{user?.fullName}</p>
-            <p className="truncate text-xs text-neutral-500">{roleLabel(user?.role)}</p>
-          </div>
+        <div className="flex items-center gap-3 overflow-hidden rounded-lg px-2 py-2">
+          <Link
+            href="/profile"
+            onClick={onNavigate}
+            className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition-colors hover:bg-bg-subtle/70"
+            aria-label="Open profile"
+          >
+            <Avatar name={user?.fullName ?? "User"} size="sm" />
+            <div
+              className={cn("min-w-0 flex-1", !expanded && "invisible group-hover/sidebar:visible")}
+            >
+              <p className="truncate text-sm font-medium text-neutral-900">{user?.fullName}</p>
+              <p className="truncate text-xs text-neutral-500">{roleLabel(user?.role)}</p>
+            </div>
+          </Link>
           <button
             type="button"
             onClick={() => void logout()}
             aria-label="Log out"
-            className="flex h-8 w-8 flex-none items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-bg-subtle hover:text-neutral-700"
+            className={cn(
+              "flex h-8 w-8 flex-none items-center justify-center rounded-md text-neutral-700 transition-colors hover:bg-bg-subtle hover:text-black",
+              !expanded && "invisible group-hover/sidebar:visible",
+            )}
           >
             <LogOutIcon className="size-4" />
           </button>
-        </Link>
+        </div>
       </div>
     </div>
   );
 }
 
-export function Sidebar() {
+export function Sidebar({
+  onDesktopExpandedChange,
+}: {
+  onDesktopExpandedChange?: (expanded: boolean) => void;
+}) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const desktopExpanded = expanded || hovered;
+
+  const setDesktopHover = (value: boolean) => {
+    setHovered(value);
+    onDesktopExpandedChange?.(expanded || value);
+  };
+
+  const toggleDesktopSidebar = () => {
+    const nextExpanded = !expanded;
+    setExpanded(nextExpanded);
+    onDesktopExpandedChange?.(nextExpanded || hovered);
+  };
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-neutral-100 bg-bg-default lg:block">
-        <SidebarContent />
+      <aside
+        className={cn(
+          "group/sidebar fixed inset-y-0 left-0 z-30 hidden border-r border-neutral-200 bg-bg-default shadow-sm transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] lg:block",
+          desktopExpanded ? "w-60" : "w-20",
+        )}
+        onMouseEnter={() => setDesktopHover(true)}
+        onMouseLeave={() => setDesktopHover(false)}
+      >
+        <SidebarContent expanded={desktopExpanded} onToggle={toggleDesktopSidebar} />
       </aside>
 
       <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-neutral-100 bg-bg-default/80 px-4 backdrop-blur lg:hidden">
         <Link href="/dashboard" aria-label="Digital Pathshala dashboard">
-          <Wordmark className="h-6" />
+          <Wordmark />
         </Link>
         <button
           type="button"

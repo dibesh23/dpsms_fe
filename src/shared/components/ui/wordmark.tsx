@@ -1,19 +1,29 @@
 import { cn } from "@/shared/lib/cn";
 
-export function Wordmark({ className }: { className?: string }) {
+export function Wordmark({
+  className,
+  hideText = false,
+  textClassName,
+}: {
+  className?: string;
+  hideText?: boolean;
+  textClassName?: string;
+}) {
   return (
     <div
       className={cn(
-        "flex items-center gap-2.5 text-neutral-900",
+        "flex items-center gap-3 text-black",
         className,
       )}
     >
-      <span className="flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-black text-xs font-bold tracking-tight text-white">
+      <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-black text-sm font-bold tracking-tight text-white shadow-sm">
         DP
       </span>
-      <span className="whitespace-nowrap text-base font-semibold tracking-tight">
-        Digital Pathshala
-      </span>
+      {!hideText && (
+        <span className={cn("whitespace-nowrap text-lg font-medium tracking-tight text-black", textClassName)}>
+          Digital Pathshala
+        </span>
+      )}
     </div>
   );
 }

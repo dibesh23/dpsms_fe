@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { Sidebar } from "../../shared/components/layout/Sidebar";
@@ -10,6 +10,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   useEffect(() => {
     if (isLoading) return;
@@ -28,8 +29,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-[100dvh] bg-bg-muted text-content-default">
-      <Sidebar />
-      <div className="lg:pl-60">
+      <Sidebar onDesktopExpandedChange={setSidebarExpanded} />
+      <div
+        className={`transition-[padding-left] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          sidebarExpanded ? "lg:pl-60" : "lg:pl-20"
+        }`}
+      >
         <main className="mx-auto w-full max-w-8xl px-4 py-8 sm:px-6 lg:px-10">{children}</main>
       </div>
     </div>
