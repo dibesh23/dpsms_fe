@@ -187,8 +187,9 @@ export default function TeacherDashboardPage() {
   const load = useCallback(async () => {
     try {
       const data = await teacherDashboardApi.getSummary();
-      setSummary(data ?? EMPTY_SUMMARY);
-    } catch {
+      setSummary({ ...EMPTY_SUMMARY, ...data });
+    } catch (err) {
+      console.error("[TeacherDashboard] Failed to load summary:", err);
       setSummary(EMPTY_SUMMARY);
     } finally {
       setLoading(false);
@@ -354,7 +355,7 @@ export default function TeacherDashboardPage() {
               description="Marking status and attendance at a glance"
               className="lg:col-span-2"
             >
-              {summary.sectionsToday.length === 0 ? (
+              {(summary.sectionsToday ?? []).length === 0 ? (
                 <EmptyState
                   icon={<LayoutGridIcon className="size-5" />}
                   title="No sections assigned"
@@ -362,7 +363,7 @@ export default function TeacherDashboardPage() {
                 />
               ) : (
                 <ul className="divide-y divide-neutral-100">
-                  {summary.sectionsToday.map((snapshot) => (
+                  {(summary.sectionsToday ?? []).map((snapshot) => (
                     <SectionRow key={snapshot.sectionId} snapshot={snapshot} />
                   ))}
                 </ul>
@@ -442,10 +443,10 @@ export default function TeacherDashboardPage() {
               description="Average across my sections"
               className="lg:col-span-2"
             >
-              <BarChart data={summary.weeklyAttendanceTrend} highlightMax height={180} />
+              <BarChart data={summary.weeklyAttendanceTrend ?? []} highlightMax height={180} />
               <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {(() => {
-                  const monthTotal = summary.sectionsMonth.reduce(
+                  const monthTotal = (summary.sectionsMonth ?? []).reduce(
                     (sum, s) => ({
                       students: sum.students + s.totalStudents,
                       present: sum.present + s.present,
@@ -489,14 +490,14 @@ export default function TeacherDashboardPage() {
                 </span>
               }
             >
-              {summary.upcomingEvents.length === 0 ? (
+              {(summary.upcomingEvents ?? []).length === 0 ? (
                 <EmptyState
                   icon={<CalendarDaysIcon className="size-5" />}
                   title="No upcoming events"
                 />
               ) : (
                 <ul className="space-y-3">
-                  {summary.upcomingEvents.slice(0, 4).map((event) => {
+                  {(summary.upcomingEvents ?? []).slice(0, 4).map((event) => {
                     const date = new Date(event.startsAt);
                     const day = Number.isNaN(date.getTime())
                       ? "—"
@@ -541,11 +542,11 @@ export default function TeacherDashboardPage() {
               className="lg:col-span-3"
               action={<span className="text-xs font-medium text-blue-600">View all</span>}
             >
-              {summary.notifications.length === 0 ? (
+              {(summary.notifications ?? []).length === 0 ? (
                 <EmptyState icon={<BellIcon className="size-5" />} title="You're all caught up" />
               ) : (
                 <ul className="grid grid-cols-1 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
-                  {summary.notifications.map((notification) => (
+                  {(summary.notifications ?? []).map((notification) => (
                     <li
                       key={notification.id}
                       className="relative flex items-start gap-3 rounded-lg px-0.5 py-2"
