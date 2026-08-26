@@ -13,6 +13,7 @@ export default function DashboardRoute() {
     return <LoadingState label="Loading your dashboard…" />;
   }
 
+  // STUDENT gets their own detailed academic dashboard
   if (user?.role === "STUDENT") {
     return <StudentDashboardPage />;
   }
