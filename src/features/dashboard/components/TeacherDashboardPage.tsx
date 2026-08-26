@@ -187,7 +187,7 @@ export default function TeacherDashboardPage() {
   const load = useCallback(async () => {
     try {
       const data = await teacherDashboardApi.getSummary();
-      setSummary(data);
+      setSummary(data ?? EMPTY_SUMMARY);
     } catch {
       setSummary(EMPTY_SUMMARY);
     } finally {
@@ -199,12 +199,13 @@ export default function TeacherDashboardPage() {
     void load();
   }, [load]);
 
-  const stats = summary.stats.map((stat) => ({
+  const stats = (summary.stats ?? []).map((stat) => ({
     ...stat,
     icon: STAT_ICONS[stat.label],
   }));
 
-  const { profile, ownAttendance } = summary;
+  const profile = summary.profile ?? EMPTY_SUMMARY.profile;
+  const ownAttendance = summary.ownAttendance ?? EMPTY_SUMMARY.ownAttendance;
   const totalMonthDays =
     ownAttendance.presentDays + ownAttendance.absentDays + ownAttendance.onLeaveDays;
 
@@ -238,7 +239,7 @@ export default function TeacherDashboardPage() {
             className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-bg-default text-neutral-600 transition-colors hover:bg-bg-muted"
           >
             <BellIcon className="size-4" />
-            {summary.notifications.some((n) => !n.isRead) && (
+            {(summary.notifications ?? []).some((n) => !n.isRead) && (
               <span className="absolute top-2 right-2 size-1.5 rounded-full bg-red-500" />
             )}
           </button>
