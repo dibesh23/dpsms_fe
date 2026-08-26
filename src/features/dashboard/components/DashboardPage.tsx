@@ -11,6 +11,7 @@ import { DashboardWidget } from "@/shared/components/ui/dashboard-widget";
 import { BarChart, DonutChart } from "@/shared/components/ui/charts";
 import { StatusBadge } from "@/shared/components/ui/status-badge";
 import { dashboardApi, type DashboardSummary } from "../api/dashboardApi";
+import { DashboardNoticesWidget } from "@/features/notice/components/DashboardNoticesWidget";
 import {
   ArrowUpRightIcon,
   BellIcon,
@@ -356,6 +357,8 @@ export default function DashboardPage() {
             })}
           </div>
         </DashboardWidget>
+
+        <DashboardNoticesWidget role={user?.role ?? "PRINCIPAL"} limit={5} />
 
         <DashboardWidget
           title="Notifications"

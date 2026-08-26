@@ -51,6 +51,8 @@ const ROLE_FALLBACK_PERMISSIONS: Record<string, readonly PermissionKey[]> = {
     P.ATTENDANCE_STUDENT_LIST,
     P.ATTENDANCE_STAFF_READ,
     P.NOTICE_OWN_VIEW,
+    P.NOTICE_LIST,
+    P.NOTICE_CREATE,  // teachers can post notices to their own classes
     P.MESSAGING_OWN_VIEW,
   ],
   STUDENT: [
