@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { cn } from "@/shared/lib/cn";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
@@ -9,6 +9,7 @@ import { DashboardWidget } from "@/shared/components/ui/dashboard-widget";
 import { Avatar } from "@/shared/components/ui/avatar";
 import { LoadingState } from "@/shared/components/ui/loading-state";
 import { EmptyState } from "@/shared/components/ui/empty-state";
+import { SearchBar } from "@/shared/components/ui/search-bar";
 import { useToast } from "@/shared/components/ui/toast";
 import {
   attendanceApi,
@@ -23,7 +24,7 @@ import {
   GraduationCapIcon,
 } from "@/shared/components/ui/icons";
 
-const STATUS_OPTIONS: StaffAttendanceStatus[] = ["PRESENT", "ABSENT", "ON_LEAVE"];
+const PRIMARY_STATUSES = ["PRESENT", "ABSENT", "ON_LEAVE"] as const;
 
 const STATUS_LABELS: Record<StaffAttendanceStatus, string> = {
   PRESENT: "Present",
@@ -31,7 +32,10 @@ const STATUS_LABELS: Record<StaffAttendanceStatus, string> = {
   ON_LEAVE: "On Leave",
 };
 
-const STATUS_COLORS: Record<StaffAttendanceStatus, string> = {
+const SEGMENT_ACTIVE_COLORS: Record<
+  (typeof PRIMARY_STATUSES)[number],
+  string
+> = {
   PRESENT: "border-emerald-200 bg-emerald-50 text-emerald-700",
   ABSENT: "border-red-200 bg-red-50 text-red-700",
   ON_LEAVE: "border-amber-200 bg-amber-50 text-amber-700",
@@ -59,6 +63,7 @@ export function StaffAttendancePage() {
   const [selectedDate, setSelectedDate] = useState<string>(toDateString(todayStart()));
   const [records, setRecords] = useState<StaffRosterEntry[]>([]);
   const [localStatuses, setLocalStatuses] = useState<Map<string, StaffAttendanceStatus>>(new Map());
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -97,11 +102,12 @@ export function StaffAttendancePage() {
       // (null when not yet marked) — works on fresh days too.
       const result = await attendanceApi.getStaffRoster(dateObj);
       setRecords(result.items);
-      const map = new Map<string, StaffAttendanceStatus | null>();
+      const map = new Map<string, StaffAttendanceStatus>();
       for (const r of result.items) {
-        map.set(r.teacherId, r.status ?? null);
+        // Unmarked staff read as Present — matches what save submits.
+        map.set(r.teacherId, r.status ?? "PRESENT");
       }
-      setLocalStatuses(map as Map<string, StaffAttendanceStatus>);
+      setLocalStatuses(map);
     } catch {
       setRecords([]);
       setLocalStatuses(new Map());
@@ -130,9 +136,15 @@ export function StaffAttendancePage() {
     setLocalStatuses(next);
   };
 
+  const filteredRecords = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return records;
+    return records.filter((r) => r.teacherName.toLowerCase().includes(query));
+  }, [records, search]);
+
   const hasChanges = records.some((r) => {
     const current = localStatuses.get(r.teacherId);
-    return current !== undefined && current !== r.status;
+    return current !== undefined && current !== (r.status ?? "PRESENT");
   });
 
   const handleSave = async () => {
@@ -174,7 +186,7 @@ export function StaffAttendancePage() {
               disabled={loading || records.length === 0}
             />
             <Button
-              text="Save"
+              text={saving ? "Saving…" : "Save"}
               loading={saving}
               icon={<ClipboardCheckIcon className="size-4" />}
               onClick={handleSave}
@@ -198,6 +210,12 @@ export function StaffAttendancePage() {
             className="h-9 rounded-lg border border-neutral-200 bg-bg-default px-3 text-sm text-neutral-900 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-100"
           />
         </div>
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder="Search teachers…"
+          className="sm:w-64"
+        />
       </div>
 
       {/* Stats Row */}
@@ -240,57 +258,60 @@ export function StaffAttendancePage() {
       {/* Attendance Table */}
       <DashboardWidget
         title="Staff Attendance Register"
-        description={`${records.length} staff members · Select status for each`}
+        description={`${records.length} staff members · Defaults to Present — only mark the exceptions`}
       >
         {loading ? (
           <LoadingState label="Loading attendance…" />
         ) : records.length === 0 ? (
           <EmptyState title="No staff members found" description="No active teachers to display." />
+        ) : filteredRecords.length === 0 ? (
+          <EmptyState title="No matches" description={`No teachers match "${search.trim()}".`} />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+          <div className="-mx-5 overflow-x-auto px-5">
+            <table className="w-full min-w-[32rem] text-left text-sm">
               <thead>
                 <tr className="border-b border-neutral-100">
-                  <th className="px-4 py-3 text-xs font-medium tracking-wide text-neutral-400">
+                  <th className="py-2.5 pr-4 text-xs font-medium tracking-wide text-neutral-400">
                     Teacher
                   </th>
-                  {STATUS_OPTIONS.map((status) => (
-                    <th
-                      key={status}
-                      className="px-4 py-3 text-center text-xs font-medium tracking-wide text-neutral-400"
-                    >
-                      {STATUS_LABELS[status]}
-                    </th>
-                  ))}
+                  <th className="py-2.5 text-right text-xs font-medium tracking-wide text-neutral-400">
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {records.map((record) => {
-                  const current = localStatuses.get(record.teacherId) ?? record.status;
+                {filteredRecords.map((record) => {
+                  const current = localStatuses.get(record.teacherId) ?? "PRESENT";
                   return (
                     <tr key={record.teacherId} className="transition-colors hover:bg-bg-muted">
-                      <td className="px-4 py-3">
+                      <td className="py-2 pr-4 align-middle">
                         <div className="flex items-center gap-3">
                           <Avatar name={record.teacherName} size="sm" />
                           <span className="font-medium text-neutral-900">{record.teacherName}</span>
                         </div>
                       </td>
-                      {STATUS_OPTIONS.map((status) => (
-                        <td key={status} className="px-4 py-3 text-center">
-                          <button
-                            type="button"
-                            onClick={() => updateStatus(record.teacherId, status)}
-                            className={cn(
-                              "inline-flex h-8 min-w-8 items-center justify-center rounded-lg border px-3 text-xs font-medium transition-all",
-                              current === status
-                                ? STATUS_COLORS[status]
-                                : "border-neutral-200 bg-bg-default text-neutral-400 hover:border-neutral-300 hover:text-neutral-600",
-                            )}
-                          >
-                            {status === "ON_LEAVE" ? "L" : status.charAt(0)}
-                          </button>
-                        </td>
-                      ))}
+                      <td className="py-2 align-middle">
+                        <div className="inline-flex items-center gap-0.5 rounded-lg border border-neutral-200 bg-bg-default p-0.5">
+                          {PRIMARY_STATUSES.map((status) => (
+                            <button
+                              key={status}
+                              type="button"
+                              aria-pressed={current === status}
+                              onClick={() => updateStatus(record.teacherId, status)}
+                              disabled={saving}
+                              className={cn(
+                                "inline-flex h-8 items-center justify-center rounded-md border border-transparent px-3 text-xs font-medium transition-all",
+                                current === status
+                                  ? SEGMENT_ACTIVE_COLORS[status]
+                                  : "text-neutral-400 hover:bg-bg-subtle hover:text-neutral-700",
+                                saving && "cursor-not-allowed opacity-60",
+                              )}
+                            >
+                              {STATUS_LABELS[status]}
+                            </button>
+                          ))}
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { cn } from "@/shared/lib/cn";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Avatar } from "@/shared/components/ui/avatar";
@@ -10,10 +11,19 @@ import { DonutChart } from "@/shared/components/ui/charts";
 import { StatusBadge, type StatusVariant } from "@/shared/components/ui/status-badge";
 import { EmptyState } from "@/shared/components/ui/empty-state";
 import { formatCurrency, formatDate } from "@/shared/lib/format";
-import { studentDashboardApi, type StudentDashboardSummary, type DayAttendanceStatus, type NotificationType, type InvoiceStatus, type SchoolEventCategory } from "../api/studentDashboardApi";
-import { DashboardNoticesWidget } from "@/features/notice/components/DashboardNoticesWidget";
+import {
+  studentDashboardApi,
+  type StudentDashboardSummary,
+  type DayAttendancePoint,
+  type DayAttendanceStatus,
+  type NotificationType,
+  type InvoiceStatus,
+  type SchoolEventCategory,
+} from "../api/studentDashboardApi";
 import {
   AlertTriangleIcon,
+  ArrowUpRightIcon,
+  BanIcon,
   BellIcon,
   CalendarDaysIcon,
   CheckCircle2Icon,
@@ -40,12 +50,70 @@ const ATTENDANCE_LABEL: Record<DayAttendanceStatus, string> = {
   NOT_MARKED: "Not Marked",
 };
 
-const ATTENDANCE_VARIANT: Record<DayAttendanceStatus, StatusVariant> = {
-  PRESENT: "success",
-  ABSENT: "danger",
-  LATE: "warning",
-  EXCUSED: "info",
-  NOT_MARKED: "neutral",
+const MIN_ATTENDANCE_PERCENT = 75;
+const NEAR_MIN_ATTENDANCE_BAND = 5;
+
+const TODAY_HERO_STYLES: Record<
+  DayAttendanceStatus,
+  { box: string; icon: string; label: string }
+> = {
+  PRESENT: {
+    box: "border-emerald-200 bg-emerald-50",
+    icon: "bg-bg-default text-emerald-600",
+    label: "text-emerald-800",
+  },
+  ABSENT: {
+    box: "border-red-200 bg-red-50",
+    icon: "bg-bg-default text-red-600",
+    label: "text-red-800",
+  },
+  LATE: {
+    box: "border-amber-200 bg-amber-50",
+    icon: "bg-bg-default text-amber-600",
+    label: "text-amber-800",
+  },
+  EXCUSED: {
+    box: "border-blue-200 bg-blue-50",
+    icon: "bg-bg-default text-blue-600",
+    label: "text-blue-800",
+  },
+  NOT_MARKED: {
+    box: "border-neutral-200 bg-bg-subtle",
+    icon: "bg-bg-default text-neutral-500",
+    label: "text-neutral-700",
+  },
+};
+
+const TODAY_ICON: Record<DayAttendanceStatus, React.ReactNode> = {
+  PRESENT: <CheckCircle2Icon className="size-5" />,
+  ABSENT: <BanIcon className="size-5" />,
+  LATE: <ClockIcon className="size-5" />,
+  EXCUSED: <FileTextIcon className="size-5" />,
+  NOT_MARKED: <CalendarDaysIcon className="size-5" />,
+};
+
+const TODAY_TITLE: Record<DayAttendanceStatus, string> = {
+  PRESENT: "Marked present today",
+  ABSENT: "Marked absent today",
+  LATE: "Marked late today",
+  EXCUSED: "Absence excused today",
+  NOT_MARKED: "Attendance not marked yet",
+};
+
+const TODAY_HINT: Record<DayAttendanceStatus, string> = {
+  PRESENT: "Your teacher has recorded your attendance for today.",
+  ABSENT: "If this doesn't look right, talk to your class teacher.",
+  LATE: "You were marked present, but arrived after attendance was taken.",
+  EXCUSED: "Today's absence has an approved excuse on record.",
+  NOT_MARKED: "This updates as soon as your teacher marks attendance.",
+};
+
+const DAY_STRIP_COLORS: Record<DayAttendanceStatus, string> = {
+  PRESENT: "bg-emerald-500",
+  ABSENT: "bg-red-500",
+  LATE: "bg-amber-400",
+  EXCUSED: "bg-blue-500",
+  NOT_MARKED: "bg-neutral-200",
 };
 
 const INVOICE_LABEL: Record<InvoiceStatus, string> = {
@@ -100,7 +168,9 @@ const EMPTY_SUMMARY: StudentDashboardSummary = {
     monthPercent: 0,
     monthLabel: "",
     todayStatus: "NOT_MARKED",
-    yesterdayStatus: "NOT_MARKED",
+    totalMarkedDays: 0,
+    totalMarkedDaysThisMonth: 0,
+    recentDays: [],
     presentDaysThisMonth: 0,
     lateDaysThisMonth: 0,
     excusedDaysThisMonth: 0,
@@ -124,21 +194,58 @@ function attendanceColor(percent: number): string {
   return "#dc2626";
 }
 
-function AttendanceGauge({
+function attendanceRisk(percent: number): {
+  tone: "danger" | "warning" | "ok";
+  classes: string;
+  message: string;
+} {
+  if (percent < MIN_ATTENDANCE_PERCENT) {
+    return {
+      tone: "danger",
+      classes: "text-red-700",
+      message: `Below the ${MIN_ATTENDANCE_PERCENT}% minimum required for exams`,
+    };
+  }
+  if (percent < MIN_ATTENDANCE_PERCENT + NEAR_MIN_ATTENDANCE_BAND) {
+    return {
+      tone: "warning",
+      classes: "text-amber-700",
+      message: `Close to the ${MIN_ATTENDANCE_PERCENT}% minimum required for exams`,
+    };
+  }
+  return {
+    tone: "ok",
+    classes: "text-emerald-700",
+    message: `Meets the ${MIN_ATTENDANCE_PERCENT}% minimum required for exams`,
+  };
+}
+
+function GaugeBlock({
   percent,
   label,
-  statusBadge,
+  ariaLabel,
+  hasData,
 }: {
   percent: number;
   label: string;
-  statusBadge?: React.ReactNode;
+  ariaLabel: string;
+  hasData: boolean;
 }) {
-  const color = attendanceColor(percent);
+  if (!hasData) {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex size-[132px] flex-col items-center justify-center rounded-full border-2 border-dashed border-neutral-200">
+          <p className="text-xs font-medium text-neutral-400">No data yet</p>
+        </div>
+        <p className="text-xs text-neutral-500">{label}</p>
+      </div>
+    );
+  }
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-2" role="img" aria-label={ariaLabel}>
       <DonutChart
         data={[
-          { label: "Complete", value: percent, color },
+          { label: "Complete", value: percent, color: attendanceColor(percent) },
           { label: "Remaining", value: Math.max(100 - percent, 0), color: "#f5f5f5" },
         ]}
         size={132}
@@ -146,7 +253,61 @@ function AttendanceGauge({
         centerValue={`${percent}%`}
         centerLabel={label}
       />
-      {statusBadge}
+    </div>
+  );
+}
+
+function DayStrip({ days }: { days: DayAttendancePoint[] }) {
+  const tally = { present: 0, absent: 0, late: 0, excused: 0 };
+  for (const day of days) {
+    if (day.status === "PRESENT") tally.present += 1;
+    else if (day.status === "ABSENT") tally.absent += 1;
+    else if (day.status === "LATE") tally.late += 1;
+    else if (day.status === "EXCUSED") tally.excused += 1;
+  }
+
+  return (
+    <div className="space-y-2">
+      <div
+        className="flex flex-wrap gap-1"
+        role="img"
+        aria-label={`Last ${days.length} days: ${tally.present} present, ${tally.absent} absent, ${tally.late} late, ${tally.excused} excused`}
+      >
+        {days.map((day) => {
+          const weekday = new Date(`${day.date}T12:00:00Z`).getUTCDay();
+          const unmarkedWeekend =
+            day.status === "NOT_MARKED" && (weekday === 0 || weekday === 6);
+          return (
+            <span
+              key={day.date}
+              title={`${formatDate(day.date)} — ${
+                unmarkedWeekend ? "Weekend" : ATTENDANCE_LABEL[day.status]
+              }`}
+              className={cn(
+                "size-3 rounded-sm",
+                unmarkedWeekend
+                  ? "border border-neutral-200 bg-neutral-100"
+                  : DAY_STRIP_COLORS[day.status],
+              )}
+            />
+          );
+        })}
+      </div>
+      <div className="flex flex-wrap gap-x-3 gap-y-1">
+        {(["PRESENT", "ABSENT", "LATE", "EXCUSED"] as const).map((status) => (
+          <span
+            key={status}
+            className="inline-flex items-center gap-1 text-[10px] font-medium text-neutral-400"
+          >
+            <span className={cn("size-2 rounded-sm", DAY_STRIP_COLORS[status])} />
+            {ATTENDANCE_LABEL[status]}
+          </span>
+        ))}
+        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-neutral-400">
+          <span className="size-2 rounded-sm border border-neutral-200 bg-neutral-100" />
+          No school
+        </span>
+      </div>
     </div>
   );
 }
@@ -217,6 +378,8 @@ export default function StudentDashboardPage() {
   // Only PUBLISHED exam results should ever reach a student; filtering
   // defensively here in case the API ever includes DRAFT/pending ones.
   const publishedResults = summary.examResults.filter((exam) => exam.status === "PUBLISHED");
+  const hasAttendanceData = attendance.totalMarkedDays > 0;
+  const overallRisk = hasAttendanceData ? attendanceRisk(attendance.overallPercent) : null;
 
   return (
     <div className="space-y-4">
@@ -336,63 +499,132 @@ export default function StudentDashboardPage() {
 
         {/* Reports */}
         <div className="min-w-0 flex-1 space-y-4">
-          <DashboardWidget title="Attendance Report" description="Overall and this month">
+          <DashboardWidget
+            title="Attendance Report"
+            description="Today, overall trend, and your recent pattern"
+            action={
+              <Link
+                href="/attendance-history"
+                className="inline-flex flex-none items-center gap-1 text-xs font-medium text-blue-600 transition-colors hover:text-blue-700"
+              >
+                View full history
+                <ArrowUpRightIcon className="size-3.5" />
+              </Link>
+            }
+          >
             {loading ? (
               <div className="flex h-40 items-center justify-center text-sm text-neutral-400">
                 Loading…
               </div>
             ) : (
-              <>
-                <div className="flex flex-wrap items-center justify-around gap-6">
-                  <AttendanceGauge
-                    percent={attendance.overallPercent}
-                    label="Overall"
-                    statusBadge={
-                      <StatusBadge
-                        status={ATTENDANCE_LABEL[attendance.todayStatus]}
-                        variant={ATTENDANCE_VARIANT[attendance.todayStatus]}
-                      />
-                    }
-                  />
-                  <AttendanceGauge
-                    percent={attendance.monthPercent}
-                    label={attendance.monthLabel || "This month"}
-                    statusBadge={
-                      <StatusBadge
-                        status={ATTENDANCE_LABEL[attendance.yesterdayStatus]}
-                        variant={ATTENDANCE_VARIANT[attendance.yesterdayStatus]}
-                      />
-                    }
-                  />
+              <div className="space-y-5">
+                {/* Today's status — the thing a student checks first */}
+                <div
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg border p-4",
+                    TODAY_HERO_STYLES[attendance.todayStatus].box,
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex size-11 flex-none items-center justify-center rounded-full",
+                      TODAY_HERO_STYLES[attendance.todayStatus].icon,
+                    )}
+                  >
+                    {TODAY_ICON[attendance.todayStatus]}
+                  </span>
+                  <div className="min-w-0">
+                    <p
+                      className={cn(
+                        "text-lg font-semibold leading-tight",
+                        TODAY_HERO_STYLES[attendance.todayStatus].label,
+                      )}
+                    >
+                      {TODAY_TITLE[attendance.todayStatus]}
+                    </p>
+                    <p className="mt-0.5 text-xs text-neutral-500">
+                      {TODAY_HINT[attendance.todayStatus]}
+                    </p>
+                  </div>
+                  <span className="ml-auto hidden flex-none text-xs text-neutral-400 sm:block">
+                    {formatDate(new Date())}
+                  </span>
                 </div>
 
-                <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-                    <p className="text-xs font-medium text-emerald-700">Present</p>
-                    <p className="mt-1 text-xl font-semibold text-emerald-800">
-                      {attendance.presentDaysThisMonth}
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-                    <p className="text-xs font-medium text-blue-700">Excused</p>
-                    <p className="mt-1 text-xl font-semibold text-blue-800">
-                      {attendance.excusedDaysThisMonth}
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                    <p className="text-xs font-medium text-amber-700">Late</p>
-                    <p className="mt-1 text-xl font-semibold text-amber-800">
-                      {attendance.lateDaysThisMonth}
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                    <p className="text-xs font-medium text-red-700">Absent</p>
-                    <p className="mt-1 text-xl font-semibold text-red-800">
-                      {attendance.absentDaysThisMonth}
-                    </p>
-                  </div>
-                </div>
-              </>
+                {hasAttendanceData ? (
+                  <>
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap items-center justify-around gap-6">
+                        <GaugeBlock
+                          percent={attendance.overallPercent}
+                          label="Overall"
+                          ariaLabel={`Overall attendance ${attendance.overallPercent} percent`}
+                          hasData
+                        />
+                        <GaugeBlock
+                          percent={attendance.monthPercent}
+                          label={attendance.monthLabel || "This month"}
+                          ariaLabel={`${attendance.monthLabel || "This month"} attendance ${attendance.monthPercent} percent`}
+                          hasData={attendance.totalMarkedDaysThisMonth > 0}
+                        />
+                      </div>
+                      {overallRisk && (
+                        <p
+                          className={cn(
+                            "flex items-center justify-center gap-1.5 text-xs font-medium",
+                            overallRisk.classes,
+                          )}
+                        >
+                          {overallRisk.tone !== "ok" && (
+                            <AlertTriangleIcon className="size-3.5 flex-none" />
+                          )}
+                          {overallRisk.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="border-t border-neutral-100 pt-4">
+                      <p className="mb-2 text-xs font-medium tracking-wide text-neutral-400 uppercase">
+                        Last 30 days
+                      </p>
+                      <DayStrip days={attendance.recentDays} />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 border-t border-neutral-100 pt-4 sm:grid-cols-4">
+                      <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                        <p className="text-xs font-medium text-emerald-700">Present</p>
+                        <p className="mt-1 text-xl font-semibold text-emerald-800">
+                          {attendance.presentDaysThisMonth}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+                        <p className="text-xs font-medium text-blue-700">Excused</p>
+                        <p className="mt-1 text-xl font-semibold text-blue-800">
+                          {attendance.excusedDaysThisMonth}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                        <p className="text-xs font-medium text-amber-700">Late</p>
+                        <p className="mt-1 text-xl font-semibold text-amber-800">
+                          {attendance.lateDaysThisMonth}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                        <p className="text-xs font-medium text-red-700">Absent</p>
+                        <p className="mt-1 text-xl font-semibold text-red-800">
+                          {attendance.absentDaysThisMonth}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <EmptyState
+                    icon={<CalendarDaysIcon className="size-5" />}
+                    title="No attendance recorded yet"
+                    description="Once your teachers start marking attendance, your percentages, risk status, and daily pattern will appear here."
+                  />
+                )}
+              </div>
             )}
           </DashboardWidget>
 
