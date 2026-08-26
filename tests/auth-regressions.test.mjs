@@ -14,6 +14,19 @@ test("concurrent unauthorized requests share one refresh", async () => {
   assert.match(source, /refreshPromise \?\?=/);
 });
 
+test("each browser tab keeps and rotates its own refresh token", async () => {
+  const [api, storage] = await Promise.all([
+    read("src/features/auth/api/authApi.ts"),
+    read("src/shared/lib/tabSession.ts"),
+  ]);
+
+  assert.match(storage, /window\.sessionStorage\.getItem/);
+  assert.match(storage, /window\.sessionStorage\.setItem/);
+  assert.match(api, /setTabRefreshToken\(data\.refreshToken\)/);
+  assert.match(api, /"X-Refresh-Token": tabToken/);
+  assert.match(api, /refreshToken: token/);
+});
+
 test("plain login does not reuse a cached or environment tenant", async () => {
   const [context, page] = await Promise.all([
     read("src/features/auth/components/LoginWithSchoolContext.tsx"),
