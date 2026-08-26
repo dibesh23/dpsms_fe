@@ -20,6 +20,7 @@ import {
   type InvoiceStatus,
   type SchoolEventCategory,
 } from "../api/studentDashboardApi";
+import { DashboardNoticesWidget } from "@/features/notice/components/DashboardNoticesWidget";
 import {
   AlertTriangleIcon,
   ArrowUpRightIcon,
