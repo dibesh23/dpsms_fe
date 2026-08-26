@@ -109,6 +109,9 @@ export const teacherDashboardApi = {
     const { data } = await apiClient.get<{ data: TeacherDashboardSummary }>(
       "/dashboard/teacher-summary",
     );
+    if (!data?.data) {
+      throw new Error("Invalid response from teacher dashboard endpoint");
+    }
     return data.data;
   },
 };
