@@ -673,7 +673,19 @@ export default function StudentDashboardPage() {
               )}
             </DashboardWidget>
 
-            <DashboardWidget title="Fee Report" description="Payment status">
+            <DashboardWidget
+              title="Fee Report"
+              description="Payment status"
+              action={
+                <Link
+                  href="/fees"
+                  className="inline-flex flex-none items-center gap-1 text-xs font-medium text-blue-600 transition-colors hover:text-blue-700"
+                >
+                  View full details
+                  <ArrowUpRightIcon className="size-3.5" />
+                </Link>
+              }
+            >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-neutral-500">Total Fee</span>
