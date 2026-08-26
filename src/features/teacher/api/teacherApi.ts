@@ -78,17 +78,6 @@ export interface TeacherUpdatePayload {
   status?: TeacherApiStatus;
 }
 
-export interface MyClassItem {
-  sectionId: string;
-  sectionName: string;
-  classId: string;
-  className: string;
-  academicYearLabel: string;
-  subjects: Array<{ id: string; name: string }>;
-  totalStudents: number;
-  isClassTeacher: boolean;
-}
-
 export const teacherApi = {
   async list(): Promise<TeacherRecord[]> {
     const { data } = await apiClient.get<{ data: TeacherListResult }>("/teachers");
@@ -115,13 +104,6 @@ export const teacherApi = {
 
   async remove(id: string): Promise<void> {
     await apiClient.delete(`/teachers/${id}`);
-  },
-
-  async myClasses(): Promise<MyClassItem[]> {
-    const { data } = await apiClient.get<{ data: { items: MyClassItem[] } }>(
-      "/teachers/me/classes",
-    );
-    return data.data.items;
   },
 };
 

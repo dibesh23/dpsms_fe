@@ -2,8 +2,6 @@
 
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 
-import { getLastSchool } from "./schoolStorage";
-
 let accessTokenRef: (() => string | null) | null = null;
 
 let refreshTokenRef: (() => Promise<boolean>) | null = null;
@@ -30,13 +28,6 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = accessTokenRef?.();
   if (token) {
     config.headers["Authorization"] = `Bearer ${token}`;
-  }
-  // Advisory tenant hint for pre-auth flows (login, forgot-password): lets the
-  // backend scope lookups to the chosen school and attribute audit events.
-  // Authorization itself always comes from the JWT — never from this header.
-  const subdomain = getLastSchool()?.subdomain;
-  if (subdomain) {
-    config.headers["X-Tenant-Subdomain"] = subdomain;
   }
   return config;
 });

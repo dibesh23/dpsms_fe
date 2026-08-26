@@ -29,13 +29,6 @@ export const teacherAssignmentApi = {
     return data.data;
   },
 
-  async listMySubjects(): Promise<SubjectAssignmentRecord[]> {
-    const { data } = await apiClient.get<{ data: SubjectAssignmentRecord[] }>(
-      "/teachers/me/subjects",
-    );
-    return data.data;
-  },
-
   async createSubjectAssignment(
     teacherId: string,
     payload: { subjectId: string; sectionId: string },

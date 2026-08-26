@@ -138,20 +138,6 @@ export interface StudentTransferPayload {
   reason?: string;
 }
 
-export interface MyStudentItem {
-  studentId: string;
-  fullName: string;
-  admissionNumber: string;
-  rollNumber: string;
-  sectionId: string;
-  sectionName: string;
-  classId: string;
-  className: string;
-  guardianName: string | null;
-  guardianPhone: string | null;
-  guardianRelation: string | null;
-}
-
 export const studentApi = {
   async list(): Promise<StudentRecord[]> {
     const { data } = await apiClient.get<{ data: StudentListResult }>("/students");
@@ -178,13 +164,6 @@ export const studentApi = {
 
   async remove(id: string): Promise<void> {
     await apiClient.delete(`/students/${id}`);
-  },
-
-  async myStudents(sectionId?: string): Promise<MyStudentItem[]> {
-    const { data } = await apiClient.get<{ data: { items: MyStudentItem[] } }>("/students/my", {
-      params: sectionId ? { sectionId } : undefined,
-    });
-    return data.data.items;
   },
 
   async transfer(id: string, payload: StudentTransferPayload): Promise<TransferResult> {

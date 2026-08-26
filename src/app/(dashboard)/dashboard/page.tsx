@@ -4,7 +4,6 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { LoadingState } from "@/shared/components/ui/loading-state";
 import DashboardPage from "@/features/dashboard/components/DashboardPage";
 import StudentDashboardPage from "@/features/dashboard/components/StudentDashboardPage";
-import TeacherDashboardPage from "@/features/dashboard/components/TeacherDashboardPage";
 
 export default function DashboardRoute() {
   const { user, isLoading } = useAuth();
@@ -18,9 +17,7 @@ export default function DashboardRoute() {
     return <StudentDashboardPage />;
   }
 
-  if (user?.role === "TEACHER") {
-    return <TeacherDashboardPage />;
-  }
-
+  // TEACHER, PRINCIPAL, SUPER_ADMIN all get the admin dashboard
+  // (DashboardPage already has DashboardNoticesWidget which respects role)
   return <DashboardPage />;
 }
