@@ -181,27 +181,7 @@ export const academicApi = {
     await apiClient.delete(`/classes/${classId}/subjects/${subjectId}`);
   },
 
-  // ---------- Teacher: own assigned classes & sections ----------
-  // Uses GET /attendance/my-sections which already resolves the teacher's
-  // TeacherClassAssignment rows filtered to the active academic year.
-  async getMyAssignedClasses(): Promise<{ classId: string; className: string; sections: { sectionId: string; sectionName: string }[] }[]> {
-    const { data } = await apiClient.get<{
-      data: {
-        items: { sectionId: string; sectionName: string; classId: string; className: string }[];
-        academicYearId: string;
-      };
-    }>("/attendance/my-sections");
-
-    // Group sections by classId
-    const classMap = new Map<string, { classId: string; className: string; sections: { sectionId: string; sectionName: string }[] }>();
-    for (const item of data.data.items) {
-      if (!classMap.has(item.classId)) {
-        classMap.set(item.classId, { classId: item.classId, className: item.className, sections: [] });
-      }
-      classMap.get(item.classId)!.sections.push({ sectionId: item.sectionId, sectionName: item.sectionName });
-    }
-    return [...classMap.values()];
-  },
+  // ---------- Departments ----------
   async listDepartments(): Promise<DepartmentRecord[]> {
     return getItems<DepartmentRecord>("/departments");
   },

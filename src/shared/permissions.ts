@@ -3,7 +3,6 @@ export const PERMISSIONS = {
 
   STUDENT_LIST: "students:list",
   STUDENT_CREATE: "students:create",
-  STUDENT_READ: "students:read",
   STUDENT_UPDATE: "students:update",
   STUDENT_DELETE: "students:delete",
   STUDENT_TRANSFER: "students:transfer",
@@ -12,7 +11,6 @@ export const PERMISSIONS = {
 
   TEACHER_LIST: "teachers:list",
   TEACHER_CREATE: "teachers:create",
-  TEACHER_READ: "teachers:read",
   TEACHER_UPDATE: "teachers:update",
   TEACHER_DELETE: "teachers:delete",
   TEACHER_ASSIGNMENT_MANAGE: "teachers:assignments:manage",
@@ -55,7 +53,6 @@ export const PERMISSIONS = {
   ACADEMIC_CLASS_SUBJECT_MANAGE: "academic:class-subjects:manage",
 
   TEACHER_OWN_CLASSES_VIEW: "teachers:own-classes:view",
-
   ATTENDANCE_STUDENT_MARK: "attendance:student:mark",
   ATTENDANCE_STUDENT_LIST: "attendance:student:list",
   ATTENDANCE_STUDENT_READ: "attendance:student:read",
@@ -63,15 +60,9 @@ export const PERMISSIONS = {
   ATTENDANCE_STAFF_LIST: "attendance:staff:list",
   ATTENDANCE_STAFF_READ: "attendance:staff:read",
   ATTENDANCE_OWN_VIEW: "attendance:own:view",
-
-  NOTICE_LIST: "notices:list",
-  NOTICE_CREATE: "notices:create",
-  NOTICE_UPDATE: "notices:update",
-  NOTICE_DELETE: "notices:delete",
-  NOTICE_OWN_VIEW: "notices:own:view",
-
   EXAM_OWN_VIEW: "exam:own:view",
   FEE_OWN_VIEW: "fees:own:view",
+  NOTICE_OWN_VIEW: "notices:own:view",
   TIMETABLE_OWN_VIEW: "timetable:own:view",
   ASSIGNMENT_OWN_VIEW: "assignments:own:view",
   LIVE_CLASS_OWN_VIEW: "live-class:own:view",

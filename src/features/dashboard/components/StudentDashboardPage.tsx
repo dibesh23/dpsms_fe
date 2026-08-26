@@ -581,7 +581,56 @@ export default function StudentDashboardPage() {
               )}
             </DashboardWidget>
 
-            <DashboardNoticesWidget role={user?.role ?? "STUDENT"} limit={5} />
+            <DashboardWidget
+              title="Notifications"
+              action={<span className="text-xs font-medium text-blue-600">View all</span>}
+            >
+              {summary.notifications.length === 0 ? (
+                <EmptyState icon={<ClockIcon className="size-5" />} title="You're all caught up" />
+              ) : (
+                <ul className="space-y-1">
+                  {summary.notifications.map((notification) => (
+                    <li
+                      key={notification.id}
+                      className="relative flex items-start gap-3 rounded-lg px-0.5 py-2"
+                    >
+                      {!notification.isRead && (
+                        <span className="absolute left-0 top-3.5 size-1.5 rounded-full bg-blue-500" />
+                      )}
+                      <span
+                        className={cn(
+                          "ml-2 flex size-7 flex-none items-center justify-center rounded-md border",
+                          notification.type === "ALERT" && "border-red-200 bg-red-50 text-red-600",
+                          notification.type === "WARNING" &&
+                            "border-amber-200 bg-amber-50 text-amber-600",
+                          notification.type === "SUCCESS" &&
+                            "border-emerald-200 bg-emerald-50 text-emerald-600",
+                          notification.type === "INFO" &&
+                            "border-blue-200 bg-blue-50 text-blue-600",
+                        )}
+                      >
+                        {NOTIFICATION_ICON[notification.type]}
+                      </span>
+                      <div className="min-w-0">
+                        <p
+                          className={cn(
+                            "text-sm",
+                            !notification.isRead
+                              ? "font-medium text-neutral-800"
+                              : "text-neutral-600",
+                          )}
+                        >
+                          {notification.title}
+                        </p>
+                        <p className="text-xs text-neutral-400">
+                          {formatDate(notification.createdAt)}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </DashboardWidget>
           </section>
         </div>
       </div>

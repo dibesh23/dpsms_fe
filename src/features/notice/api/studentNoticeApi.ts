@@ -1,43 +1,36 @@
 import { apiClient } from "@/shared/lib/apiClient";
 
-// ── Notice summary for recipient feed ─────────────────────────────────────────
+
+export type NoticeScope = "SCHOOL_WIDE" | "CLASS" | "SECTION";
+
+export interface NoticeAttachmentSummary {
+  id: string; // Attachment.id
+  label: string; // display filename
+  url: string; // Attachment.url
+  mimeType: string; // Attachment.mimeType
+  sizeBytes: number; // Attachment.sizeBytes
+}
 
 export interface NoticeSummary {
-  id: string;
-  title: string;
-  body: string;
-  isUrgent: boolean;
-  publishedAt: string;   // always set in the published feed (/notices/me filters to publishedAt != null)
-  publishedByName: string;
-  scheduledAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  isRead: boolean;
-  isAcknowledged: boolean;
+  id: string; // Notice.id
+  title: string; // Notice.title
+  body: string; // Notice.body
+  isUrgent: boolean; // Notice.isUrgent
+  publishedByName: string; // Notice.publishedByUser -> User.fullName
+  publishedAt: string; // Notice.publishedAt
+  scope: NoticeScope;
+  scopeLabel: string; // e.g. "All Students", "Grade 10", "Grade 10 - A"
+  attachments: NoticeAttachmentSummary[]; // Notice.noticeAttachments -> Attachment
 }
 
-export interface MyNoticesResult {
+export interface StudentNoticeSummary {
   notices: NoticeSummary[];
-  unreadCount: number;
 }
-
-// ── API ───────────────────────────────────────────────────────────────────────
 
 export const studentNoticeApi = {
-  /** GET /api/notices/me — published notices for the logged-in user's tenant */
-  async getNotices(): Promise<MyNoticesResult> {
-    const { data } = await apiClient.get<{ data: MyNoticesResult }>("/notices/me");
+  async getNotices(): Promise<StudentNoticeSummary> {
+    const { data } = await apiClient.get<{ data: StudentNoticeSummary }>("/students/me/notices");
     return data.data;
-  },
-
-  /** POST /api/notices/:id/read — mark a notice as read (idempotent) */
-  async markRead(id: string): Promise<void> {
-    await apiClient.post(`/notices/${id}/read`);
-  },
-
-  /** POST /api/notices/:id/acknowledge — acknowledge an urgent notice */
-  async acknowledge(id: string): Promise<void> {
-    await apiClient.post(`/notices/${id}/acknowledge`);
   },
 };
 

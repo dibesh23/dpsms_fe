@@ -9,7 +9,7 @@ export function DashboardWidget({
   className,
   bodyClassName,
 }: {
-  title: ReactNode;
+  title: string;
   description?: string;
   action?: ReactNode;
   children: ReactNode;
