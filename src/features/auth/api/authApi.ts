@@ -1,16 +1,23 @@
 import { apiClient } from "../../../shared/lib/apiClient";
+import {
+  clearTabRefreshToken,
+  getTabRefreshToken,
+  setTabRefreshToken,
+} from "../../../shared/lib/tabSession";
 import type {
   LoginPayload,
   LoginResponse,
   RegisterSchoolPayload,
   RegisterSchoolResponse,
   AuthUser,
+  RefreshResponse,
   SessionInfo,
 } from "../types";
 
 export const authApi = {
   async registerSchool(payload: RegisterSchoolPayload): Promise<RegisterSchoolResponse> {
     const { data } = await apiClient.post<RegisterSchoolResponse>("/auth/register", payload);
+    if (data.refreshToken) setTabRefreshToken(data.refreshToken);
     return data;
   },
 
@@ -38,22 +45,37 @@ export const authApi = {
 
   async login(payload: LoginPayload): Promise<LoginResponse> {
     const { data } = await apiClient.post<LoginResponse>("/auth/login", payload);
+    if (data.refreshToken) setTabRefreshToken(data.refreshToken);
     return data;
   },
 
   async logout(): Promise<void> {
-    await apiClient.post("/auth/logout");
+    try {
+      const token = getTabRefreshToken();
+      await apiClient.post("/auth/logout", token ? { refreshToken: token } : {});
+    } finally {
+      clearTabRefreshToken();
+    }
   },
 
   async logoutAll(): Promise<void> {
-    await apiClient.post("/auth/logout-all");
+    try {
+      await apiClient.post("/auth/logout-all");
+    } finally {
+      clearTabRefreshToken();
+    }
   },
 
-  async refresh(): Promise<{ accessToken: string; user: AuthUser }> {
-    const { data } = await apiClient.post<{
-      accessToken: string;
-      user: AuthUser;
-    }>("/auth/refresh");
+  async refresh(): Promise<RefreshResponse> {
+    // Prefer the per-tab token so concurrent portals in separate tabs each
+    // rotate their own session; fall back to the shared cookie.
+    const tabToken = getTabRefreshToken();
+    const { data } = await apiClient.post<RefreshResponse>(
+      "/auth/refresh",
+      {},
+      tabToken ? { headers: { "X-Refresh-Token": tabToken } } : undefined,
+    );
+    if (data.refreshToken) setTabRefreshToken(data.refreshToken);
     return data;
   },
 

@@ -52,7 +52,7 @@ const ROLE_FALLBACK_PERMISSIONS: Record<string, readonly PermissionKey[]> = {
     P.ATTENDANCE_STAFF_READ,
     P.NOTICE_OWN_VIEW,
     P.NOTICE_LIST,
-    P.NOTICE_CREATE,  // teachers can post notices to their own classes
+    P.NOTICE_CREATE, // teachers can post notices to their own classes
     P.MESSAGING_OWN_VIEW,
   ],
   STUDENT: [
@@ -81,17 +81,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAccessTokenRef(() => accessTokenRef.current);
   }, []);
 
+  // Single-flight: concurrent callers (mount restore + apiClient 401 retry)
+  // share one rotation so we never race the refresh token against itself.
+  const refreshInFlightRef = useRef<Promise<boolean> | null>(null);
+
   const refreshToken = useCallback(async (): Promise<boolean> => {
-    try {
-      const { accessToken, user: refreshedUser } = await authApi.refresh();
-      accessTokenRef.current = accessToken;
-      setUser(refreshedUser);
-      return true;
-    } catch {
-      accessTokenRef.current = null;
-      setUser(null);
-      return false;
-    }
+    refreshInFlightRef.current ??= (async () => {
+      try {
+        const { accessToken, user: refreshedUser } = await authApi.refresh();
+        accessTokenRef.current = accessToken;
+        setUser(refreshedUser);
+        return true;
+      } catch {
+        accessTokenRef.current = null;
+        setUser(null);
+        return false;
+      } finally {
+        refreshInFlightRef.current = null;
+      }
+    })();
+    return refreshInFlightRef.current;
   }, []);
 
   useEffect(() => {
@@ -103,28 +112,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (mountedRef.current) return;
     mountedRef.current = true;
 
-    let cancelled = false;
-    (async () => {
-      try {
-        const { accessToken, user: refreshedUser } = await authApi.refresh();
-        if (!cancelled) {
-          accessTokenRef.current = accessToken;
-          setUser(refreshedUser);
-        }
-      } catch {
-        if (!cancelled) {
-          accessTokenRef.current = null;
-          setUser(null);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    void refreshToken().finally(() => setIsLoading(false));
+  }, [refreshToken]);
 
   const login = useCallback(
     async (payload: LoginPayload): Promise<void> => {
