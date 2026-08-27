@@ -10,6 +10,7 @@ import { Pagination } from "@/shared/components/ui/pagination";
 import { StatusBadge } from "@/shared/components/ui/status-badge";
 import { EmptyState } from "@/shared/components/ui/empty-state";
 import { Button } from "@/shared/components/ui/button";
+import { Dialog } from "@/shared/components/ui/dialog";
 import { useToast } from "@/shared/components/ui/toast";
 import { useTable } from "@/shared/hooks/useTable";
 import { formatDate } from "@/shared/lib/format";
@@ -18,56 +19,151 @@ import {
   type MyNoticesResult,
   type NoticeSummary,
 } from "../api/studentNoticeApi";
+import { noticeApi } from "../api/noticeApi";
 import {
   AlertTriangleIcon,
   BellIcon,
   CheckCircle2Icon,
-  ChevronDownIcon,
-  ChevronUpIcon,
+  DownloadIcon,
+  FileTextIcon,
 } from "@/shared/components/ui/icons";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const EMPTY_RESULT: MyNoticesResult = { notices: [], unreadCount: 0 };
-const BODY_PREVIEW_LIMIT = 220;
 
-// ── Expandable body ───────────────────────────────────────────────────────────
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
-function NoticeBody({ body }: { body: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const isLong = body.length > BODY_PREVIEW_LIMIT;
-  const shown = expanded || !isLong ? body : `${body.slice(0, BODY_PREVIEW_LIMIT).trimEnd()}...`;
+// ── Attachment chip ───────────────────────────────────────────────────────────
+
+function AttachmentChip({ noticeId, attachment }: {
+  noticeId: string;
+  attachment: { id: string; label: string; mimeType: string; sizeBytes: number };
+}) {
+  const [opening, setOpening] = useState(false);
+
+  const handleOpen = async () => {
+    if (opening) return;
+    setOpening(true);
+    try {
+      await noticeApi.openAttachment(noticeId, attachment.id, attachment.label);
+    } finally {
+      setOpening(false);
+    }
+  };
+
   return (
-    <div>
-      <p className="whitespace-pre-line text-sm leading-relaxed text-neutral-600">{shown}</p>
-      {isLong && (
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline"
-        >
-          {expanded ? "Show less" : "Read more"}
-          {expanded ? <ChevronUpIcon className="size-3.5" /> : <ChevronDownIcon className="size-3.5" />}
-        </button>
-      )}
-    </div>
+    <button
+      type="button"
+      onClick={() => void handleOpen()}
+      disabled={opening}
+      className="flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs transition-colors hover:bg-neutral-100 disabled:opacity-50"
+    >
+      <FileTextIcon className="size-3.5 flex-none text-neutral-400" />
+      <span className="max-w-[160px] truncate font-medium text-neutral-700">
+        {opening ? "Opening…" : attachment.label}
+      </span>
+      <span className="text-neutral-400">{formatBytes(attachment.sizeBytes)}</span>
+      <DownloadIcon className="size-3.5 flex-none text-neutral-400" />
+    </button>
   );
 }
 
-// ── Notice card ───────────────────────────────────────────────────────────────
+// ── Notice detail dialog ──────────────────────────────────────────────────────
+
+function NoticeDetailDialog({
+  notice,
+  onClose,
+  onAcknowledge,
+}: {
+  notice: NoticeSummary | null;
+  onClose: () => void;
+  onAcknowledge: (id: string) => void;
+}) {
+  if (!notice) return null;
+
+  return (
+    <Dialog open={notice !== null} onClose={onClose} title={notice.title}>
+      <div className="space-y-4">
+        {/* Meta */}
+        <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-400">
+          {notice.isUrgent && <StatusBadge status="Urgent" variant="danger" />}
+          <span>{formatDate(notice.publishedAt)}</span>
+          <span>·</span>
+          <span>Posted by {notice.publishedByName}</span>
+        </div>
+
+        {/* Body — full text, no truncation */}
+        <div className="rounded-lg border border-neutral-100 bg-neutral-50 p-4">
+          <p className="whitespace-pre-line text-sm leading-relaxed text-neutral-700">
+            {notice.body}
+          </p>
+        </div>
+
+        {/* Attachments */}
+        {notice.attachments.length > 0 && (
+          <div>
+            <p className="mb-2 text-xs font-medium text-neutral-500">
+              Attachments ({notice.attachments.length})
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {notice.attachments.map((a) => (
+                <AttachmentChip key={a.id} noticeId={notice.id} attachment={a} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Urgent acknowledgement */}
+        {notice.isUrgent && !notice.isAcknowledged && (
+          <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+            <AlertTriangleIcon className="size-4 flex-none text-amber-500" />
+            <p className="flex-1 text-xs text-amber-700">
+              Please acknowledge that you have read and understood this urgent notice.
+            </p>
+            <Button
+              text="Acknowledge"
+              variant="secondary"
+              onClick={() => onAcknowledge(notice.id)}
+              className="w-auto flex-none text-xs"
+            />
+          </div>
+        )}
+
+        {notice.isUrgent && notice.isAcknowledged && (
+          <div className="flex items-center gap-2 text-xs text-green-600">
+            <CheckCircle2Icon className="size-3.5" />
+            You acknowledged this notice
+          </div>
+        )}
+
+        <div className="flex justify-end border-t border-neutral-100 pt-3">
+          <Button variant="secondary" text="Close" onClick={onClose} className="w-auto" />
+        </div>
+      </div>
+    </Dialog>
+  );
+}
+
+// ── Notice card (list item) ───────────────────────────────────────────────────
 
 function NoticeCard({
   notice,
   onRead,
-  onAcknowledge,
+  onClick,
 }: {
   notice: NoticeSummary;
   onRead: (id: string) => void;
-  onAcknowledge: (id: string) => void;
+  onClick: (notice: NoticeSummary) => void;
 }) {
   const cardRef = useRef<HTMLLIElement>(null);
   const hasMarkedRead = useRef(false);
 
+  // Auto mark-as-read when 60% visible
   useEffect(() => {
     if (notice.isRead || hasMarkedRead.current) return;
     const el = cardRef.current;
@@ -89,51 +185,49 @@ function NoticeCard({
   return (
     <li
       ref={cardRef}
+      onClick={() => onClick(notice)}
       className={[
-        "p-5 transition-colors",
+        "cursor-pointer px-5 py-4 transition-colors hover:bg-neutral-50",
         !notice.isRead ? "border-l-2 border-l-blue-400 bg-blue-50/40" : "",
       ]
         .filter(Boolean)
         .join(" ")}
     >
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          {!notice.isRead && (
-            <span className="mt-0.5 size-2 flex-none rounded-full bg-blue-500" aria-label="Unread" />
-          )}
-          <h3 className="text-sm font-semibold text-neutral-900">{notice.title}</h3>
-          {notice.isUrgent && <StatusBadge status="Urgent" variant="danger" />}
-        </div>
-        <p className="flex-none text-xs text-neutral-400">{formatDate(notice.publishedAt)}</p>
-      </div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-1">
+          {/* Title row */}
+          <div className="flex flex-wrap items-center gap-2">
+            {!notice.isRead && (
+              <span className="mt-0.5 size-2 flex-none rounded-full bg-blue-500" aria-label="Unread" />
+            )}
+            <h3 className={`text-sm ${!notice.isRead ? "font-semibold" : "font-medium"} text-neutral-900`}>
+              {notice.title}
+            </h3>
+            {notice.isUrgent && <StatusBadge status="Urgent" variant="danger" />}
+            {notice.attachments.length > 0 && (
+              <span className="flex items-center gap-1 text-xs text-neutral-400">
+                <FileTextIcon className="size-3" />
+                {notice.attachments.length}
+              </span>
+            )}
+          </div>
 
-      <p className="mt-0.5 text-xs text-neutral-400">Posted by {notice.publishedByName}</p>
+          {/* Body preview — one line only, click to read full */}
+          <p className="line-clamp-1 text-xs text-neutral-500">{notice.body}</p>
 
-      <div className="mt-3">
-        <NoticeBody body={notice.body} />
-      </div>
-
-      {notice.isUrgent && !notice.isAcknowledged && (
-        <div className="mt-4 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-          <AlertTriangleIcon className="size-4 flex-none text-amber-500" />
-          <p className="flex-1 text-xs text-amber-700">
-            This is an urgent notice. Please acknowledge that you have read and understood it.
+          {/* Meta */}
+          <p className="text-xs text-neutral-400">
+            {formatDate(notice.publishedAt)} · {notice.publishedByName}
           </p>
-          <Button
-            text="Acknowledge"
-            variant="secondary"
-            onClick={() => onAcknowledge(notice.id)}
-            className="w-auto flex-none text-xs"
-          />
         </div>
-      )}
 
-      {notice.isUrgent && notice.isAcknowledged && (
-        <div className="mt-3 flex items-center gap-2 text-xs text-green-600">
-          <CheckCircle2Icon className="size-3.5" />
-          You acknowledged this notice
-        </div>
-      )}
+        {/* Unacknowledged urgent indicator */}
+        {notice.isUrgent && !notice.isAcknowledged && (
+          <span className="flex-none rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+            Action required
+          </span>
+        )}
+      </div>
     </li>
   );
 }
@@ -145,6 +239,7 @@ export function StudentNoticePage() {
   const [result, setResult] = useState<MyNoticesResult>(EMPTY_RESULT);
   const [loading, setLoading] = useState(true);
   const [newBanner, setNewBanner] = useState(0);
+  const [openNotice, setOpenNotice] = useState<NoticeSummary | null>(null);
 
   const { seed, refresh } = useNoticePolling({
     onNewNotices: (count) => setNewBanner(count),
@@ -167,8 +262,18 @@ export function StudentNoticePage() {
       const updated = prev.notices.map((n) => (n.id === id ? { ...n, isRead: true } : n));
       return { notices: updated, unreadCount: updated.filter((n) => !n.isRead).length };
     });
+    // Also update the open dialog if it's for this notice
+    setOpenNotice((prev) => (prev?.id === id ? { ...prev, isRead: true } : prev));
     studentNoticeApi.markRead(id).catch(() => {});
   }, []);
+
+  const handleClickNotice = useCallback((notice: NoticeSummary) => {
+    setOpenNotice(notice);
+    // Mark as read when opened
+    if (!notice.isRead) {
+      handleRead(notice.id);
+    }
+  }, [handleRead]);
 
   const handleAcknowledge = useCallback(
     async (id: string) => {
@@ -178,6 +283,7 @@ export function StudentNoticePage() {
           n.id === id ? { ...n, isRead: true, isAcknowledged: true } : n,
         ),
       }));
+      setOpenNotice((prev) => (prev?.id === id ? { ...prev, isAcknowledged: true } : prev));
       try {
         await studentNoticeApi.acknowledge(id);
         success("Notice acknowledged");
@@ -189,6 +295,7 @@ export function StudentNoticePage() {
             n.id === id ? { ...n, isAcknowledged: false } : n,
           ),
         }));
+        setOpenNotice((prev) => (prev?.id === id ? { ...prev, isAcknowledged: false } : prev));
         error("Failed to acknowledge notice");
       }
     },
@@ -206,7 +313,7 @@ export function StudentNoticePage() {
 
   const table = useTable<NoticeSummary>({
     data: result.notices,
-    pageSize: 6,
+    pageSize: 10,
     getSearchText: (n) => `${n.title} ${n.body} ${n.publishedByName}`,
     filterMatch: (n, value) => {
       if (value === "URGENT") return n.isUrgent;
@@ -227,7 +334,7 @@ export function StudentNoticePage() {
     <div className="space-y-4">
       <PageHeader
         title="Notices & Announcements"
-        description="Official notices published by the school"
+        description="Click any notice to read it in full"
       />
 
       <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
@@ -242,7 +349,7 @@ export function StudentNoticePage() {
           <AlertTriangleIcon className="size-4 flex-none text-amber-500" />
           <p className="text-sm text-amber-700">
             You have <strong>{pendingAckCount}</strong> urgent{" "}
-            {pendingAckCount === 1 ? "notice" : "notices"} waiting for acknowledgement.
+            {pendingAckCount === 1 ? "notice" : "notices"} requiring acknowledgement.
           </p>
         </div>
       )}
@@ -289,7 +396,7 @@ export function StudentNoticePage() {
                 key={notice.id}
                 notice={notice}
                 onRead={handleRead}
-                onAcknowledge={(id) => void handleAcknowledge(id)}
+                onClick={handleClickNotice}
               />
             ))}
           </ul>
@@ -302,6 +409,13 @@ export function StudentNoticePage() {
           label="notices"
         />
       </div>
+
+      {/* Full notice detail dialog */}
+      <NoticeDetailDialog
+        notice={openNotice}
+        onClose={() => setOpenNotice(null)}
+        onAcknowledge={(id) => void handleAcknowledge(id)}
+      />
     </div>
   );
 }

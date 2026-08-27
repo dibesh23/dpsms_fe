@@ -3,7 +3,6 @@
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { AdminNoticePage } from "@/features/notice/components/AdminNoticePage";
 import { StudentNoticePage } from "@/features/notice/components/StudentNoticePage";
-import { TeacherNoticePage } from "@/features/notice/components/TeacherNoticePage";
 
 export default function NoticesRoute() {
   const { user } = useAuth();
@@ -12,10 +11,7 @@ export default function NoticesRoute() {
     return <AdminNoticePage />;
   }
 
-  if (user?.role === "TEACHER") {
-    return <TeacherNoticePage />;
-  }
-
-  // STUDENT (and any other role)
+  // TEACHER and STUDENT both get the read-only feed
+  // (teachers can no longer create notices — only PRINCIPAL/SUPER_ADMIN can)
   return <StudentNoticePage />;
 }
