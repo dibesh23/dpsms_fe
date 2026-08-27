@@ -1,4 +1,7 @@
 import { apiClient } from "@/shared/lib/apiClient";
+import type { NoticeAttachment } from "./noticeApi";
+
+export type { NoticeAttachment };
 
 // ── Notice summary for recipient feed ─────────────────────────────────────────
 
@@ -7,13 +10,14 @@ export interface NoticeSummary {
   title: string;
   body: string;
   isUrgent: boolean;
-  publishedAt: string;   // always set in the published feed (/notices/me filters to publishedAt != null)
+  publishedAt: string;
   publishedByName: string;
   scheduledAt: string | null;
   createdAt: string;
   updatedAt: string;
   isRead: boolean;
   isAcknowledged: boolean;
+  attachments: NoticeAttachment[];
 }
 
 export interface MyNoticesResult {

@@ -195,6 +195,12 @@ const NAV_SECTIONS: Array<{
         icon: BellIcon,
         permission: PERMISSIONS.MESSAGING_OWN_VIEW,
       },
+      {
+        label: "Notices",
+        href: "/notices",
+        icon: BellIcon,
+        permission: PERMISSIONS.NOTICE_OWN_VIEW,
+      },
     ],
   },
   {

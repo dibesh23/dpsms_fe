@@ -10,9 +10,9 @@ import { BarChart } from "@/shared/components/ui/charts";
 import { StatusBadge, type StatusVariant } from "@/shared/components/ui/status-badge";
 import { EmptyState } from "@/shared/components/ui/empty-state";
 import { formatDate } from "@/shared/lib/format";
+import { DashboardNoticesWidget } from "@/features/notice/components/DashboardNoticesWidget";
 import {
-  teacherDashboardApi,
-  type TeacherDashboardSummary,
+  teacherDashboardApi,  type TeacherDashboardSummary,
   type StaffAttendanceStatus,
   type NotificationType,
   type SchoolEventCategory,
@@ -537,9 +537,11 @@ export default function TeacherDashboardPage() {
           </section>
 
           <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <DashboardNoticesWidget role="TEACHER" limit={5} />
+
             <DashboardWidget
               title="Notifications"
-              className="lg:col-span-3"
+              className="lg:col-span-2"
               action={<span className="text-xs font-medium text-blue-600">View all</span>}
             >
               {(summary.notifications ?? []).length === 0 ? (
