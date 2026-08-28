@@ -132,6 +132,30 @@ const NAV_SECTIONS: Array<{
     ],
   },
   {
+    label: "Finance",
+    roles: ["SUPER_ADMIN", "PRINCIPAL"],
+    items: [
+      {
+        label: "Fee Types",
+        href: "/fees/types",
+        icon: CreditCardIcon,
+        permission: PERMISSIONS.FEE_TYPE_MANAGE,
+      },
+      {
+        label: "Fee Structures",
+        href: "/fees/structures",
+        icon: LayoutGridIcon,
+        permission: PERMISSIONS.FEE_STRUCTURE_MANAGE,
+      },
+      {
+        label: "Invoices",
+        href: "/fees/invoices",
+        icon: FileTextIcon,
+        permission: PERMISSIONS.FEE_INVOICE_LIST,
+      },
+    ],
+  },
+  {
     label: "Communication",
     roles: ["SUPER_ADMIN", "PRINCIPAL"],
     items: [

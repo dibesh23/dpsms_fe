@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/features/common/components/ComingSoon";
+import { AdmissionLetterPage } from "@/features/fee/components/AdmissionLetterPage";
 
-export default function AdmissionLetterPage() {
-  return <ComingSoon feature="Admission Letter" />;
+export default function Page() {
+  return <AdmissionLetterPage />;
 }
