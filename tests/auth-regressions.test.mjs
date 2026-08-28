@@ -41,3 +41,10 @@ test("plain login accepts an empty hidden tenant field", async () => {
   const source = await read("src/features/auth/components/LoginForm.tsx");
   assert.match(source, /value === "" \|\| z\.uuid\(\)\.safeParse\(value\)\.success/);
 });
+
+test("advisory tenant header is only sent for explicitly scoped requests", async () => {
+  const source = await read("src/shared/lib/apiClient.ts");
+  assert.match(source, /hasExplicitScope/);
+  assert.match(source, /if \(hasExplicitScope\)/);
+  assert.match(source, /typeof body\.tenantId === "string"/);
+});
