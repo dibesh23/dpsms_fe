@@ -11,6 +11,7 @@ interface UseTableOptions<T> {
   filterMatch?: (row: T, value: string | null) => boolean;
   sortValue?: (row: T, key: string) => string | number;
   defaultSortKey?: string | null;
+  defaultSortDir?: SortDir;
 }
 
 export interface FilterOption {
@@ -25,11 +26,12 @@ export function useTable<T>({
   filterMatch,
   sortValue,
   defaultSortKey = null,
+  defaultSortDir,
 }: UseTableOptions<T>) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<string | null>(defaultSortKey);
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [sortDir, setSortDir] = useState<SortDir>(defaultSortDir ?? "asc");
   const [page, setPage] = useState(1);
 
   const rows = useMemo(() => {

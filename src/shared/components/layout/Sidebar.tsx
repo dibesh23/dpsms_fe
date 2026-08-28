@@ -156,6 +156,18 @@ const NAV_SECTIONS: Array<{
     ],
   },
   {
+    label: "Communication",
+    roles: ["SUPER_ADMIN", "PRINCIPAL"],
+    items: [
+      {
+        label: "Notices",
+        href: "/notices",
+        icon: BellIcon,
+        permission: PERMISSIONS.NOTICE_LIST,
+      },
+    ],
+  },
+  {
     label: "Administration",
     roles: ["SUPER_ADMIN", "PRINCIPAL"],
     items: [
@@ -173,19 +185,19 @@ const NAV_SECTIONS: Array<{
     items: [
       {
         label: "My Classes",
-        href: "/classes",
+        href: "/my-classes",
         icon: LayoutGridIcon,
         permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW,
       },
       {
         label: "My Students",
-        href: "/students",
+        href: "/my-students",
         icon: UsersIcon,
         permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW,
       },
       {
-        label: "Subjects",
-        href: "/subjects",
+        label: "My Subjects",
+        href: "/my-subjects",
         icon: BookOpenIcon,
         permission: PERMISSIONS.ACADEMIC_SUBJECT_LIST,
       },
@@ -202,16 +214,16 @@ const NAV_SECTIONS: Array<{
         permission: PERMISSIONS.EXAM_OWN_VIEW,
       },
       {
-        label: "Parents",
-        href: "/parents",
-        icon: HeartHandshakeIcon,
-        permission: PERMISSIONS.PARENT_LIST,
-      },
-      {
         label: "Messaging",
         href: "/messaging",
         icon: BellIcon,
         permission: PERMISSIONS.MESSAGING_OWN_VIEW,
+      },
+      {
+        label: "Notices",
+        href: "/notices",
+        icon: BellIcon,
+        permission: PERMISSIONS.NOTICE_OWN_VIEW,
       },
     ],
   },

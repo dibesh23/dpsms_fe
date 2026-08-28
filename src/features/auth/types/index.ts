@@ -28,16 +28,24 @@ export interface RegisterSchoolPayload {
 
 export interface LoginResponse {
   accessToken: string;
+  refreshToken?: string;
   user: AuthUser;
 }
 
 export interface RegisterSchoolResponse {
   accessToken: string;
+  refreshToken?: string;
   user: AuthUser;
   tenantId: string;
   schoolName: string;
   subdomain: string;
   message: string;
+}
+
+export interface RefreshResponse {
+  accessToken: string;
+  refreshToken?: string;
+  user: AuthUser;
 }
 
 export interface SessionInfo {
