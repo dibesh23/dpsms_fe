@@ -18,7 +18,7 @@ export function setRefreshTokenRef(fn: () => Promise<boolean>): void {
   refreshTokenRef = fn;
 }
 
-const API_BASE_URL = process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:4000";
+const API_BASE_URL = (process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:4000").replace(/\/+$/, "");
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: `${API_BASE_URL}/api`,
@@ -65,6 +65,9 @@ apiClient.interceptors.response.use(
       !isRefreshEndpoint &&
       refreshTokenRef
     ) {
+      // Retry requests must not hit a double-slash path when the original URL
+      // already started with "/" (baseURL + path join safety net).
+      originalConfig.url = `${originalConfig.baseURL}${originalConfig.url}`.replace(/\/{2,}/g, "/");
       originalConfig._retry = true;
       try {
         refreshPromise ??= refreshTokenRef().finally(() => {

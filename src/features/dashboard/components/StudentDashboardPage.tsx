@@ -668,6 +668,11 @@ export default function StudentDashboardPage() {
                       {exam.overallGrade && (
                         <StatusBadge status={exam.overallGrade} variant="neutral" dot={false} />
                       )}
+                      {exam.overallGpa != null && (
+                        <span className="rounded-full bg-bg-subtle px-2 py-0.5 text-xs font-semibold text-neutral-600">
+                          GPA {exam.overallGpa}
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>
