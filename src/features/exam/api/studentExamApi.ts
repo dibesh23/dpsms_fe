@@ -1,7 +1,7 @@
 import { apiClient } from "@/shared/lib/apiClient";
 
 // Mirrors schema.prisma
-export type ExamStatus = "DRAFT" | "RESULTS_PENDING_APPROVAL" | "PUBLISHED";
+export type ExamStatus = "DRAFT" | "MARKS_ENTRY" | "SUBMITTED" | "PUBLISHED" | "CANCELLED";
 export type SubjectType = "COMPULSORY" | "ELECTIVE";
 
 export interface ExamSubjectDetail {
@@ -13,8 +13,9 @@ export interface ExamSubjectDetail {
   fullMarksTheory: number; // ExamSubject.fullMarksTheory
   fullMarksPractical: number; // ExamSubject.fullMarksPractical
   passMarks: number; // ExamSubject.passMarks
-  grade: string | null; // ExamResult.gradeScale -> GradeScale.grade
-  gpaValue: number | null; // GradeScale.gpaValue
+  grade: string | null; // ExamResult.grade (auto NEB grade)
+  gpaValue: number | null; // ExamResult.gpaValue (auto NEB grade point)
+  isAbsent: boolean; // ExamResult.isAbsent
 }
 
 export interface ExamResultSummary {
@@ -27,6 +28,8 @@ export interface ExamResultSummary {
   totalObtained: number; // sum of (theoryMarks + practicalMarks) across subjects
   totalFullMarks: number; // sum of (fullMarksTheory + fullMarksPractical) across subjects
   percentage: number;
+  /** Overall GPA on the 0-4 (0-4 scale) NEB grade, mean of subject GPAs. */
+  gpaValue: number | null;
   /** Derived client-side isn't safe here (needs per-subject pass marks
    *  from every ExamSubject), so the backend computes it: PASS only if
    *  every subject's obtained marks meet that subject's passMarks. */
