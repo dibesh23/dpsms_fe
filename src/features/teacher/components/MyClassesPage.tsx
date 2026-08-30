@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { StatsCard } from "@/shared/components/ui/stats-card";
 import { EmptyState } from "@/shared/components/ui/empty-state";
@@ -106,7 +107,7 @@ export function MyClassesPage() {
           />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {classes.map((item) => (
             <div
               key={item.sectionId}
@@ -114,9 +115,12 @@ export function MyClassesPage() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-neutral-900">
+                  <Link
+                    href={`/my-classes/${item.sectionId}`}
+                    className="truncate font-medium text-neutral-900 transition-colors hover:underline"
+                  >
                     {item.className} – {item.sectionName}
-                  </p>
+                  </Link>
                   <p className="text-xs text-neutral-500">{item.academicYearLabel}</p>
                 </div>
                 {item.isClassTeacher ? (
