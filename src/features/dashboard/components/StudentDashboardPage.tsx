@@ -383,14 +383,14 @@ export default function StudentDashboardPage() {
   const overallRisk = hasAttendanceData ? attendanceRisk(attendance.overallPercent) : null;
 
   return (
-    <div className="space-y-4">
-      <header className="flex flex-wrap items-center justify-between gap-4">
+    <div className="mx-auto max-w-[1500px] space-y-4 pb-6">
+      <header className="flex flex-wrap items-center justify-between gap-4 rounded-[18px] border border-neutral-200 bg-white px-5 py-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
+            <h1 className="text-xl font-semibold tracking-tight text-neutral-950">
               Welcome back, {firstName}
             </h1>
-            <StatusBadge status="Student" variant="info" />
+            <StatusBadge status="Student" variant="success" />
             {profile.status !== "ACTIVE" && (
               <StatusBadge status={profile.status.replace(/_/g, " ")} variant="warning" />
             )}
@@ -401,14 +401,14 @@ export default function StudentDashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           {profile.academicYearLabel && (
-            <span className="rounded-full border border-neutral-200 bg-bg-default px-3 py-1 text-xs font-medium text-neutral-500">
+            <span className="rounded-full border border-[#c9dfcf] bg-[#eff7f1] px-3 py-1 text-xs font-medium text-[#156d39]">
               Academic Year {profile.academicYearLabel}
             </span>
           )}
           <button
             type="button"
             aria-label="Notifications"
-            className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-bg-default text-neutral-600 transition-colors hover:bg-bg-muted"
+            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-[#156d39] transition-colors hover:bg-[#eff7f1]"
           >
             <BellIcon className="size-4" />
             {summary.notifications.some((n) => !n.isRead) && (
@@ -436,7 +436,7 @@ export default function StudentDashboardPage() {
       <div className="flex flex-col gap-4 lg:flex-row">
         {/* Profile panel */}
         <div className="lg:w-72 lg:flex-none">
-          <div className="rounded-lg border border-neutral-200 bg-bg-default p-5">
+          <div className="rounded-[18px] border border-neutral-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,.02)]">
             <div className="flex flex-col items-center text-center">
               <Avatar name={profile.fullName || user?.fullName || "Student"} size="lg" />
               <p className="mt-3 text-base font-semibold text-neutral-900">
@@ -506,7 +506,7 @@ export default function StudentDashboardPage() {
             action={
               <Link
                 href="/attendance-history"
-                className="inline-flex flex-none items-center gap-1 text-xs font-medium text-blue-600 transition-colors hover:text-blue-700"
+                className="inline-flex flex-none items-center gap-1 text-xs font-medium text-[#156d39] transition-colors hover:text-[#0d3320]"
               >
                 View full history
                 <ArrowUpRightIcon className="size-3.5" />
@@ -685,7 +685,7 @@ export default function StudentDashboardPage() {
               action={
                 <Link
                   href="/fees"
-                  className="inline-flex flex-none items-center gap-1 text-xs font-medium text-blue-600 transition-colors hover:text-blue-700"
+                  className="inline-flex flex-none items-center gap-1 text-xs font-medium text-[#156d39] transition-colors hover:text-[#0d3320]"
                 >
                   View full details
                   <ArrowUpRightIcon className="size-3.5" />
@@ -713,7 +713,7 @@ export default function StudentDashboardPage() {
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100">
                   <div
-                    className="h-full rounded-full bg-neutral-900"
+                    className="h-full rounded-full bg-gradient-to-r from-[#156d39] to-[#4ade80]"
                     style={{
                       width: `${
                         fee.totalAnnualFee > 0
