@@ -103,6 +103,7 @@ function SubjectMarksTable({ subjects }: { subjects: ExamSubjectDetail[] }) {
                   <p className="font-medium text-neutral-800">{subject.subjectName}</p>
                   <p className="text-xs text-neutral-400">
                     {SUBJECT_TYPE_LABEL[subject.subjectType] ?? subject.subjectType}
+                    {subject.isAbsent ? " · Absent" : ""}
                   </p>
                 </td>
                 <td className="py-2.5 pr-3 text-neutral-600">
@@ -120,7 +121,7 @@ function SubjectMarksTable({ subjects }: { subjects: ExamSubjectDetail[] }) {
                 <td className="py-2.5 text-right">
                   <StatusBadge
                     status={subject.grade ?? (passed ? "Pass" : "Fail")}
-                    variant={passed ? "success" : "danger"}
+                    variant={subject.isAbsent ? "danger" : passed ? "success" : "danger"}
                     dot={false}
                   />
                 </td>
@@ -221,6 +222,17 @@ export function StudentExamResultPage() {
         render: (exam) => <span className="font-medium text-neutral-900">{exam.percentage}%</span>,
       },
       {
+        key: "gpa",
+        header: "GPA",
+        sortValue: (exam) => exam.gpaValue ?? -1,
+        render: (exam) =>
+          exam.gpaValue != null ? (
+            <span className="font-medium text-neutral-900">{exam.gpaValue.toFixed(2)}</span>
+          ) : (
+            <span className="text-neutral-400">-</span>
+          ),
+      },
+      {
         key: "result",
         header: "Result",
         sortValue: (exam) => exam.result,
@@ -251,6 +263,7 @@ export function StudentExamResultPage() {
     sortValue: (exam, key) => {
       if (key === "marks") return exam.totalObtained;
       if (key === "percentage") return exam.percentage;
+      if (key === "gpa") return exam.gpaValue ?? -1;
       if (key === "result") return exam.result;
       return exam.examName;
     },

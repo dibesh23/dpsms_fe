@@ -70,6 +70,12 @@ export const PERMISSIONS = {
   NOTICE_DELETE: "notices:delete",
   NOTICE_OWN_VIEW: "notices:own:view",
 
+  EXAM_LIST: "exams:list",
+  EXAM_CREATE: "exams:create",
+  EXAM_UPDATE: "exams:update",
+  EXAM_DELETE: "exams:delete",
+  EXAM_RESULTS_ENTER: "exams:results:enter",
+  EXAM_RESULTS_APPROVE: "exams:results:approve",
   EXAM_OWN_VIEW: "exam:own:view",
   FEE_TYPE_MANAGE: "fees:type:manage",
   FEE_STRUCTURE_MANAGE: "fees:structure:manage",

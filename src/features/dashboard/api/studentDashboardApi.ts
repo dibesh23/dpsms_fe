@@ -82,6 +82,7 @@ export interface ExamSubjectResult {
   subjectName: string;
   theoryMarks: number | null;
   practicalMarks: number | null;
+  gpaValue: number | null;
   fullMarksTheory: number;
   fullMarksPractical: number;
   grade: string | null;
@@ -97,6 +98,7 @@ export interface ExamResultSummary {
   totalFullMarks: number;
   percentage: number;
   overallGrade: string | null;
+  overallGpa: number | null;
   subjects: ExamSubjectResult[];
 }
 

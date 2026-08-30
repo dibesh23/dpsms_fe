@@ -156,6 +156,24 @@ const NAV_SECTIONS: Array<{
     ],
   },
   {
+    label: "Examinations",
+    roles: ["SUPER_ADMIN", "PRINCIPAL"],
+    items: [
+      {
+        label: "Exams",
+        href: "/exams",
+        icon: FileTextIcon,
+        permission: PERMISSIONS.EXAM_LIST,
+      },
+      {
+        label: "Exam Types",
+        href: "/exam-types",
+        icon: ClipboardCheckIcon,
+        permission: PERMISSIONS.EXAM_CREATE,
+      },
+    ],
+  },
+  {
     label: "Communication",
     roles: ["SUPER_ADMIN", "PRINCIPAL"],
     items: [
@@ -214,10 +232,10 @@ const NAV_SECTIONS: Array<{
         permission: PERMISSIONS.EXAM_OWN_VIEW,
       },
       {
-        label: "Messaging",
-        href: "/messaging",
-        icon: BellIcon,
-        permission: PERMISSIONS.MESSAGING_OWN_VIEW,
+        label: "Exams",
+        href: "/exams",
+        icon: ClipboardCheckIcon,
+        permission: PERMISSIONS.EXAM_LIST,
       },
       {
         label: "Notices",
