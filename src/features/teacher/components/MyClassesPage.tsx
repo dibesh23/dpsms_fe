@@ -140,6 +140,7 @@ export function MyClassesPage() {
               <div className="mt-4 flex items-center justify-end border-t border-neutral-100 pt-4">
                 <RowActions
                   actions={[
+                    { label: "View details", href: `/my-classes/${item.sectionId}` },
                     { label: "View students", href: "/students" },
                     {
                       label: "Mark attendance",
