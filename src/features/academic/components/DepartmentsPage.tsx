@@ -15,7 +15,12 @@ import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { AddDepartmentForm, type AddDepartmentValues } from "./AddDepartmentForm";
-import { SetDepartmentHeadForm, type SetDepartmentHeadValues } from "./SetDepartmentHeadForm";
+import {
+  SetDepartmentHeadForm,
+  headValueToPayload,
+  type DepartmentHeadOption,
+  type SetDepartmentHeadValues,
+} from "./SetDepartmentHeadForm";
 import {
   EditDepartmentForm,
   editValuesToPayload,
@@ -23,6 +28,7 @@ import {
 } from "./EditDepartmentForm";
 import { academicApi, type DepartmentRecord as DepartmentRecordDto } from "../api/academicApi";
 import { teacherApi } from "@/features/teacher/api/teacherApi";
+import { staffApi } from "@/features/staff/api/staffApi";
 import {
   ArrowUpRightIcon,
   BookOpenIcon,
@@ -52,6 +58,7 @@ export function DepartmentsPage() {
   const [teachers, setTeachers] = useState<Array<{ id: string; name: string; department: string }>>(
     [],
   );
+  const [staff, setStaff] = useState<Array<{ id: string; name: string; department: string }>>([]);
   const toast = useToast();
   const { can } = useAuth();
   const canCreate = can(PERMISSIONS.ACADEMIC_DEPARTMENT_CREATE);
@@ -80,18 +87,45 @@ export function DepartmentsPage() {
         setTeachers([]);
       }
     }
+    if (staff.length === 0) {
+      try {
+        const records = await staffApi.list();
+        setStaff(records.map((s) => ({ id: s.id, name: s.name, department: s.department })));
+      } catch {
+        setStaff([]);
+      }
+    }
   };
 
   const headOptions = useMemo(() => {
     if (!headTarget) return [];
-    const inDepartment = teachers.filter((t) => t.department === headTarget.name);
+    const inDepartment: DepartmentHeadOption[] = [
+      ...teachers
+        .filter((t) => t.department === headTarget.name)
+        .map((t) => ({ id: t.id, name: t.name, kind: "teacher" as const })),
+      ...staff
+        .filter((s) => s.department === headTarget.name)
+        .map((s) => ({ id: s.id, name: s.name, kind: "staff" as const })),
+    ];
     // Keep the current head selectable even if their membership drifted.
-    const current = headTarget.headTeacher;
-    if (current && !inDepartment.some((t) => t.id === current.id)) {
-      return [{ id: current.id, name: current.fullName }, ...inDepartment];
+    const current = headTarget.headTeacher
+      ? {
+          id: headTarget.headTeacher.id,
+          name: headTarget.headTeacher.fullName,
+          kind: "teacher" as const,
+        }
+      : headTarget.headStaff
+        ? {
+            id: headTarget.headStaff.id,
+            name: headTarget.headStaff.fullName,
+            kind: "staff" as const,
+          }
+        : null;
+    if (current && !inDepartment.some((option) => option.id === current.id)) {
+      return [current, ...inDepartment];
     }
     return inDepartment;
-  }, [teachers, headTarget]);
+  }, [teachers, staff, headTarget]);
 
   const handleAdd = async (values: AddDepartmentValues): Promise<boolean> => {
     try {
@@ -112,9 +146,10 @@ export function DepartmentsPage() {
   const handleUpdateHead = async (values: SetDepartmentHeadValues): Promise<string | null> => {
     if (!headTarget) return "Could not update the department head. Try again.";
     try {
-      const record = await academicApi.updateDepartment(headTarget.id, {
-        headTeacherId: values.headTeacherId || null,
-      });
+      const record = await academicApi.updateDepartment(
+        headTarget.id,
+        headValueToPayload(values.head),
+      );
       setDepartments((current) =>
         current.map((department) => (department.id === record.id ? record : department)),
       );
@@ -177,7 +212,7 @@ export function DepartmentsPage() {
     data: departments,
     pageSize: 6,
     getSearchText: (department) =>
-      `${department.name} ${department.headTeacher?.fullName ?? ""} ${department.description}`,
+      `${department.name} ${department.headTeacher?.fullName ?? ""} ${department.headStaff?.fullName ?? ""} ${department.description}`,
     sortValue: (department, key) => String(department[key as keyof DepartmentRecordDto] ?? ""),
     defaultSortKey: "name",
   });
@@ -303,11 +338,16 @@ export function DepartmentsPage() {
               <p className="mt-2 line-clamp-2 text-sm text-neutral-500">{department.description}</p>
               <div className="mt-auto flex items-center justify-between gap-2 border-t border-neutral-100 pt-4">
                 <div className="flex min-w-0 items-center gap-2">
-                  <Avatar name={department.headTeacher?.fullName ?? ""} size="sm" />
+                  <Avatar
+                    name={department.headTeacher?.fullName ?? department.headStaff?.fullName ?? ""}
+                    size="sm"
+                  />
                   <div className="min-w-0">
                     <p className="text-xs text-neutral-400">Department head</p>
                     <p className="truncate text-sm font-medium text-neutral-800">
-                      {department.headTeacher?.fullName ?? "Not assigned"}
+                      {department.headTeacher?.fullName ??
+                        department.headStaff?.fullName ??
+                        "Not assigned"}
                     </p>
                   </div>
                 </div>
@@ -359,7 +399,7 @@ export function DepartmentsPage() {
           open={headTarget !== null}
           onClose={() => setHeadTarget(null)}
           title="Set Department Head"
-          description="Assign a teacher from this department as its head."
+          description="Assign a teacher or staff member from this department as its head."
         >
           {headTarget && (
             <SetDepartmentHeadForm
@@ -367,8 +407,9 @@ export function DepartmentsPage() {
                 id: headTarget.id,
                 name: headTarget.name,
                 headTeacherId: headTarget.headTeacher?.id ?? null,
+                headStaffId: headTarget.headStaff?.id ?? null,
               }}
-              teachers={headOptions}
+              options={headOptions}
               onUpdate={handleUpdateHead}
               onClose={() => setHeadTarget(null)}
             />

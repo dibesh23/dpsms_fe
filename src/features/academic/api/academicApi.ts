@@ -20,6 +20,7 @@ export interface DepartmentRecord {
   id: string;
   name: string;
   headTeacher: DepartmentHeadRecord | null;
+  headStaff: DepartmentHeadRecord | null;
   description: string;
   staffCount: number;
   teacherCount: number;
@@ -184,7 +185,9 @@ export const academicApi = {
   // ---------- Teacher: own assigned classes & sections ----------
   // Uses GET /attendance/my-sections which already resolves the teacher's
   // TeacherClassAssignment rows filtered to the active academic year.
-  async getMyAssignedClasses(): Promise<{ classId: string; className: string; sections: { sectionId: string; sectionName: string }[] }[]> {
+  async getMyAssignedClasses(): Promise<
+    { classId: string; className: string; sections: { sectionId: string; sectionName: string }[] }[]
+  > {
     const { data } = await apiClient.get<{
       data: {
         items: { sectionId: string; sectionName: string; classId: string; className: string }[];
@@ -193,12 +196,21 @@ export const academicApi = {
     }>("/attendance/my-sections");
 
     // Group sections by classId
-    const classMap = new Map<string, { classId: string; className: string; sections: { sectionId: string; sectionName: string }[] }>();
+    const classMap = new Map<
+      string,
+      { classId: string; className: string; sections: { sectionId: string; sectionName: string }[] }
+    >();
     for (const item of data.data.items) {
       if (!classMap.has(item.classId)) {
-        classMap.set(item.classId, { classId: item.classId, className: item.className, sections: [] });
+        classMap.set(item.classId, {
+          classId: item.classId,
+          className: item.className,
+          sections: [],
+        });
       }
-      classMap.get(item.classId)!.sections.push({ sectionId: item.sectionId, sectionName: item.sectionName });
+      classMap
+        .get(item.classId)!
+        .sections.push({ sectionId: item.sectionId, sectionName: item.sectionName });
     }
     return [...classMap.values()];
   },
@@ -216,11 +228,16 @@ export const academicApi = {
     const { data } = await apiClient.post<{ data: DepartmentRecord }>("/departments", payload);
     return data.data;
   },
-  // The head teacher must already belong to the department, so heads are
-  // assigned after creation; passing null clears an assigned head.
+  // The head must already belong to the department (teacher or staff), so
+  // heads are assigned after creation; passing null clears an assigned head.
   async updateDepartment(
     id: string,
-    payload: { headTeacherId?: string | null; name?: string; description?: string },
+    payload: {
+      headTeacherId?: string | null;
+      headStaffId?: string | null;
+      name?: string;
+      description?: string;
+    },
   ): Promise<DepartmentRecord> {
     const { data } = await apiClient.patch<{ data: DepartmentRecord }>(
       `/departments/${id}`,

@@ -17,7 +17,12 @@ import { academicApi, type DepartmentRecord as DepartmentRecordDto } from "../ap
 import { teacherApi, type TeacherRecord } from "@/features/teacher/api/teacherApi";
 import { staffApi, type StaffRecord } from "@/features/staff/api/staffApi";
 import { StatusBadge } from "@/shared/components/ui/status-badge";
-import { SetDepartmentHeadForm, type SetDepartmentHeadValues } from "./SetDepartmentHeadForm";
+import {
+  SetDepartmentHeadForm,
+  headValueToPayload,
+  type DepartmentHeadOption,
+  type SetDepartmentHeadValues,
+} from "./SetDepartmentHeadForm";
 import {
   EditDepartmentForm,
   editValuesToPayload,
@@ -96,15 +101,32 @@ export function DepartmentDetailPage() {
 
   const headOptions = useMemo(() => {
     if (!department) return [];
-    const inDepartment: Array<{ id: string; name: string }> = teachers
-      .filter((t) => t.department === department.name)
-      .map((t) => ({ id: t.id, name: t.name }));
-    const current = department.headTeacher;
-    if (current && !inDepartment.some((t) => t.id === current.id)) {
-      return [{ id: current.id, name: current.fullName }, ...inDepartment];
+    const inDepartment: DepartmentHeadOption[] = [
+      ...teachers
+        .filter((t) => t.department === department.name)
+        .map((t) => ({ id: t.id, name: t.name, kind: "teacher" as const })),
+      ...staff
+        .filter((s) => s.department === department.name)
+        .map((s) => ({ id: s.id, name: s.name, kind: "staff" as const })),
+    ];
+    const current = department.headTeacher
+      ? {
+          id: department.headTeacher.id,
+          name: department.headTeacher.fullName,
+          kind: "teacher" as const,
+        }
+      : department.headStaff
+        ? {
+            id: department.headStaff.id,
+            name: department.headStaff.fullName,
+            kind: "staff" as const,
+          }
+        : null;
+    if (current && !inDepartment.some((option) => option.id === current.id)) {
+      return [current, ...inDepartment];
     }
     return inDepartment;
-  }, [teachers, department]);
+  }, [teachers, staff, department]);
 
   const departmentTeachers = useMemo(
     () => (department ? teachers.filter((t) => t.department === department.name) : []),
@@ -134,9 +156,10 @@ export function DepartmentDetailPage() {
   const handleUpdateHead = async (values: SetDepartmentHeadValues): Promise<string | null> => {
     if (!department) return "Department is not loaded yet.";
     try {
-      const record = await academicApi.updateDepartment(department.id, {
-        headTeacherId: values.headTeacherId || null,
-      });
+      const record = await academicApi.updateDepartment(
+        department.id,
+        headValueToPayload(values.head),
+      );
       setDepartment(record);
       setHeadOpen(false);
       toast.success("Department head updated successfully.");
@@ -277,13 +300,22 @@ export function DepartmentDetailPage() {
         <section className="rounded-lg border border-neutral-200 bg-bg-default p-5">
           <h2 className="font-medium text-neutral-900">Department Head</h2>
           <div className="mt-3 flex items-center gap-3">
-            <Avatar name={department.headTeacher?.fullName ?? ""} size="lg" />
+            <Avatar
+              name={department.headTeacher?.fullName ?? department.headStaff?.fullName ?? ""}
+              size="lg"
+            />
             <div className="min-w-0">
               <p className="truncate font-medium text-neutral-900">
-                {department.headTeacher?.fullName ?? "Not assigned"}
+                {department.headTeacher?.fullName ??
+                  department.headStaff?.fullName ??
+                  "Not assigned"}
               </p>
               <p className="text-xs text-neutral-400">
-                {department.headTeacher ? "Faculty lead" : "Assign a teacher from this department"}
+                {department.headTeacher
+                  ? "Teacher lead"
+                  : department.headStaff
+                    ? "Staff lead"
+                    : "Assign a teacher or staff member from this department"}
               </p>
             </div>
           </div>
@@ -379,15 +411,16 @@ export function DepartmentDetailPage() {
           open={headOpen}
           onClose={() => setHeadOpen(false)}
           title="Set Department Head"
-          description="Assign a teacher from this department as its head."
+          description="Assign a teacher or staff member from this department as its head."
         >
           <SetDepartmentHeadForm
             department={{
               id: department.id,
               name: department.name,
               headTeacherId: department.headTeacher?.id ?? null,
+              headStaffId: department.headStaff?.id ?? null,
             }}
-            teachers={headOptions}
+            options={headOptions}
             onUpdate={handleUpdateHead}
             onClose={() => setHeadOpen(false)}
           />
