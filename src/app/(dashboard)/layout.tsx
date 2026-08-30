@@ -1,23 +1,22 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { Sidebar } from "../../shared/components/layout/Sidebar";
 import { LoadingState } from "@/shared/components/ui/loading-state";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   useEffect(() => {
     if (isLoading) return;
     if (!isAuthenticated) {
-      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
+      router.replace("/login");
     }
-  }, [isLoading, isAuthenticated, router, pathname]);
+  }, [isLoading, isAuthenticated, router]);
 
   if (isLoading) {
     return (
@@ -28,14 +27,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-[100dvh] bg-bg-muted text-content-default">
+    <div className="min-h-[100dvh] bg-[#dcebe0] text-content-default">
       <Sidebar onDesktopExpandedChange={setSidebarExpanded} />
       <div
-        className={`transition-[padding-left] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          sidebarExpanded ? "lg:pl-60" : "lg:pl-20"
+        className={`transition-[padding-left] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] lg:py-3 lg:pr-3 ${
+          sidebarExpanded ? "lg:pl-[252px]" : "lg:pl-[92px]"
         }`}
       >
-        <main className="mx-auto w-full max-w-8xl px-4 py-8 sm:px-6 lg:px-10">{children}</main>
+        <main className="mx-auto min-h-[calc(100dvh-1.5rem)] w-full max-w-8xl border-neutral-200 bg-[#fbfaf7] px-4 py-6 shadow-[0_1px_4px_rgba(0,0,0,0.04)] sm:px-6 lg:rounded-[24px] lg:border lg:px-8 lg:py-7">
+          {children}
+        </main>
       </div>
     </div>
   );

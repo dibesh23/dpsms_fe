@@ -18,9 +18,12 @@ export function DashboardWidget({
 }) {
   return (
     <section
-      className={cn("flex flex-col rounded-lg border border-neutral-200 bg-bg-default", className)}
+      className={cn(
+        "flex flex-col overflow-hidden rounded-[18px] border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,.02)]",
+        className,
+      )}
     >
-      <div className="flex items-center justify-between gap-3 px-5 pt-5">
+      <div className="flex min-h-12 items-center justify-between gap-3 border-b border-neutral-100 px-5 py-3">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold text-neutral-900">{title}</h2>
           {description && <p className="mt-0.5 text-xs text-neutral-500">{description}</p>}

@@ -36,7 +36,9 @@ export function BarChart({
               <div
                 className={cn(
                   "w-full rounded-t-md transition-all",
-                  isMax ? "bg-neutral-900" : "bg-neutral-200 group-hover:bg-neutral-300",
+                  isMax
+                    ? "bg-gradient-to-b from-[#22c55e] to-[#86efac] shadow-[0_8px_24px_rgba(34,197,94,.16)]"
+                    : "bg-[#dce9e0] group-hover:bg-[#c9dfcf]",
                 )}
                 style={{ height: `${(datum.value / max) * 100}%` }}
               />

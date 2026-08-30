@@ -211,14 +211,14 @@ export default function TeacherDashboardPage() {
     ownAttendance.presentDays + ownAttendance.absentDays + ownAttendance.onLeaveDays;
 
   return (
-    <div className="space-y-4">
-      <header className="flex flex-wrap items-center justify-between gap-4">
+    <div className="mx-auto max-w-[1500px] space-y-4 pb-6">
+      <header className="flex flex-wrap items-center justify-between gap-4 rounded-[18px] border border-neutral-200 bg-white px-5 py-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
+            <h1 className="text-xl font-semibold tracking-tight text-neutral-950">
               Welcome back, {firstName}
             </h1>
-            <StatusBadge status="Teacher" variant="info" />
+            <StatusBadge status="Teacher" variant="success" />
             {profile.status !== "ACTIVE" && (
               <StatusBadge
                 status={TEACHER_STATUS_LABEL[profile.status]}
@@ -230,14 +230,14 @@ export default function TeacherDashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           {summary.academicYearLabel && (
-            <span className="rounded-full border border-neutral-200 bg-bg-default px-3 py-1 text-xs font-medium text-neutral-500">
+            <span className="rounded-full border border-[#c9dfcf] bg-[#eff7f1] px-3 py-1 text-xs font-medium text-[#156d39]">
               Academic Year {summary.academicYearLabel}
             </span>
           )}
           <button
             type="button"
             aria-label="Notifications"
-            className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-bg-default text-neutral-600 transition-colors hover:bg-bg-muted"
+            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-[#156d39] transition-colors hover:bg-[#eff7f1]"
           >
             <BellIcon className="size-4" />
             {(summary.notifications ?? []).some((n) => !n.isRead) && (
@@ -265,7 +265,7 @@ export default function TeacherDashboardPage() {
       <div className="flex flex-col gap-4 lg:flex-row">
         {/* Profile panel */}
         <div className="lg:w-72 lg:flex-none">
-          <div className="rounded-lg border border-neutral-200 bg-bg-default p-5">
+          <div className="rounded-[18px] border border-neutral-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,.02)]">
             <div className="flex flex-col items-center text-center">
               <Avatar name={profile.fullName || user?.fullName || "Teacher"} size="lg" />
               <p className="mt-3 text-base font-semibold text-neutral-900">
@@ -542,7 +542,7 @@ export default function TeacherDashboardPage() {
             <DashboardWidget
               title="Notifications"
               className="lg:col-span-2"
-              action={<span className="text-xs font-medium text-blue-600">View all</span>}
+              action={<span className="text-xs font-medium text-[#156d39]">View all</span>}
             >
               {(summary.notifications ?? []).length === 0 ? (
                 <EmptyState icon={<BellIcon className="size-5" />} title="You're all caught up" />
