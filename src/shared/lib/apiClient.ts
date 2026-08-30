@@ -34,9 +34,18 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   // Advisory tenant hint for pre-auth flows (login, forgot-password): lets the
   // backend scope lookups to the chosen school and attribute audit events.
   // Authorization itself always comes from the JWT — never from this header.
-  const subdomain = getLastSchool()?.subdomain;
-  if (subdomain) {
-    config.headers["X-Tenant-Subdomain"] = subdomain;
+  // Sent only when the request itself carries an explicit tenant scope, so a
+  // plain /login is never silently bound to a previously visited school from
+  // localStorage; the backend resolves unique email/role combinations instead.
+  const body = (config.data ?? {}) as Record<string, unknown>;
+  const hasExplicitScope =
+    (typeof body.tenantId === "string" && body.tenantId.length > 0) ||
+    (typeof body.subdomain === "string" && body.subdomain.length > 0);
+  if (hasExplicitScope) {
+    const subdomain = getLastSchool()?.subdomain;
+    if (subdomain) {
+      config.headers["X-Tenant-Subdomain"] = subdomain;
+    }
   }
   return config;
 });
