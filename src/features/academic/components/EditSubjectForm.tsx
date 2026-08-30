@@ -95,23 +95,20 @@ export function EditSubjectForm({
         <Field
           label="Department"
           error={errors.department?.message}
-          hint="Existing names are matched; new ones are created"
+          hint="Select an existing department or leave as “None” to clear it"
         >
-          <>
-            <Input
-              list="subject-department-options"
-              type="text"
-              placeholder="Science & Math"
-              disabled={isSubmitting}
-              error={errors.department?.message}
-              {...register("department")}
-            />
-            <datalist id="subject-department-options">
-              {departments.map((department) => (
-                <option key={department} value={department} />
-              ))}
-            </datalist>
-          </>
+          <Select
+            disabled={isSubmitting}
+            {...register("department")}
+            defaultValue={subject.department ?? ""}
+          >
+            <option value="">— None —</option>
+            {departments.map((department) => (
+              <option key={department} value={department}>
+                {department}
+              </option>
+            ))}
+          </Select>
         </Field>
       </div>
 

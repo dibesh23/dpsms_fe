@@ -247,11 +247,8 @@ export default function MySubjectsPage() {
               {sortedKeys.map((section) => {
                 const items = sectionGroups.get(section) ?? [];
                 return (
-                  <div
-                    key={section}
-                    className="overflow-hidden rounded-xl border border-neutral-200 bg-bg-default"
-                  >
-                    <div className="flex items-center gap-3 border-b border-neutral-100 bg-bg-subtle px-4 py-3">
+                  <div key={section} className="rounded-xl border border-neutral-200 bg-bg-default">
+                    <div className="flex items-center gap-3 rounded-t-xl border-b border-neutral-100 bg-bg-subtle px-4 py-3">
                       <span className="flex size-9 flex-none items-center justify-center rounded-lg border border-neutral-200 bg-bg-default text-neutral-500">
                         <LayoutGridIcon className="size-4" />
                       </span>
@@ -305,9 +302,9 @@ export default function MySubjectsPage() {
                 return (
                   <div
                     key={subjectName}
-                    className="overflow-hidden rounded-xl border border-neutral-200 bg-bg-default"
+                    className="rounded-xl border border-neutral-200 bg-bg-default"
                   >
-                    <div className="flex items-center gap-3 border-b border-neutral-100 bg-bg-subtle px-4 py-3">
+                    <div className="flex items-center gap-3 rounded-t-xl border-b border-neutral-100 bg-bg-subtle px-4 py-3">
                       <span className="flex size-9 flex-none items-center justify-center rounded-lg border border-neutral-200 bg-bg-default text-neutral-500">
                         <BookOpenIcon className="size-4" />
                       </span>
