@@ -232,6 +232,12 @@ const NAV_SECTIONS: Array<{
         permission: PERMISSIONS.EXAM_OWN_VIEW,
       },
       {
+        label: "Assignments",
+        href: "/manage-assignments",
+        icon: ClipboardCheckIcon,
+        permission: PERMISSIONS.ASSIGNMENT_MANAGE,
+      },
+      {
         label: "Exams",
         href: "/exams",
         icon: ClipboardCheckIcon,
