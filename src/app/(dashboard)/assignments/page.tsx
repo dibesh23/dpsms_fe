@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/features/common/components/ComingSoon";
+import { StudentAssignmentsPage } from "@/features/assignment/components/StudentAssignmentsPage";
 
-export default function AssignmentsPage() {
-  return <ComingSoon feature="Home Assignments" />;
+export default function AssignmentsRoute() {
+  return <StudentAssignmentsPage />;
 }

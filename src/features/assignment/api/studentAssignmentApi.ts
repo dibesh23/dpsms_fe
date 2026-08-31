@@ -77,8 +77,8 @@ export const studentAssignmentApi = {
   async submit(
     id: string,
     payload: { content: string; attachmentIds?: string[] },
-  ): Promise<StudentSubmissionDetail> {
-    const { data } = await apiClient.post<{ data: StudentSubmissionDetail }>(
+  ): Promise<{ submissionId: string; isLate: boolean }> {
+    const { data } = await apiClient.post<{ data: { submissionId: string; isLate: boolean } }>(
       `/assignments/${id}/submit`,
       payload,
     );
