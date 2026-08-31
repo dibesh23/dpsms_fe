@@ -197,6 +197,31 @@ export const assignmentApi = {
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 10_000);
   },
+
+  // Submission attachments live under /submissions/:submissionId/attachments
+  async openSubmissionAttachment(
+    id: string,
+    submissionId: string,
+    attachmentId: string,
+    label: string,
+  ): Promise<void> {
+    const { data, headers } = await apiClient.get<Blob>(
+      `/assignments/${id}/submissions/${submissionId}/attachments/${attachmentId}/download`,
+      { responseType: "blob" },
+    );
+    const mimeType = (headers["content-type"] as string) || "application/octet-stream";
+    const blob = new Blob([data], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noreferrer";
+    a.download = label;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  },
 };
 
 export default assignmentApi;

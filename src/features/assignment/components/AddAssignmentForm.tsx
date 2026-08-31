@@ -25,6 +25,7 @@ export interface TeacherOwnSection {
   sectionId: string;
   sectionName: string;
   className: string;
+  classId: string;
 }
 
 export function AddAssignmentForm({
@@ -36,12 +37,11 @@ export function AddAssignmentForm({
   onAdd: (values: AssignmentFormValues) => Promise<string | null>;
   onClose: () => void;
 }) {
-  const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
-  const [apiError, setApiError] = useState<string | null>(null);
-
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<AssignmentFormValues>({
     resolver: zodResolver(AssignmentFormSchema),
@@ -51,12 +51,32 @@ export function AddAssignmentForm({
     },
   });
 
+  const sectionId = watch("sectionId");
+
+  const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
+  const [apiError, setApiError] = useState<string | null>(null);
+
   useEffect(() => {
+    const section = sections.find((s) => s.sectionId === sectionId);
+    if (!section) {
+      setSubjects([]);
+      return;
+    }
+    let active = true;
     academicApi
-      .listSubjects()
-      .then(setSubjects)
-      .catch(() => setSubjects([]));
-  }, []);
+      .listClassSubjects(section.classId)
+      .then((rows) => {
+        if (!active) return;
+        setSubjects(rows.map((r) => ({ id: r.subjectId, name: r.subjectName })));
+      })
+      .catch(() => {
+        if (active) setSubjects([]);
+      });
+    setValue("subjectId", "");
+    return () => {
+      active = false;
+    };
+  }, [sectionId, sections, setValue]);
 
   const onSubmit = async (values: AssignmentFormValues) => {
     setApiError(null);

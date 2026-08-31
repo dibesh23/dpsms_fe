@@ -83,7 +83,10 @@ export function StudentAssignmentDetailPage() {
 
   const submission = assignment.submission;
   const isPublished = assignment.status === "PUBLISHED";
-  const canSubmit = isPublished && (submission === null || submission.status === "SUBMITTED");
+  const isGraded = submission?.status === "GRADED";
+  const canSubmit = isPublished && !isGraded;
+  const isOverdue =
+    isPublished && !isGraded && new Date(`${assignment.dueDate}T23:59:59`) < new Date();
 
   return (
     <div className="space-y-4">
@@ -131,6 +134,7 @@ export function StudentAssignmentDetailPage() {
               <AttachmentUploader
                 existing={assignment.attachments.map(toDisplay)}
                 onSubmit={async () => {}}
+                readOnly
                 onOpen={(a) =>
                   void studentAssignmentApi.openAssignmentAttachment(id, a.id, a.label)
                 }
@@ -171,6 +175,7 @@ export function StudentAssignmentDetailPage() {
                 <AttachmentUploader
                   existing={submission.attachments.map(toDisplay)}
                   onSubmit={async () => {}}
+                  readOnly
                   onOpen={(a) =>
                     void studentAssignmentApi.openAssignmentAttachment(id, a.id, a.label)
                   }
@@ -201,7 +206,10 @@ export function StudentAssignmentDetailPage() {
             <dl className="space-y-2 text-sm">
               <div className="flex items-center justify-between gap-3">
                 <dt className="text-neutral-500">Due date</dt>
-                <dd className="font-medium text-neutral-800">{assignment.dueDate}</dd>
+                <dd className="flex items-center gap-2 font-medium text-neutral-800">
+                  {assignment.dueDate}
+                  {isOverdue && <StatusBadge status="Overdue" variant="danger" />}
+                </dd>
               </div>
             </dl>
           </section>
@@ -212,6 +220,10 @@ export function StudentAssignmentDetailPage() {
               submissionId={submission?.submissionId ?? null}
               onDone={load}
             />
+          ) : isGraded ? (
+            <section className="rounded-lg border border-neutral-200 bg-white p-5 text-sm text-neutral-500">
+              This submission has already been graded and can no longer be resubmitted.
+            </section>
           ) : (
             !isPublished && (
               <section className="rounded-lg border border-neutral-200 bg-white p-5 text-sm text-neutral-500">

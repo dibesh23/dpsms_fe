@@ -735,7 +735,6 @@ export function TeacherAssignmentsPage() {
             <AssignSubjectForm
               teachers={teachers}
               classes={classes}
-              subjects={subjects}
               onAdd={handleAssignSubject}
               onClose={() => setAssignSubjectOpen(false)}
             />

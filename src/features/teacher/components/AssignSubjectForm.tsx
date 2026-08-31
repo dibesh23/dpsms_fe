@@ -20,19 +20,21 @@ export type AssignSubjectValues = z.infer<typeof AssignSubjectSchema>;
 export function AssignSubjectForm({
   teachers,
   classes,
-  subjects,
   onAdd,
   onClose,
 }: {
   teachers: Array<{ id: string; name: string }>;
   classes: Array<{ id: string; name: string }>;
-  subjects: Array<{ id: string; name: string; code: string | null }>;
   onAdd: (values: AssignSubjectValues) => Promise<string | null>;
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
   const [sections, setSections] = useState<SectionRecord[]>([]);
   const [sectionsLoading, setSectionsLoading] = useState(false);
+  const [subjects, setSubjects] = useState<Array<{ id: string; name: string; code: string | null }>>(
+    [],
+  );
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
 
   const {
     register,
@@ -69,6 +71,33 @@ export function AssignSubjectForm({
       cancelled = true;
     };
   }, [selectedClassId]);
+
+  useEffect(() => {
+    if (!selectedClassId) {
+      setSubjects([]);
+      return;
+    }
+    let cancelled = false;
+    setSubjectsLoading(true);
+    academicApi
+      .listClassSubjects(selectedClassId)
+      .then((records) => {
+        if (!cancelled)
+          setSubjects(
+            records.map((r) => ({ id: r.subjectId, name: r.subjectName, code: null })),
+          );
+      })
+      .catch(() => {
+        if (!cancelled) setSubjects([]);
+      })
+      .finally(() => {
+        if (!cancelled) setSubjectsLoading(false);
+      });
+    setValue("subjectId", "");
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedClassId, setValue]);
 
   const onSubmit = async (values: AssignSubjectValues) => {
     setApiError(null);
@@ -133,9 +162,29 @@ export function AssignSubjectForm({
         </Select>
       </Field>
 
-      <Field label="Subject" error={errors.subjectId?.message} required>
-        <Select disabled={isSubmitting} {...register("subjectId")}>
-          <option value="">Select subject</option>
+      <Field
+        label="Subject"
+        error={errors.subjectId?.message}
+        hint={
+          selectedClassId && !subjectsLoading && subjects.length === 0
+            ? "No subjects mapped to this class yet. Add them on the class page before assigning."
+            : undefined
+        }
+        required
+      >
+        <Select
+          disabled={isSubmitting || !selectedClassId || subjectsLoading}
+          {...register("subjectId")}
+        >
+          <option value="">
+            {!selectedClassId
+              ? "Select a class first"
+              : subjectsLoading
+                ? "Loading subjects…"
+                : subjects.length === 0
+                  ? "No subjects available"
+                  : "Select subject"}
+          </option>
           {subjects.map((subject) => (
             <option key={subject.id} value={subject.id}>
               {subject.code ? `${subject.name} (${subject.code})` : subject.name}

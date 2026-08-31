@@ -23,6 +23,7 @@ export function AttachmentUploader({
   onOpen,
   onRemove,
   maxFiles = 5,
+  readOnly = false,
 }: {
   existing: DisplayAttachment[];
   onSubmit: (files: File[]) => Promise<void>;
@@ -30,6 +31,7 @@ export function AttachmentUploader({
   onOpen?: (attachment: DisplayAttachment) => void;
   onRemove?: (attachment: DisplayAttachment) => void;
   maxFiles?: number;
+  readOnly?: boolean;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newFiles, setNewFiles] = useState<File[]>([]);
@@ -118,7 +120,7 @@ export function AttachmentUploader({
         </div>
       )}
 
-      {totalAttachments < maxFiles && (
+      {!readOnly && totalAttachments < maxFiles && (
         <div className="flex items-center gap-2">
           <button
             type="button"

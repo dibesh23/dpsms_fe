@@ -30,6 +30,13 @@ import {
 
 type SubmissionFilter = "PENDING" | StudentAssignmentListItem["submissionStatus"] | "";
 
+// A published assignment the student hasn't yet finished is considered overdue
+// once its due date has passed. Late submissions are still allowed server-side.
+function isOverdue(a: StudentAssignmentListItem): boolean {
+  if (a.submissionStatus === "GRADED") return false;
+  return new Date(`${a.dueDate}T23:59:59`) < new Date();
+}
+
 function isSubmissionFilter(value: string | null): value is SubmissionFilter {
   return (
     value === null ||
@@ -48,7 +55,7 @@ export function StudentAssignmentsPage() {
 
   const load = useCallback(async () => {
     try {
-      const result = await studentAssignmentApi.list({ pageSize: 500 });
+      const result = await studentAssignmentApi.list({ pageSize: 100, includeGraded: true });
       setItems(result.items);
     } catch {
       setItems([]);
@@ -141,22 +148,25 @@ export function StudentAssignmentsPage() {
       key: "submissionStatus",
       header: "Submission",
       sortValue: (a) => a.submissionStatus,
-      render: (a) => (
-        <StatusBadge
-          status={
-            a.submissionStatus === "NOT_STARTED"
-              ? a.status === "PUBLISHED"
-                ? "Pending"
+      render: (a) =>
+        isOverdue(a) ? (
+          <StatusBadge status="Overdue" variant="danger" />
+        ) : (
+          <StatusBadge
+            status={
+              a.submissionStatus === "NOT_STARTED"
+                ? a.status === "PUBLISHED"
+                  ? "Pending"
+                  : SUBMISSION_STATUS_LABEL[a.submissionStatus]
                 : SUBMISSION_STATUS_LABEL[a.submissionStatus]
-              : SUBMISSION_STATUS_LABEL[a.submissionStatus]
-          }
-          variant={
-            a.submissionStatus === "NOT_STARTED" && a.status === "PUBLISHED"
-              ? "warning"
-              : SUBMISSION_STATUS_VARIANT[a.submissionStatus]
-          }
-        />
-      ),
+            }
+            variant={
+              a.submissionStatus === "NOT_STARTED" && a.status === "PUBLISHED"
+                ? "warning"
+                : SUBMISSION_STATUS_VARIANT[a.submissionStatus]
+            }
+          />
+        ),
     },
     {
       key: "marks",

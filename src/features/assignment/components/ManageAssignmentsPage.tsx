@@ -50,7 +50,7 @@ export function ManageAssignmentsPage() {
   const load = useCallback(async () => {
     try {
       const [list, own] = await Promise.all([
-        assignmentApi.list({ pageSize: 500 }),
+        assignmentApi.list({ pageSize: 100 }),
         academicApi.getMyAssignedClasses().catch(() => []),
       ]);
       setAssignments(list.items);
@@ -60,6 +60,7 @@ export function ManageAssignmentsPage() {
             sectionId: s.sectionId,
             sectionName: s.sectionName,
             className: group.className,
+            classId: group.classId,
           })),
         ),
       );

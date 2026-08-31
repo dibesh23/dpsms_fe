@@ -234,7 +234,7 @@ const NAV_SECTIONS: Array<{
       {
         label: "Assignments",
         href: "/manage-assignments",
-        icon: ClipboardCheckIcon,
+        icon: BookUserIcon,
         permission: PERMISSIONS.ASSIGNMENT_MANAGE,
       },
       {

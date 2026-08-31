@@ -267,7 +267,15 @@ function GradeDialog({
           <AttachmentUploader
             existing={attachments}
             onSubmit={async () => {}}
-            onOpen={(a) => void assignmentApi.openAttachment(assignmentId, a.id, a.label)}
+            readOnly
+            onOpen={(a) =>
+              void assignmentApi.openSubmissionAttachment(
+                assignmentId,
+                submission.submissionId,
+                a.id,
+                a.label,
+              )
+            }
           />
         )}
 
