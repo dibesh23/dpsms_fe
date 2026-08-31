@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Field, Select } from "@/shared/components/ui/form-field";
+import { academicApi } from "@/features/academic/api/academicApi";
 
 const ROLES = [
   "Accountant",
@@ -18,8 +19,6 @@ const ROLES = [
   "Admin Officer",
   "Transport Coordinator",
 ];
-
-const DEPARTMENTS = ["Administration", "Library", "Science & Math", "Facilities", "Transport"];
 
 export const STAFF_STATUS_LABELS = ["Active", "On Leave", "Resigned"] as const;
 export type StaffStatusLabel = (typeof STAFF_STATUS_LABELS)[number];
@@ -73,6 +72,22 @@ export function EditStaffForm({
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<string[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    academicApi
+      .listDepartments()
+      .then((records) => {
+        if (active) setDepartments(records.map((d) => d.name).sort());
+      })
+      .catch(() => {
+        if (active) setDepartments([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const {
     register,
@@ -89,10 +104,11 @@ export function EditStaffForm({
     if (error) setApiError(error);
   };
 
-  const departmentOptions =
-    initial.department && !DEPARTMENTS.includes(initial.department)
-      ? [initial.department, ...DEPARTMENTS]
-      : DEPARTMENTS;
+  // Keep the current department in the list even if it is not among the
+  // existing department records, so the value is never lost on save.
+  const departmentOptions = [initial.department, ...departments]
+    .filter(Boolean)
+    .filter((name, index, arr) => arr.indexOf(name) === index);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
@@ -134,8 +150,20 @@ export function EditStaffForm({
           </Select>
         </Field>
 
-        <Field label="Department" error={errors.department?.message} required>
-          <Select disabled={isSubmitting} {...register("department")}>
+        <Field
+          label="Department"
+          error={errors.department?.message}
+          required
+          hint={
+            departments.length === 0
+              ? "No departments exist yet. Create one in Departments first."
+              : undefined
+          }
+        >
+          <Select
+            disabled={isSubmitting || departmentOptions.length === 0}
+            {...register("department")}
+          >
             {departmentOptions.map((department) => (
               <option key={department} value={department}>
                 {department}

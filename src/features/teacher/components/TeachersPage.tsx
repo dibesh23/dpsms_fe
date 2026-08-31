@@ -17,6 +17,7 @@ import { AddTeacherForm, type AddTeacherValues } from "./AddTeacherForm";
 import { EditTeacherForm, editValuesToPayload, type EditTeacherValues } from "./EditTeacherForm";
 import { CredentialsRevealDialog } from "@/shared/components/ui/credentials-reveal-dialog";
 import { teacherApi, type TeacherRecord } from "../api/teacherApi";
+import { academicApi } from "@/features/academic/api/academicApi";
 import {
   GraduationCapIcon,
   MailIcon,
@@ -43,14 +44,6 @@ export interface Teacher {
   status: "Active" | "On Leave" | "Invited" | "Inactive";
 }
 
-const DEPARTMENT_FILTERS = [
-  { value: "Science & Math", label: "Science & Math" },
-  { value: "Languages", label: "Languages" },
-  { value: "Humanities", label: "Humanities" },
-  { value: "Commerce", label: "Commerce" },
-  { value: "Sports", label: "Sports" },
-];
-
 const toTeacher = (record: TeacherRecord): Teacher => ({
   id: record.id,
   name: record.name,
@@ -64,6 +57,7 @@ const toTeacher = (record: TeacherRecord): Teacher => ({
 
 export function TeachersPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [departmentRecords, setDepartmentRecords] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Teacher | null>(null);
   const [removeTarget, setRemoveTarget] = useState<Teacher | null>(null);
@@ -91,6 +85,21 @@ export function TeachersPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    let active = true;
+    academicApi
+      .listDepartments()
+      .then((records) => {
+        if (active) setDepartmentRecords(records.map((d) => d.name));
+      })
+      .catch(() => {
+        if (active) setDepartmentRecords([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleAdd = async (values: AddTeacherValues): Promise<boolean> => {
     try {
@@ -185,6 +194,18 @@ export function TeachersPage() {
     () => new Set(teachers.map((teacher) => teacher.department)).size,
     [teachers],
   );
+  const departmentOptions = useMemo(
+    () =>
+      Array.from(
+        new Set([
+          ...departmentRecords,
+          ...teachers.map((teacher) => teacher.department).filter(Boolean),
+        ]),
+      )
+        .sort((a, b) => a.localeCompare(b))
+        .map((name) => ({ value: name, label: name })),
+    [departmentRecords, teachers],
+  );
   const weeklyLoad = useMemo(() => {
     if (teachers.length === 0) return 0;
     return Math.round(
@@ -231,7 +252,7 @@ export function TeachersPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <FilterDropdown
           label="Filter by department"
-          options={DEPARTMENT_FILTERS}
+          options={departmentOptions}
           value={table.filter}
           onChange={table.setFilter}
         />

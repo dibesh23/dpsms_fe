@@ -19,6 +19,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { AddStaffForm, type AddStaffValues } from "./AddStaffForm";
 import { staffApi } from "../api/staffApi";
+import { academicApi } from "@/features/academic/api/academicApi";
 import {
   BriefcaseIcon,
   ClockIcon,
@@ -37,14 +38,6 @@ export interface StaffMember {
   status: "Active" | "On Leave" | "Resigned";
   joinedAt: string;
 }
-
-const DEPARTMENT_FILTERS = [
-  { value: "Administration", label: "Administration" },
-  { value: "Library", label: "Library" },
-  { value: "Science & Math", label: "Science & Math" },
-  { value: "Facilities", label: "Facilities" },
-  { value: "Transport", label: "Transport" },
-];
 
 const toStatus = (status: string): StaffMember["status"] => {
   if (status === "RESIGNED") return "Resigned";
@@ -124,6 +117,7 @@ const COLUMNS: Column<StaffMember>[] = [
 
 export function StaffPage() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [departmentRecords, setDepartmentRecords] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const toast = useToast();
   const { can } = useAuth();
@@ -151,6 +145,21 @@ export function StaffPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    let active = true;
+    academicApi
+      .listDepartments()
+      .then((records) => {
+        if (active) setDepartmentRecords(records.map((d) => d.name));
+      })
+      .catch(() => {
+        if (active) setDepartmentRecords([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleAdd = async (values: AddStaffValues): Promise<boolean> => {
     try {
@@ -195,6 +204,18 @@ export function StaffPage() {
     () => new Set(staff.map((member) => member.department)).size,
     [staff],
   );
+  const departmentOptions = useMemo(
+    () =>
+      Array.from(
+        new Set([
+          ...departmentRecords,
+          ...staff.map((member) => member.department).filter(Boolean),
+        ]),
+      )
+        .sort((a, b) => a.localeCompare(b))
+        .map((name) => ({ value: name, label: name })),
+    [departmentRecords, staff],
+  );
   const onLeave = staff.filter((member) => member.status === "On Leave").length;
 
   return (
@@ -236,7 +257,7 @@ export function StaffPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <FilterDropdown
           label="Filter by department"
-          options={DEPARTMENT_FILTERS}
+          options={departmentOptions}
           value={table.filter}
           onChange={table.setFilter}
         />
