@@ -121,7 +121,11 @@ export function BatchPromotionPage() {
       setResult(response);
       setStep("success");
       toast.success(
-        `${response.summary.promoted} of ${response.summary.total} students promoted.`,
+        `${response.summary.promoted} of ${response.summary.total} students promoted.${
+          (response.summary.skipped ?? 0) > 0
+            ? ` ${response.summary.skipped} skipped (class name has no grade).`
+            : ""
+        }`,
       );
     } catch (err) {
       setApiError(getApiErrorMessage(err, "Could not run the batch promotion. Please try again."));
@@ -320,7 +324,7 @@ export function BatchPromotionPage() {
                 </p>
               </div>
             </div>
-            <dl className="mt-4 grid grid-cols-3 gap-4 border-t border-emerald-200 pt-4">
+            <dl className="mt-4 grid grid-cols-4 gap-4 border-t border-emerald-200 pt-4">
               <div>
                 <dt className="text-xs text-emerald-600">Total</dt>
                 <dd className="mt-0.5 text-2xl font-semibold text-emerald-900">
@@ -337,6 +341,12 @@ export function BatchPromotionPage() {
                 <dt className="text-xs text-emerald-600">Need review</dt>
                 <dd className="mt-0.5 text-2xl font-semibold text-red-600">
                   {result.summary.failed}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-emerald-600">Skipped</dt>
+                <dd className="mt-0.5 text-2xl font-semibold text-neutral-500">
+                  {result.summary.skipped ?? 0}
                 </dd>
               </div>
             </dl>

@@ -22,6 +22,7 @@ export interface RunBatchResponse {
     total: number;
     promoted: number;
     failed: number;
+    skipped?: number;
   };
   failedStudents: {
     studentId: string;
@@ -75,6 +76,7 @@ export interface PromotionBatchRow {
     total: number;
     promoted: number;
     failed: number;
+    skipped?: number;
     pendingReview: number;
   };
 }
@@ -105,6 +107,7 @@ export interface BatchDetail {
     total: number;
     promoted: number;
     failed: number;
+    skipped?: number;
     pendingReview: number;
   };
   failedStudents: BatchFailedStudent[];
