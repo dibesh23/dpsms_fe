@@ -170,9 +170,9 @@ export const academicApi = {
   },
   async addClassSubject(
     classId: string,
-    payload: { subjectId: string; isElectiveGroup?: boolean },
-  ): Promise<ClassSubjectRecord> {
-    const { data } = await apiClient.post<{ data: ClassSubjectRecord }>(
+    payload: { subjectIds: string[]; isElectiveGroup?: boolean },
+  ): Promise<ClassSubjectRecord[]> {
+    const { data } = await apiClient.post<{ data: ClassSubjectRecord[] }>(
       `/classes/${classId}/subjects`,
       payload,
     );
