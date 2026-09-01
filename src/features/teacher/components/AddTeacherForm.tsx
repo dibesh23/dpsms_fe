@@ -1,32 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Field, Select } from "@/shared/components/ui/form-field";
-
-const SUBJECTS = [
-  "Mathematics",
-  "Science",
-  "English",
-  "Nepali",
-  "Social Studies",
-  "Computer Science",
-  "Physical Education",
-  "Accountancy",
-];
-
-const DEPARTMENTS = ["Science & Math", "Languages", "Humanities", "Commerce", "Sports"];
+import { academicApi } from "@/features/academic/api/academicApi";
 
 const STATUSES = ["Active", "On Leave", "Invited"] as const;
 
 const AddTeacherSchema = z.object({
   fullName: z.string().min(1, "Full name is required").max(255),
   email: z.email("Enter a valid email address"),
-  subject: z.string().min(1, "Select a subject"),
   department: z.string().min(1, "Select a department"),
   phone: z.string().min(7, "Enter a valid phone number"),
   classesPerWeek: z.string().min(1, "Classes per week is required"),
@@ -43,6 +30,22 @@ export function AddTeacherForm({
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<string[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    academicApi
+      .listDepartments()
+      .then((records) => {
+        if (active) setDepartments(records.map((d) => d.name).sort());
+      })
+      .catch(() => {
+        if (active) setDepartments([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const {
     register,
@@ -84,21 +87,19 @@ export function AddTeacherForm({
           />
         </Field>
 
-        <Field label="Subject" error={errors.subject?.message}>
-          <Select disabled={isSubmitting} {...register("subject")}>
-            <option value="">Select subject</option>
-            {SUBJECTS.map((subject) => (
-              <option key={subject} value={subject}>
-                {subject}
-              </option>
-            ))}
-          </Select>
-        </Field>
-
-        <Field label="Department" error={errors.department?.message}>
-          <Select disabled={isSubmitting} {...register("department")}>
+        <Field
+          label="Department"
+          error={errors.department?.message}
+          className="sm:col-span-2"
+          hint={
+            departments.length === 0
+              ? "No departments exist yet. Create one in Departments first."
+              : undefined
+          }
+        >
+          <Select disabled={isSubmitting || departments.length === 0} {...register("department")}>
             <option value="">Select department</option>
-            {DEPARTMENTS.map((department) => (
+            {departments.map((department) => (
               <option key={department} value={department}>
                 {department}
               </option>

@@ -20,7 +20,6 @@ import {
   FileTextIcon,
   ClipboardCheckIcon,
   GraduationCapIcon,
-  GroupIcon,
   HeartHandshakeIcon,
   LayoutDashboardIcon,
   LayoutGridIcon,
@@ -174,6 +173,30 @@ const NAV_SECTIONS: Array<{
     ],
   },
   {
+    label: "Promotion",
+    roles: ["SUPER_ADMIN", "PRINCIPAL"],
+    items: [
+      {
+        label: "Batch Promotion",
+        href: "/promotion/batch",
+        icon: GraduationCapIcon,
+        permission: PERMISSIONS.PROMOTION_BATCH_RUN,
+      },
+      {
+        label: "Review Failed",
+        href: "/promotion/review",
+        icon: ClipboardCheckIcon,
+        permission: PERMISSIONS.PROMOTION_REVIEW,
+      },
+      {
+        label: "Promotion History",
+        href: "/promotion/history",
+        icon: FileTextIcon,
+        permission: PERMISSIONS.PROMOTION_VIEW,
+      },
+    ],
+  },
+  {
     label: "Communication",
     roles: ["SUPER_ADMIN", "PRINCIPAL"],
     items: [
@@ -214,34 +237,22 @@ const NAV_SECTIONS: Array<{
         permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW,
       },
       {
-        label: "My Subjects",
-        href: "/my-subjects",
-        icon: BookOpenIcon,
-        permission: PERMISSIONS.ACADEMIC_SUBJECT_LIST,
-      },
-      {
         label: "Attendance",
         href: "/attendance/students",
         icon: CheckCircle2Icon,
         permission: PERMISSIONS.ATTENDANCE_STUDENT_MARK,
       },
       {
-        label: "Class Tests",
-        href: "/class-tests",
-        icon: FileTextIcon,
-        permission: PERMISSIONS.EXAM_OWN_VIEW,
+        label: "Assignments",
+        href: "/manage-assignments",
+        icon: BookUserIcon,
+        permission: PERMISSIONS.ASSIGNMENT_MANAGE,
       },
       {
         label: "Exams",
         href: "/exams",
         icon: ClipboardCheckIcon,
         permission: PERMISSIONS.EXAM_LIST,
-      },
-      {
-        label: "Messaging",
-        href: "/messaging",
-        icon: BellIcon,
-        permission: PERMISSIONS.MESSAGING_OWN_VIEW,
       },
       {
         label: "Notices",
@@ -262,21 +273,9 @@ const NAV_SECTIONS: Array<{
         permission: PERMISSIONS.ATTENDANCE_OWN_VIEW,
       },
       {
-        label: "My Timetable",
-        href: "/timetable",
-        icon: CalendarDaysIcon,
-        permission: PERMISSIONS.TIMETABLE_OWN_VIEW,
-      },
-      {
         label: "My Report Card",
         href: "/report-card",
         icon: FileTextIcon,
-        permission: PERMISSIONS.EXAM_OWN_VIEW,
-      },
-      {
-        label: "Test Results",
-        href: "/test-results",
-        icon: BookOpenIcon,
         permission: PERMISSIONS.EXAM_OWN_VIEW,
       },
       {
@@ -320,12 +319,6 @@ const NAV_SECTIONS: Array<{
         href: "/notices",
         icon: BellIcon,
         permission: PERMISSIONS.NOTICE_OWN_VIEW,
-      },
-      {
-        label: "Live Class",
-        href: "/live-class",
-        icon: GroupIcon,
-        permission: PERMISSIONS.LIVE_CLASS_OWN_VIEW,
       },
     ],
   },

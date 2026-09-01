@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
+import { DataTable, type Column } from "@/shared/components/ui/data-table";
+import { Pagination } from "@/shared/components/ui/pagination";
 import { StatsCard } from "@/shared/components/ui/stats-card";
-import { EmptyState } from "@/shared/components/ui/empty-state";
-import { Dialog } from "@/shared/components/ui/dialog";
 import { RowActions } from "@/shared/components/ui/row-actions";
+import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
 import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -34,6 +34,50 @@ function getApiErrorMessage(err: unknown, fallback: string): string {
   }
   return fallback;
 }
+
+const sortValueOf = <T extends object>(row: T, key: string): string | number => {
+  const value = row[key as keyof T];
+  return typeof value === "number" ? value : String(value ?? "");
+};
+
+const COLUMNS: Column<ClassRecordDto>[] = [
+  {
+    key: "name",
+    header: "Class",
+    sortValue: (row) => row.name,
+    render: (row) => <span className="font-medium text-neutral-900">{row.name}</span>,
+  },
+  {
+    key: "sections",
+    header: "Sections",
+    sortValue: (row) => row.sections.join(", "),
+    render: (row) => (
+      <span className="flex flex-wrap gap-1">
+        {row.sections.map((section) => (
+          <span
+            key={section}
+            className="inline-block rounded-md border border-neutral-200 bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600"
+          >
+            {section}
+          </span>
+        ))}
+      </span>
+    ),
+  },
+  {
+    key: "students",
+    header: "Students",
+    align: "right",
+    sortValue: (row) => row.students,
+    render: (row) => <span className="font-medium text-neutral-700">{row.students}</span>,
+  },
+  {
+    key: "academicYearLabel",
+    header: "Academic Year",
+    sortValue: (row) => row.academicYearLabel ?? "",
+    render: (row) => <span className="text-neutral-500">{row.academicYearLabel || "—"}</span>,
+  },
+];
 
 export function ClassesPage() {
   const [classes, setClasses] = useState<ClassRecordDto[]>([]);
@@ -108,15 +152,56 @@ export function ClassesPage() {
 
   const table = useTable<ClassRecordDto>({
     data: classes,
-    pageSize: 6,
+    pageSize: 10,
     getSearchText: (schoolClass) =>
       `${schoolClass.name} ${schoolClass.sections.join(" ")} ${schoolClass.academicYearLabel}`,
-    sortValue: (schoolClass, key) => String(schoolClass[key as keyof ClassRecordDto] ?? ""),
+    sortValue: sortValueOf,
     defaultSortKey: "name",
   });
 
   const totalSections = classes.reduce((sum, schoolClass) => sum + schoolClass.sections.length, 0);
   const totalStudents = classes.reduce((sum, schoolClass) => sum + schoolClass.students, 0);
+
+  const columnsWithActions: Column<ClassRecordDto>[] = canUpdate || canDelete
+    ? [
+        ...COLUMNS,
+        {
+          key: "actions",
+          header: "",
+          align: "right" as const,
+          render: (row: ClassRecordDto) => (
+            <RowActions
+              actions={[
+                {
+                  label: "View details",
+                  icon: <ArrowUpRightIcon className="size-3.5" />,
+                  href: `/classes/${row.id}`,
+                },
+                ...(canUpdate
+                  ? [
+                      {
+                        label: "Rename",
+                        icon: <PencilIcon className="size-3.5" />,
+                        onClick: () => setRenameTarget(row),
+                      },
+                    ]
+                  : []),
+                ...(canDelete
+                  ? [
+                      {
+                        label: "Remove",
+                        icon: <TrashIcon className="size-3.5" />,
+                        danger: true,
+                        onClick: () => setDeleteTarget(row),
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+          ),
+        },
+      ]
+    : COLUMNS;
 
   return (
     <div className="space-y-4">
@@ -159,89 +244,31 @@ export function ClassesPage() {
         />
       </section>
 
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-neutral-500">{table.total} class records</p>
+      <div className="flex items-center justify-end">
         <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search classes…" />
       </div>
 
-      {table.rows.length === 0 ? (
-        <div className="rounded-lg border border-neutral-200 bg-bg-default">
-          <EmptyState title="No classes found" description="Try adjusting your search." />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {table.rows.map((schoolClass) => (
-            <div
-              key={schoolClass.id}
-              className="flex flex-col rounded-lg border border-neutral-200 bg-bg-default p-5 transition-colors hover:border-neutral-300"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <Link href={`/classes/${schoolClass.id}`} className="group min-w-0 flex-1">
-                  <p className="truncate font-medium text-neutral-900 group-hover:underline">
-                    {schoolClass.name}
-                  </p>
-                  <p className="mt-0.5 text-xs text-neutral-400">
-                    {schoolClass.academicYearLabel || "—"}
-                  </p>
-                </Link>
-                <RowActions
-                  actions={[
-                    {
-                      label: "View details",
-                      icon: <ArrowUpRightIcon className="size-3.5" />,
-                      href: `/classes/${schoolClass.id}`,
-                    },
-                    ...(canUpdate
-                      ? [
-                          {
-                            label: "Rename",
-                            icon: <PencilIcon className="size-3.5" />,
-                            onClick: () => setRenameTarget(schoolClass),
-                          },
-                        ]
-                      : []),
-                    ...(canDelete
-                      ? [
-                          {
-                            label: "Remove",
-                            icon: <TrashIcon className="size-3.5" />,
-                            danger: true,
-                            onClick: () => setDeleteTarget(schoolClass),
-                          },
-                        ]
-                      : []),
-                  ]}
-                />
-              </div>
-
-              <Link href={`/classes/${schoolClass.id}`} className="mt-1.5 flex flex-wrap gap-1.5">
-                {schoolClass.sections.map((section) => (
-                  <span
-                    key={section}
-                    className="rounded-md border border-neutral-200 bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600 transition-colors hover:border-neutral-300"
-                  >
-                    Section {section}
-                  </span>
-                ))}
-              </Link>
-
-              <div className="mt-auto flex items-center justify-between border-t border-neutral-100 pt-4 text-sm">
-                <div>
-                  <p className="text-xs text-neutral-400">Students</p>
-                  <p className="mt-0.5 font-medium text-neutral-800">{schoolClass.students}</p>
-                </div>
-                <Link
-                  href={`/classes/${schoolClass.id}`}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-neutral-500 transition-colors hover:text-neutral-900"
-                >
-                  Manage class
-                  <ArrowUpRightIcon className="size-3.5" />
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <DataTable
+        columns={columnsWithActions}
+        data={table.pageRows}
+        keyExtractor={(row) => row.id}
+        sortKey={table.sortKey}
+        sortDir={table.sortDir}
+        onSort={table.handleSort}
+        empty={{
+          title: "No classes found",
+          description: "Try adjusting your search.",
+        }}
+        footer={
+          <Pagination
+            page={table.page}
+            pageSize={table.pageSize}
+            total={table.total}
+            onPageChange={table.setPage}
+            label="classes"
+          />
+        }
+      />
 
       {canCreate && (
         <Dialog

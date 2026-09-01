@@ -7,6 +7,7 @@ import { z } from "zod";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Field, Select } from "@/shared/components/ui/form-field";
+import { StudentMultiSelect } from "./StudentMultiSelect";
 
 const STATUSES = ["Verified", "Pending"] as const;
 
@@ -28,15 +29,22 @@ export function AddParentForm({
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<AddParentValues>({
     resolver: zodResolver(AddParentSchema),
-    defaultValues: { status: "Verified" },
+    defaultValues: { status: "Verified", students: "" },
   });
+
+  const applySelected = (names: string[]) => {
+    setSelected(names);
+    setValue("students", names.join(", "), { shouldValidate: true, shouldDirty: true });
+  };
 
   const onSubmit = async (values: AddParentValues) => {
     setApiError(null);
@@ -82,16 +90,10 @@ export function AddParentForm({
         <Field
           label="Linked students"
           error={errors.students?.message}
-          hint="Comma-separated student names"
+          hint="Browse by class and section, then pick the students to link to this guardian"
           className="sm:col-span-2"
         >
-          <Input
-            type="text"
-            placeholder="Aarav Sharma, Sita Rai"
-            disabled={isSubmitting}
-            error={errors.students?.message}
-            {...register("students")}
-          />
+          <StudentMultiSelect value={selected} onChange={applySelected} disabled={isSubmitting} />
         </Field>
 
         <Field label="Status" error={errors.status?.message}>

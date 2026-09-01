@@ -250,18 +250,20 @@ export function ClassDetailPage() {
   }, [subjects, classSubjects]);
 
   const handleAddClassSubject = async (values: {
-    subjectId: string;
+    subjectIds: string[];
     isElectiveGroup: boolean;
   }): Promise<string | null> => {
     if (!schoolClass) return "Class is not loaded yet.";
     try {
-      const record = await academicApi.addClassSubject(schoolClass.id, values);
-      setClassSubjects((current) => [...current, record]);
+      const records = await academicApi.addClassSubject(schoolClass.id, values);
+      setClassSubjects(records);
       setAddSubjectOpen(false);
-      toast.success(`"${record.subjectName}" mapped to ${schoolClass.name}.`);
+      toast.success(
+        `${records.length} subject${records.length === 1 ? "" : "s"} mapped to ${schoolClass.name}.`,
+      );
       return null;
     } catch (err) {
-      return getApiErrorMessage(err, "Could not map the subject. Try again.");
+      return getApiErrorMessage(err, "Could not map the subjects. Try again.");
     }
   };
 
@@ -679,8 +681,8 @@ export function ClassDetailPage() {
         <Dialog
           open={addSubjectOpen}
           onClose={() => setAddSubjectOpen(false)}
-          title="Map Subject"
-          description={`Choose a subject taught in ${schoolClass.name}.`}
+          title="Map Subjects"
+          description={`Select one or more subjects taught in ${schoolClass.name}.`}
         >
           <AddClassSubjectForm
             subjects={availableSubjects}

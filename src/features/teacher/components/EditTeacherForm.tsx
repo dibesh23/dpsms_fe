@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Field, Select } from "@/shared/components/ui/form-field";
+import { academicApi } from "@/features/academic/api/academicApi";
 import { TEACHER_STATUS_LABELS, teacherLabelToStatus, type TeacherStatusLabel } from "../utils";
 
 const EditTeacherSchema = z.object({
@@ -43,6 +44,28 @@ export function EditTeacherForm({
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<string[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    academicApi
+      .listDepartments()
+      .then((records) => {
+        if (active) setDepartments(records.map((d) => d.name).sort());
+      })
+      .catch(() => {
+        if (active) setDepartments([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Keep the teacher's current department in the list even if it was never
+  // created through the Departments page, so the value is never lost.
+  const departmentOptions = [initial.department, ...departments]
+    .filter(Boolean)
+    .filter((name, index, arr) => arr.indexOf(name) === index);
 
   const {
     register,
@@ -89,14 +112,23 @@ export function EditTeacherForm({
           />
         </Field>
 
-        <Field label="Department" error={errors.department?.message}>
-          <Input
-            type="text"
-            placeholder="Science & Math"
-            disabled={isSubmitting}
-            error={errors.department?.message}
-            {...register("department")}
-          />
+        <Field
+          label="Department"
+          error={errors.department?.message}
+          hint={
+            departments.length === 0
+              ? "No departments exist yet. Create one in Departments first."
+              : undefined
+          }
+        >
+          <Select disabled={isSubmitting} {...register("department")}>
+            <option value="">No department</option>
+            {departmentOptions.map((department) => (
+              <option key={department} value={department}>
+                {department}
+              </option>
+            ))}
+          </Select>
         </Field>
 
         <Field label="Phone" error={errors.phone?.message}>

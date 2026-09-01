@@ -1,17 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Button } from "@/shared/components/ui/button";
-import { Field, Select } from "@/shared/components/ui/form-field";
-
-const AddClassSubjectSchema = z.object({
-  subjectId: z.string().min(1, "Choose a subject to add"),
-});
-
-export type AddClassSubjectValues = z.infer<typeof AddClassSubjectSchema>;
 
 export interface SubjectOption {
   id: string;
@@ -25,59 +15,94 @@ export function AddClassSubjectForm({
   onClose,
 }: {
   subjects: SubjectOption[];
-  onCreate: (values: { subjectId: string; isElectiveGroup: boolean }) => Promise<string | null>;
+  onCreate: (values: { subjectIds: string[]; isElectiveGroup: boolean }) => Promise<string | null>;
   onClose: () => void;
 }) {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isElectiveGroup, setIsElectiveGroup] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<AddClassSubjectValues>({
-    resolver: zodResolver(AddClassSubjectSchema),
-    defaultValues: { subjectId: "" },
-  });
+  const allSelected = subjects.length > 0 && selectedIds.length === subjects.length;
+  const someSelected = selectedIds.length > 0 && !allSelected;
 
-  const onSubmit = async (values: AddClassSubjectValues) => {
+  const toggle = (id: string) => {
+    setSelectedIds((current) =>
+      current.includes(id) ? current.filter((s) => s !== id) : [...current, id],
+    );
+  };
+
+  const toggleAll = () => {
+    setSelectedIds((current) => (current.length === subjects.length ? [] : subjects.map((s) => s.id)));
+  };
+
+  const onSubmit = async () => {
+    if (selectedIds.length === 0) return;
     setApiError(null);
-    const error = await onCreate({
-      subjectId: values.subjectId,
-      isElectiveGroup,
-    });
+    setSubmitting(true);
+    const error = await onCreate({ subjectIds: selectedIds, isElectiveGroup });
+    setSubmitting(false);
     if (error) setApiError(error);
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-      <Field
-        label="Subject"
-        error={errors.subjectId?.message}
-        hint={subjects.length === 0 ? "Every subject is already mapped to this class." : undefined}
-        required
-      >
-        <Select disabled={isSubmitting} {...register("subjectId")}>
-          <option value="">Select a subject…</option>
-          {subjects.map((subject) => (
-            <option key={subject.id} value={subject.id}>
-              {subject.name}
-              {subject.code ? ` (${subject.code})` : ""}
-            </option>
-          ))}
-        </Select>
-      </Field>
-
-      <label className="flex items-center gap-2 text-sm text-neutral-700">
-        <input
-          type="checkbox"
-          checked={isElectiveGroup}
-          onChange={(event) => setIsElectiveGroup(event.target.checked)}
-          disabled={isSubmitting}
-          className="size-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-500"
-        />
-        Mark as elective group
-      </label>
+    <div className="space-y-4">
+      {subjects.length === 0 ? (
+        <p className="text-sm text-neutral-500">Every subject is already mapped to this class.</p>
+      ) : (
+        <>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-neutral-700">Subjects</span>
+            <button
+              type="button"
+              onClick={toggleAll}
+              className="text-xs font-medium text-neutral-600 underline-offset-2 hover:underline"
+            >
+              {allSelected ? "Clear all" : "Select all"}
+            </button>
+          </div>
+          <div className="max-h-72 space-y-1 overflow-y-auto rounded-md border border-neutral-200 p-2">
+            {subjects.map((subject) => {
+              const checked = selectedIds.includes(subject.id);
+              return (
+                <label
+                  key={subject.id}
+                  className={`flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-2 transition-colors ${
+                    checked ? "bg-bg-subtle" : "hover:bg-bg-subtle/60"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggle(subject.id)}
+                    className="size-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-500"
+                  />
+                  <span className="min-w-0 flex-1 truncate text-sm text-neutral-800">
+                    {subject.name}
+                  </span>
+                  {subject.code && (
+                    <span className="flex-none text-xs text-neutral-400">{subject.code}</span>
+                  )}
+                </label>
+              );
+            })}
+          </div>
+          <p className="text-xs text-neutral-500">
+            {selectedIds.length === 0
+              ? "Select one or more subjects to map."
+              : `${selectedIds.length} subject${selectedIds.length === 1 ? "" : "s"} selected.`}
+          </p>
+          <label className="flex items-center gap-2 text-sm text-neutral-700">
+            <input
+              type="checkbox"
+              checked={isElectiveGroup}
+              onChange={(event) => setIsElectiveGroup(event.target.checked)}
+              className="size-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-500"
+            />
+            Mark selected as elective group
+          </label>
+        </>
+      )}
 
       {apiError && (
         <div
@@ -91,12 +116,13 @@ export function AddClassSubjectForm({
       <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
         <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" />
         <Button
-          text={isSubmitting ? "Adding…" : "Add Subject"}
-          loading={isSubmitting}
-          disabled={isSubmitting}
+          text={submitting ? "Adding…" : "Add Selected"}
+          loading={submitting}
+          disabled={submitting || selectedIds.length === 0}
           className="w-auto"
+          onClick={() => void onSubmit()}
         />
       </div>
-    </form>
+    </div>
   );
 }

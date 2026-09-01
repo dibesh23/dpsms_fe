@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Field, Select } from "@/shared/components/ui/form-field";
+import { academicApi } from "@/features/academic/api/academicApi";
 
 const ROLES = [
   "Accountant",
@@ -18,8 +19,6 @@ const ROLES = [
   "Admin Officer",
   "Transport Coordinator",
 ];
-
-const DEPARTMENTS = ["Administration", "Library", "Science & Math", "Facilities", "Transport"];
 
 const STATUSES = ["Active", "On Leave", "Resigned"] as const;
 
@@ -42,6 +41,22 @@ export function AddStaffForm({
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<string[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    academicApi
+      .listDepartments()
+      .then((records) => {
+        if (active) setDepartments(records.map((d) => d.name).sort());
+      })
+      .catch(() => {
+        if (active) setDepartments([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const {
     register,
@@ -97,10 +112,18 @@ export function AddStaffForm({
           </Select>
         </Field>
 
-        <Field label="Department" error={errors.department?.message}>
-          <Select disabled={isSubmitting} {...register("department")}>
+        <Field
+          label="Department"
+          error={errors.department?.message}
+          hint={
+            departments.length === 0
+              ? "No departments exist yet. Create one in Departments first."
+              : undefined
+          }
+        >
+          <Select disabled={isSubmitting || departments.length === 0} {...register("department")}>
             <option value="">Select department</option>
-            {DEPARTMENTS.map((department) => (
+            {departments.map((department) => (
               <option key={department} value={department}>
                 {department}
               </option>

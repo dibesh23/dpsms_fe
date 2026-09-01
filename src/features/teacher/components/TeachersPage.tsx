@@ -1,41 +1,40 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
 import { FilterDropdown } from "@/shared/components/ui/filter-dropdown";
+import { DataTable, type Column } from "@/shared/components/ui/data-table";
+import { Pagination } from "@/shared/components/ui/pagination";
 import { StatsCard } from "@/shared/components/ui/stats-card";
 import { StatusBadge } from "@/shared/components/ui/status-badge";
 import { Avatar } from "@/shared/components/ui/avatar";
-import { EmptyState } from "@/shared/components/ui/empty-state";
-import { Dialog } from "@/shared/components/ui/dialog";
 import { RowActions } from "@/shared/components/ui/row-actions";
+import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
 import { AddTeacherForm, type AddTeacherValues } from "./AddTeacherForm";
 import { EditTeacherForm, editValuesToPayload, type EditTeacherValues } from "./EditTeacherForm";
 import { CredentialsRevealDialog } from "@/shared/components/ui/credentials-reveal-dialog";
 import { teacherApi, type TeacherRecord } from "../api/teacherApi";
-import {
-  GraduationCapIcon,
-  MailIcon,
-  PencilIcon,
-  PhoneIcon,
-  PlusIcon,
-  TrashIcon,
-  UsersIcon,
-} from "@/shared/components/ui/icons";
-import { cn } from "@/shared/lib/cn";
+import { academicApi } from "@/features/academic/api/academicApi";
 import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { teacherLabelToStatus, teacherStatusToLabel } from "../utils";
+import {
+  GraduationCapIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  UsersIcon,
+} from "@/shared/components/ui/icons";
 
 export interface Teacher {
   id: string;
   name: string;
   subject: string;
+  subjects: string[];
   department: string;
   email: string;
   phone: string;
@@ -43,18 +42,11 @@ export interface Teacher {
   status: "Active" | "On Leave" | "Invited" | "Inactive";
 }
 
-const DEPARTMENT_FILTERS = [
-  { value: "Science & Math", label: "Science & Math" },
-  { value: "Languages", label: "Languages" },
-  { value: "Humanities", label: "Humanities" },
-  { value: "Commerce", label: "Commerce" },
-  { value: "Sports", label: "Sports" },
-];
-
 const toTeacher = (record: TeacherRecord): Teacher => ({
   id: record.id,
   name: record.name,
   subject: record.subject,
+  subjects: record.subjects ?? [],
   department: record.department,
   email: record.email,
   phone: record.phone ?? "",
@@ -62,8 +54,79 @@ const toTeacher = (record: TeacherRecord): Teacher => ({
   status: teacherStatusToLabel(record.status),
 });
 
+const sortValueOf = <T extends object>(row: T, key: string): string | number => {
+  const value = row[key as keyof T];
+  return typeof value === "number" ? value : String(value ?? "");
+};
+
+const COLUMNS: Column<Teacher>[] = [
+  {
+    key: "name",
+    header: "Teacher",
+    sortValue: (row) => row.name,
+    render: (row) => (
+      <div className="flex items-center gap-3">
+        <Avatar name={row.name} size="sm" />
+        <div className="min-w-0">
+          <p className="truncate font-medium text-neutral-900">{row.name}</p>
+          <p className="truncate text-xs text-neutral-400">{row.email}</p>
+        </div>
+      </div>
+    ),
+  },
+  {
+    key: "subject",
+    header: "Subjects",
+    sortValue: (row) => row.subjects.join(", ") || row.subject,
+    render: (row) => {
+      const subjects =
+        row.subjects.length > 0
+          ? row.subjects
+          : row.subject
+            ? [row.subject]
+            : [];
+      return subjects.length === 0 ? (
+        <span className="text-neutral-400">—</span>
+      ) : (
+        <span className="flex max-w-64 flex-wrap gap-1">
+          {subjects.map((subject) => (
+            <span
+              key={subject}
+              className="inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600"
+            >
+              {subject}
+            </span>
+          ))}
+        </span>
+      );
+    },
+  },
+  {
+    key: "department",
+    header: "Department",
+    sortValue: (row) => row.department,
+    render: (row) => (
+      <span className="text-neutral-600">{row.department || "—"}</span>
+    ),
+  },
+  {
+    key: "status",
+    header: "Status",
+    sortValue: (row) => row.status,
+    render: (row) => <StatusBadge status={row.status} />,
+  },
+  {
+    key: "classesPerWeek",
+    header: "Classes/wk",
+    align: "right",
+    sortValue: (row) => row.classesPerWeek,
+    render: (row) => <span className="font-medium text-neutral-700">{row.classesPerWeek}</span>,
+  },
+];
+
 export function TeachersPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [departmentRecords, setDepartmentRecords] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Teacher | null>(null);
   const [removeTarget, setRemoveTarget] = useState<Teacher | null>(null);
@@ -92,12 +155,26 @@ export function TeachersPage() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    let active = true;
+    academicApi
+      .listDepartments()
+      .then((records) => {
+        if (active) setDepartmentRecords(records.map((d) => d.name));
+      })
+      .catch(() => {
+        if (active) setDepartmentRecords([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const handleAdd = async (values: AddTeacherValues): Promise<boolean> => {
     try {
       const record = await teacherApi.create({
         fullName: values.fullName,
         email: values.email,
-        subject: values.subject,
         department: values.department,
         phone: values.phone,
         classesPerWeek: Number(values.classesPerWeek) || 0,
@@ -174,16 +251,29 @@ export function TeachersPage() {
 
   const table = useTable<Teacher>({
     data: teachers,
-    pageSize: 6,
+    pageSize: 10,
     getSearchText: (teacher) =>
-      `${teacher.name} ${teacher.subject} ${teacher.department} ${teacher.email}`,
+      `${teacher.name} ${teacher.subject} ${teacher.subjects.join(" ")} ${teacher.department} ${teacher.email}`,
     filterMatch: (teacher, value) => teacher.department === value,
-    sortValue: (teacher, key) => String(teacher[key as keyof Teacher] ?? ""),
+    sortValue: sortValueOf,
+    defaultSortKey: "name",
   });
 
   const departments = useMemo(
     () => new Set(teachers.map((teacher) => teacher.department)).size,
     [teachers],
+  );
+  const departmentOptions = useMemo(
+    () =>
+      Array.from(
+        new Set([
+          ...departmentRecords,
+          ...teachers.map((teacher) => teacher.department).filter(Boolean),
+        ]),
+      )
+        .sort((a, b) => a.localeCompare(b))
+        .map((name) => ({ value: name, label: name })),
+    [departmentRecords, teachers],
   );
   const weeklyLoad = useMemo(() => {
     if (teachers.length === 0) return 0;
@@ -191,6 +281,42 @@ export function TeachersPage() {
       teachers.reduce((sum, teacher) => sum + teacher.classesPerWeek, 0) / teachers.length,
     );
   }, [teachers]);
+
+  const actionColumns: Column<Teacher>[] = canUpdate || canDelete
+    ? [
+        ...COLUMNS,
+        {
+          key: "actions",
+          header: "",
+          align: "right" as const,
+          render: (row: Teacher) => (
+            <RowActions
+              actions={[
+                ...(canUpdate
+                  ? [
+                      {
+                        label: "Edit teacher",
+                        icon: <PencilIcon className="size-3.5" />,
+                        onClick: () => setEditTarget(row),
+                      },
+                    ]
+                  : []),
+                ...(canDelete
+                  ? [
+                      {
+                        label: "Remove teacher",
+                        icon: <TrashIcon className="size-3.5" />,
+                        danger: true,
+                        onClick: () => setRemoveTarget(row),
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+          ),
+        },
+      ]
+    : COLUMNS;
 
   return (
     <div className="space-y-4">
@@ -231,105 +357,34 @@ export function TeachersPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <FilterDropdown
           label="Filter by department"
-          options={DEPARTMENT_FILTERS}
+          options={departmentOptions}
           value={table.filter}
           onChange={table.setFilter}
         />
         <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search teachers…" />
       </div>
 
-      {table.rows.length === 0 ? (
-        <div className="rounded-lg border border-neutral-200 bg-bg-default">
-          <EmptyState
-            title="No teachers found"
-            description="Try adjusting your search or filters."
+      <DataTable
+        columns={actionColumns}
+        data={table.pageRows}
+        keyExtractor={(row) => row.id}
+        sortKey={table.sortKey}
+        sortDir={table.sortDir}
+        onSort={table.handleSort}
+        empty={{
+          title: "No teachers found",
+          description: "Try adjusting your search or filters.",
+        }}
+        footer={
+          <Pagination
+            page={table.page}
+            pageSize={table.pageSize}
+            total={table.total}
+            onPageChange={table.setPage}
+            label="teachers"
           />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {table.rows.map((teacher) => (
-            <div
-              key={teacher.id}
-              className="flex flex-col rounded-lg border border-neutral-200 bg-bg-default p-5 transition-colors hover:border-neutral-300"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <Link href={`/teachers/${teacher.id}`} className="flex min-w-0 items-center gap-3">
-                  <Avatar name={teacher.name} size="lg" />
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-neutral-900 transition-colors hover:underline">
-                      {teacher.name}
-                    </p>
-                    <p className="truncate text-xs text-neutral-500">{teacher.subject || "—"}</p>
-                  </div>
-                </Link>
-                <StatusBadge status={teacher.status} />
-              </div>
-              <div className="mt-4 space-y-2 text-sm">
-                <p className="flex items-center gap-2 text-neutral-500">
-                  <span className="w-4 flex-none text-neutral-400">
-                    <GraduationCapIcon className="size-4" />
-                  </span>
-                  <span className="truncate">{teacher.department || "—"}</span>
-                </p>
-                <p className="flex items-center gap-2 text-neutral-500">
-                  <span className="w-4 flex-none text-neutral-400">
-                    <MailIcon className="size-4" />
-                  </span>
-                  <span className="truncate">{teacher.email}</span>
-                </p>
-                <p className="flex items-center gap-2 text-neutral-500">
-                  <span className="w-4 flex-none text-neutral-400">
-                    <PhoneIcon className="size-4" />
-                  </span>
-                  {teacher.phone || "—"}
-                </p>
-              </div>
-              <div className="mt-4 flex items-center justify-between border-t border-neutral-100 pt-4">
-                <span className="text-xs text-neutral-400">
-                  {teacher.classesPerWeek} classes / week
-                </span>
-                <span className="flex items-center gap-2">
-                  <span className={cn("h-1.5 w-24 overflow-hidden rounded-full bg-neutral-100")}>
-                    <span
-                      className="block h-full rounded-full bg-neutral-900"
-                      style={{
-                        width: `${Math.min(100, (teacher.classesPerWeek / 30) * 100)}%`,
-                      }}
-                    />
-                  </span>
-                  <RowActions
-                    actions={[
-                      {
-                        label: "View details",
-                        href: `/teachers/${teacher.id}`,
-                      },
-                      ...(canUpdate
-                        ? [
-                            {
-                              label: "Edit teacher",
-                              icon: <PencilIcon className="size-4" />,
-                              onClick: () => setEditTarget(teacher),
-                            },
-                          ]
-                        : []),
-                      ...(canDelete
-                        ? [
-                            {
-                              label: "Remove teacher",
-                              icon: <TrashIcon className="size-4" />,
-                              danger: true,
-                              onClick: () => setRemoveTarget(teacher),
-                            },
-                          ]
-                        : []),
-                    ]}
-                  />
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+        }
+      />
 
       {canCreate && (
         <Dialog

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Field, Select } from "@/shared/components/ui/form-field";
+import { academicApi } from "../api/academicApi";
 
 const TYPES = ["COMPULSORY", "ELECTIVE"] as const;
 
@@ -27,6 +28,22 @@ export function AddSubjectForm({
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<string[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    academicApi
+      .listDepartments()
+      .then((records) => {
+        if (active) setDepartments(records.map((d) => d.name).sort());
+      })
+      .catch(() => {
+        if (active) setDepartments([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const {
     register,
@@ -65,14 +82,27 @@ export function AddSubjectForm({
         />
       </Field>
 
-      <Field label="Department" error={errors.department?.message}>
-        <Input
-          type="text"
-          placeholder="Science & Math"
-          disabled={isSubmitting}
-          error={errors.department?.message}
+      <Field
+        label="Department"
+        error={errors.department?.message}
+        hint={
+          departments.length === 0
+            ? "No departments exist yet. Create one in Departments first."
+            : "Select an existing department"
+        }
+      >
+        <Select
+          disabled={isSubmitting || departments.length === 0}
           {...register("department")}
-        />
+          defaultValue=""
+        >
+          <option value="">— None —</option>
+          {departments.map((department) => (
+            <option key={department} value={department}>
+              {department}
+            </option>
+          ))}
+        </Select>
       </Field>
 
       <Field label="Type" error={errors.type?.message}>

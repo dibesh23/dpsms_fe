@@ -7,6 +7,7 @@ import { z } from "zod";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Field, Select } from "@/shared/components/ui/form-field";
+import { StudentMultiSelect } from "./StudentMultiSelect";
 
 export const PARENT_STATUS_LABELS = ["Verified", "Pending"] as const;
 export type ParentStatusLabel = (typeof PARENT_STATUS_LABELS)[number];
@@ -53,15 +54,27 @@ export function EditParentForm({
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string[]>(() =>
+    initial.students
+      .split(",")
+      .map((student) => student.trim())
+      .filter(Boolean),
+  );
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<EditParentValues>({
     resolver: zodResolver(EditParentSchema),
     defaultValues: initial,
   });
+
+  const updateStudentsField = (names: string[]) => {
+    setSelected(names);
+    setValue("students", names.join(", "), { shouldValidate: true, shouldDirty: true });
+  };
 
   const onSubmit = async (values: EditParentValues) => {
     setApiError(null);
@@ -134,14 +147,12 @@ export function EditParentForm({
           label="Linked students"
           error={errors.students?.message}
           className="sm:col-span-2"
-          hint="Comma-separated full names. Leave empty to unlink all students."
+          hint="Browse by class and section to change which students this guardian is linked to. Remove all to unlink every student."
         >
-          <Input
-            type="text"
-            placeholder="Aarav Sharma, Diya Sharma"
+          <StudentMultiSelect
+            value={selected}
+            onChange={updateStudentsField}
             disabled={isSubmitting}
-            error={errors.students?.message}
-            {...register("students")}
           />
         </Field>
 

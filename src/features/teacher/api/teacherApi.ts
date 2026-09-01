@@ -4,6 +4,7 @@ export interface TeacherRecord {
   id: string;
   name: string;
   subject: string;
+  subjects: string[];
   department: string;
   email: string;
   phone: string | null;
@@ -44,6 +45,10 @@ export interface TeacherDetailSubjectAssignment {
     id: string;
     name: string;
     code: string | null;
+  };
+  academicYear: {
+    id: string;
+    label: string;
   };
 }
 

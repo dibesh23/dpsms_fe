@@ -5,10 +5,8 @@ export interface SubjectAssignmentRecord {
   subjectId: string;
   subjectName: string;
   subjectCode: string | null;
-  sectionId: string;
-  sectionName: string;
-  classId: string;
-  className: string;
+  academicYearId: string;
+  academicYearLabel: string;
 }
 
 export interface ClassAssignmentRecord {
@@ -38,7 +36,7 @@ export const teacherAssignmentApi = {
 
   async createSubjectAssignment(
     teacherId: string,
-    payload: { subjectId: string; sectionId: string },
+    payload: { subjectId: string; academicYearId?: string },
   ): Promise<SubjectAssignmentRecord> {
     const { data } = await apiClient.post<{ data: SubjectAssignmentRecord }>(
       `/teachers/${teacherId}/subject-assignments`,
