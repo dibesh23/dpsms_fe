@@ -66,10 +66,8 @@ const ROLE_FALLBACK_PERMISSIONS: Record<string, readonly PermissionKey[]> = {
     P.EXAM_OWN_VIEW,
     P.FEE_OWN_VIEW,
     P.NOTICE_OWN_VIEW,
-    P.TIMETABLE_OWN_VIEW,
     P.ASSIGNMENT_OWN_VIEW,
     P.ASSIGNMENT_OWN_SUBMIT,
-    P.LIVE_CLASS_OWN_VIEW,
     P.ADMISSION_LETTER_VIEW,
   ],
 } as const;

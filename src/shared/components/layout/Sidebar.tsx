@@ -20,7 +20,6 @@ import {
   FileTextIcon,
   ClipboardCheckIcon,
   GraduationCapIcon,
-  GroupIcon,
   HeartHandshakeIcon,
   LayoutDashboardIcon,
   LayoutGridIcon,
@@ -250,12 +249,6 @@ const NAV_SECTIONS: Array<{
         permission: PERMISSIONS.ATTENDANCE_STUDENT_MARK,
       },
       {
-        label: "Class Tests",
-        href: "/class-tests",
-        icon: FileTextIcon,
-        permission: PERMISSIONS.EXAM_OWN_VIEW,
-      },
-      {
         label: "Assignments",
         href: "/manage-assignments",
         icon: BookUserIcon,
@@ -286,21 +279,9 @@ const NAV_SECTIONS: Array<{
         permission: PERMISSIONS.ATTENDANCE_OWN_VIEW,
       },
       {
-        label: "My Timetable",
-        href: "/timetable",
-        icon: CalendarDaysIcon,
-        permission: PERMISSIONS.TIMETABLE_OWN_VIEW,
-      },
-      {
         label: "My Report Card",
         href: "/report-card",
         icon: FileTextIcon,
-        permission: PERMISSIONS.EXAM_OWN_VIEW,
-      },
-      {
-        label: "Test Results",
-        href: "/test-results",
-        icon: BookOpenIcon,
         permission: PERMISSIONS.EXAM_OWN_VIEW,
       },
       {
@@ -344,12 +325,6 @@ const NAV_SECTIONS: Array<{
         href: "/notices",
         icon: BellIcon,
         permission: PERMISSIONS.NOTICE_OWN_VIEW,
-      },
-      {
-        label: "Live Class",
-        href: "/live-class",
-        icon: GroupIcon,
-        permission: PERMISSIONS.LIVE_CLASS_OWN_VIEW,
       },
     ],
   },
