@@ -49,14 +49,14 @@ export function DataTable<T>({
         ) : (
           <table className={cn("w-full text-left text-sm", minWidth)}>
             <thead>
-              <tr className="border-b border-neutral-100">
+              <tr className="border-b border-neutral-200 bg-bg-subtle">
                 {columns.map((column) => {
                   const isActive = sortKey === column.key;
                   return (
                     <th
                       key={column.key}
                       className={cn(
-                        "px-5 py-3 text-xs font-medium tracking-wide text-neutral-400",
+                        "px-5 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-700",
                         column.align === "right" && "text-right",
                         column.headerClassName,
                       )}
@@ -66,8 +66,8 @@ export function DataTable<T>({
                           type="button"
                           onClick={() => onSort(column.key)}
                           className={cn(
-                            "inline-flex items-center gap-1 transition-colors hover:text-neutral-700",
-                            isActive && "text-neutral-700",
+                            "inline-flex items-center gap-1 transition-colors hover:text-neutral-900",
+                            isActive && "text-neutral-900",
                           )}
                         >
                           {column.header}

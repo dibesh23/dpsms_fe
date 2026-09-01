@@ -1,13 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { PageHeader } from "@/shared/components/ui/page-header";
+import { Button } from "@/shared/components/ui/button";
+import { SearchBar } from "@/shared/components/ui/search-bar";
+import { DataTable, type Column } from "@/shared/components/ui/data-table";
+import { Pagination } from "@/shared/components/ui/pagination";
 import { StatsCard } from "@/shared/components/ui/stats-card";
-import { EmptyState } from "@/shared/components/ui/empty-state";
 import { LoadingState } from "@/shared/components/ui/loading-state";
-import { RowActions } from "@/shared/components/ui/row-actions";
 import { StatusBadge } from "@/shared/components/ui/status-badge";
+import { RowActions } from "@/shared/components/ui/row-actions";
+import { useTable } from "@/shared/hooks/useTable";
 import { teacherApi, type MyClassItem } from "../api/teacherApi";
 import {
   BookOpenIcon,
@@ -16,23 +19,10 @@ import {
   UsersIcon,
 } from "@/shared/components/ui/icons";
 
-function SubjectChips({ subjects }: { subjects: MyClassItem["subjects"] }) {
-  if (subjects.length === 0) {
-    return <span className="text-xs text-neutral-400">No subjects assigned</span>;
-  }
-  return (
-    <span className="flex flex-wrap gap-1.5">
-      {subjects.map((subject) => (
-        <span
-          key={subject.id}
-          className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600"
-        >
-          {subject.name}
-        </span>
-      ))}
-    </span>
-  );
-}
+const sortValueOf = <T extends object>(row: T, key: string): string | number => {
+  const value = row[key as keyof T];
+  return typeof value === "number" ? value : String(value ?? "");
+};
 
 export function MyClassesPage() {
   const [classes, setClasses] = useState<MyClassItem[]>([]);
@@ -55,6 +45,91 @@ export function MyClassesPage() {
     void load();
   }, [load]);
 
+  const table = useTable<MyClassItem>({
+    data: classes,
+    pageSize: 10,
+    getSearchText: (item) =>
+      `${item.className} ${item.sectionName} ${item.subjects.map((s) => s.name).join(" ")} ${item.academicYearLabel}`,
+    sortValue: sortValueOf,
+    defaultSortKey: "className",
+  });
+
+  const totalStudents = classes.reduce((sum, item) => sum + item.totalStudents, 0);
+  const subjectCount = new Set(classes.flatMap((item) => item.subjects.map((s) => s.id))).size;
+
+  const columns: Column<MyClassItem>[] = [
+    {
+      key: "className",
+      header: "Section",
+      sortValue: (row) => `${row.className} ${row.sectionName}`,
+      render: (row) => (
+        <div className="min-w-0">
+          <p className="truncate font-medium text-neutral-900">
+            {row.className} – {row.sectionName}
+          </p>
+          {row.isClassTeacher && (
+            <span className="mt-0.5 inline-block">
+              <StatusBadge status="Class Teacher" variant="info" dot={false} />
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "subjects",
+      header: "Subjects",
+      sortValue: (row) => row.subjects.map((s) => s.name).join(", "),
+      render: (row) =>
+        row.subjects.length === 0 ? (
+          <span className="text-xs text-neutral-400">No subjects assigned</span>
+        ) : (
+          <span className="flex flex-wrap gap-1">
+            {row.subjects.map((subject) => (
+              <span
+                key={subject.id}
+                className="inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600"
+              >
+                {subject.name}
+              </span>
+            ))}
+          </span>
+        ),
+    },
+    {
+      key: "totalStudents",
+      header: "Students",
+      align: "right",
+      sortValue: (row) => row.totalStudents,
+      render: (row) => (
+        <span className="font-medium text-neutral-700">{row.totalStudents}</span>
+      ),
+    },
+    {
+      key: "academicYearLabel",
+      header: "Year",
+      sortValue: (row) => row.academicYearLabel,
+      render: (row) => <span className="text-neutral-500">{row.academicYearLabel}</span>,
+    },
+    {
+      key: "actions",
+      header: "",
+      align: "right",
+      render: (row) => (
+        <RowActions
+          actions={[
+            { label: "View details", href: `/my-classes/${row.sectionId}` },
+            { label: "View students", href: "/students" },
+            {
+              label: "Mark attendance",
+              icon: <ClipboardCheckIcon className="size-4" />,
+              href: "/attendance/students",
+            },
+          ]}
+        />
+      ),
+    },
+  ];
+
   if (loading) {
     return (
       <>
@@ -66,9 +141,6 @@ export function MyClassesPage() {
       </>
     );
   }
-
-  const totalStudents = classes.reduce((sum, item) => sum + item.totalStudents, 0);
-  const subjectCount = new Set(classes.flatMap((item) => item.subjects.map((s) => s.id))).size;
 
   return (
     <>
@@ -95,68 +167,36 @@ export function MyClassesPage() {
         />
       </section>
 
+      <div className="flex items-center justify-end">
+        <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search classes…" />
+      </div>
+
       {error ? (
-        <div className="rounded-lg border border-neutral-200 bg-bg-default">
-          <EmptyState title="Something went wrong" description={error} />
-        </div>
-      ) : classes.length === 0 ? (
-        <div className="rounded-lg border border-neutral-200 bg-bg-default">
-          <EmptyState
-            title="No classes assigned"
-            description="You have not been assigned to any sections yet. Contact your administrator."
-          />
+        <div className="rounded-lg border border-neutral-200 bg-bg-default p-8 text-center">
+          <p className="text-sm text-neutral-600">{error}</p>
         </div>
       ) : (
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {classes.map((item) => (
-            <div
-              key={item.sectionId}
-              className="flex flex-col rounded-lg border border-neutral-200 bg-bg-default p-5 transition-colors hover:border-neutral-300"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <Link
-                    href={`/my-classes/${item.sectionId}`}
-                    className="truncate font-medium text-neutral-900 transition-colors hover:underline"
-                  >
-                    {item.className} – {item.sectionName}
-                  </Link>
-                  <p className="text-xs text-neutral-500">{item.academicYearLabel}</p>
-                </div>
-                {item.isClassTeacher ? (
-                  <StatusBadge status="Class Teacher" variant="info" dot={false} />
-                ) : null}
-              </div>
-              <div className="mt-4 space-y-3 text-sm">
-                <p className="flex items-start gap-2 text-neutral-500">
-                  <span className="mt-0.5 w-4 flex-none text-neutral-400">
-                    <BookOpenIcon className="size-4" />
-                  </span>
-                  <SubjectChips subjects={item.subjects} />
-                </p>
-                <p className="flex items-center gap-2 text-neutral-500">
-                  <span className="w-4 flex-none text-neutral-400">
-                    <UsersIcon className="size-4" />
-                  </span>
-                  {item.totalStudents} student{item.totalStudents === 1 ? "" : "s"}
-                </p>
-              </div>
-              <div className="mt-4 flex items-center justify-end border-t border-neutral-100 pt-4">
-                <RowActions
-                  actions={[
-                    { label: "View details", href: `/my-classes/${item.sectionId}` },
-                    { label: "View students", href: "/students" },
-                    {
-                      label: "Mark attendance",
-                      icon: <ClipboardCheckIcon className="size-4" />,
-                      href: "/attendance/students",
-                    },
-                  ]}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
+        <DataTable
+          columns={columns}
+          data={table.pageRows}
+          keyExtractor={(row) => row.sectionId}
+          sortKey={table.sortKey}
+          sortDir={table.sortDir}
+          onSort={table.handleSort}
+          empty={{
+            title: "No classes assigned",
+            description: "You have not been assigned to any sections yet. Contact your administrator.",
+          }}
+          footer={
+            <Pagination
+              page={table.page}
+              pageSize={table.pageSize}
+              total={table.total}
+              onPageChange={table.setPage}
+              label="classes"
+            />
+          }
+        />
       )}
     </>
   );

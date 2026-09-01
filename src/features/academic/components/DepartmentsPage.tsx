@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import Link from "next/link";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
+import { DataTable, type Column } from "@/shared/components/ui/data-table";
+import { Pagination } from "@/shared/components/ui/pagination";
 import { StatsCard } from "@/shared/components/ui/stats-card";
 import { Avatar } from "@/shared/components/ui/avatar";
-import { EmptyState } from "@/shared/components/ui/empty-state";
-import { Dialog } from "@/shared/components/ui/dialog";
 import { RowActions } from "@/shared/components/ui/row-actions";
+import { Dialog } from "@/shared/components/ui/dialog";
 import { useTable } from "@/shared/hooks/useTable";
 import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -47,6 +47,69 @@ function getApiErrorMessage(err: unknown, fallback: string): string {
   }
   return fallback;
 }
+
+const sortValueOf = <T extends object>(row: T, key: string): string | number => {
+  const value = row[key as keyof T];
+  return typeof value === "number" ? value : String(value ?? "");
+};
+
+const COLUMNS: Column<DepartmentRecordDto>[] = [
+  {
+    key: "name",
+    header: "Department",
+    sortValue: (row) => row.name,
+    render: (row) => (
+      <div className="flex items-center gap-3">
+        <span className="flex size-8 flex-none items-center justify-center rounded-md border border-neutral-200 bg-bg-subtle text-neutral-500">
+          <Building2Icon className="size-4" />
+        </span>
+        <div className="min-w-0">
+          <p className="truncate font-medium text-neutral-900">{row.name}</p>
+          {row.description && (
+            <p className="truncate text-xs text-neutral-400">{row.description}</p>
+          )}
+        </div>
+      </div>
+    ),
+  },
+  {
+    key: "staffCount",
+    header: "Staff",
+    align: "right",
+    sortValue: (row) => row.staffCount,
+    render: (row) => <span className="font-medium text-neutral-700">{row.staffCount}</span>,
+  },
+  {
+    key: "teacherCount",
+    header: "Teachers",
+    align: "right",
+    sortValue: (row) => row.teacherCount,
+    render: (row) => <span className="font-medium text-neutral-700">{row.teacherCount}</span>,
+  },
+  {
+    key: "subjectCount",
+    header: "Subjects",
+    align: "right",
+    sortValue: (row) => row.subjectCount,
+    render: (row) => <span className="font-medium text-neutral-700">{row.subjectCount}</span>,
+  },
+  {
+    key: "head",
+    header: "Head",
+    sortValue: (row) => row.headTeacher?.fullName ?? row.headStaff?.fullName ?? "",
+    render: (row) => {
+      const name = row.headTeacher?.fullName ?? row.headStaff?.fullName;
+      return name ? (
+        <div className="flex items-center gap-2">
+          <Avatar name={name} size="sm" />
+          <span className="truncate text-neutral-700">{name}</span>
+        </div>
+      ) : (
+        <span className="text-neutral-400">Not assigned</span>
+      );
+    },
+  },
+];
 
 export function DepartmentsPage() {
   const [departments, setDepartments] = useState<DepartmentRecordDto[]>([]);
@@ -107,7 +170,6 @@ export function DepartmentsPage() {
         .filter((s) => s.department === headTarget.name)
         .map((s) => ({ id: s.id, name: s.name, kind: "staff" as const })),
     ];
-    // Keep the current head selectable even if their membership drifted.
     const current = headTarget.headTeacher
       ? {
           id: headTarget.headTeacher.id,
@@ -210,15 +272,61 @@ export function DepartmentsPage() {
 
   const table = useTable<DepartmentRecordDto>({
     data: departments,
-    pageSize: 6,
+    pageSize: 10,
     getSearchText: (department) =>
       `${department.name} ${department.headTeacher?.fullName ?? ""} ${department.headStaff?.fullName ?? ""} ${department.description}`,
-    sortValue: (department, key) => String(department[key as keyof DepartmentRecordDto] ?? ""),
+    sortValue: sortValueOf,
     defaultSortKey: "name",
   });
 
   const totalStaff = departments.reduce((sum, department) => sum + department.staffCount, 0);
   const totalSubjects = departments.reduce((sum, department) => sum + department.subjectCount, 0);
+
+  const columnsWithActions: Column<DepartmentRecordDto>[] = canUpdate || canDelete
+    ? [
+        ...COLUMNS,
+        {
+          key: "actions",
+          header: "",
+          align: "right" as const,
+          render: (row: DepartmentRecordDto) => (
+            <RowActions
+              actions={[
+                {
+                  label: "View details",
+                  icon: <ArrowUpRightIcon className="size-3.5" />,
+                  href: `/departments/${row.id}`,
+                },
+                ...(canUpdate
+                  ? [
+                      {
+                        label: "Edit",
+                        icon: <PencilIcon className="size-3.5" />,
+                        onClick: () => setEditTarget(row),
+                      },
+                      {
+                        label: "Set Head",
+                        icon: <UsersIcon className="size-3.5" />,
+                        onClick: () => void openHeadDialog(row),
+                      },
+                    ]
+                  : []),
+                ...(canDelete
+                  ? [
+                      {
+                        label: "Remove",
+                        icon: <TrashIcon className="size-3.5" />,
+                        danger: true,
+                        onClick: () => setDeleteTarget(row),
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+          ),
+        },
+      ]
+    : COLUMNS;
 
   return (
     <div className="space-y-4">
@@ -261,109 +369,31 @@ export function DepartmentsPage() {
         />
       </section>
 
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-neutral-500">{table.total} departments</p>
-        <SearchBar
-          value={table.query}
-          onChange={table.setQuery}
-          placeholder="Search departments…"
-        />
+      <div className="flex items-center justify-end">
+        <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search departments…" />
       </div>
 
-      {table.rows.length === 0 ? (
-        <div className="rounded-lg border border-neutral-200 bg-bg-default">
-          <EmptyState title="No departments found" description="Try adjusting your search." />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {table.rows.map((department) => (
-            <div
-              key={department.id}
-              className="flex flex-col rounded-lg border border-neutral-200 bg-bg-default p-5 transition-colors hover:border-neutral-300"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <Link href={`/departments/${department.id}`} className="group flex min-w-0 gap-3">
-                  <span className="flex size-10 flex-none items-center justify-center rounded-lg border border-neutral-200 bg-bg-subtle text-neutral-600">
-                    <Building2Icon className="size-5" />
-                  </span>
-                  <h3 className="truncate pt-2 font-medium text-neutral-900 group-hover:underline">
-                    {department.name}
-                  </h3>
-                </Link>
-                <RowActions
-                  actions={[
-                    {
-                      label: "View details",
-                      icon: <ArrowUpRightIcon className="size-3.5" />,
-                      href: `/departments/${department.id}`,
-                    },
-                    ...(canUpdate
-                      ? [
-                          {
-                            label: "Edit",
-                            icon: <PencilIcon className="size-3.5" />,
-                            onClick: () => setEditTarget(department),
-                          },
-                          {
-                            label: "Set Head",
-                            icon: <UsersIcon className="size-3.5" />,
-                            onClick: () => void openHeadDialog(department),
-                          },
-                        ]
-                      : []),
-                    ...(canDelete
-                      ? [
-                          {
-                            label: "Remove",
-                            icon: <TrashIcon className="size-3.5" />,
-                            danger: true,
-                            onClick: () => setDeleteTarget(department),
-                          },
-                        ]
-                      : []),
-                  ]}
-                />
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                <span className="rounded-md bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600">
-                  {department.staffCount} staff
-                </span>
-                <span className="rounded-md bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600">
-                  {department.teacherCount} teachers
-                </span>
-                <span className="rounded-md bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600">
-                  {department.subjectCount} subjects
-                </span>
-              </div>
-              <p className="mt-2 line-clamp-2 text-sm text-neutral-500">{department.description}</p>
-              <div className="mt-auto flex items-center justify-between gap-2 border-t border-neutral-100 pt-4">
-                <div className="flex min-w-0 items-center gap-2">
-                  <Avatar
-                    name={department.headTeacher?.fullName ?? department.headStaff?.fullName ?? ""}
-                    size="sm"
-                  />
-                  <div className="min-w-0">
-                    <p className="text-xs text-neutral-400">Department head</p>
-                    <p className="truncate text-sm font-medium text-neutral-800">
-                      {department.headTeacher?.fullName ??
-                        department.headStaff?.fullName ??
-                        "Not assigned"}
-                    </p>
-                  </div>
-                </div>
-                {canUpdate && (
-                  <Button
-                    variant="secondary"
-                    text="Set Head"
-                    className="w-auto"
-                    onClick={() => void openHeadDialog(department)}
-                  />
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <DataTable
+        columns={columnsWithActions}
+        data={table.pageRows}
+        keyExtractor={(row) => row.id}
+        sortKey={table.sortKey}
+        sortDir={table.sortDir}
+        onSort={table.handleSort}
+        empty={{
+          title: "No departments found",
+          description: "Try adjusting your search.",
+        }}
+        footer={
+          <Pagination
+            page={table.page}
+            pageSize={table.pageSize}
+            total={table.total}
+            onPageChange={table.setPage}
+            label="departments"
+          />
+        }
+      />
 
       {canCreate && (
         <Dialog

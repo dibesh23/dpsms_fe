@@ -4,6 +4,7 @@ export interface TeacherRecord {
   id: string;
   name: string;
   subject: string;
+  subjects: string[];
   department: string;
   email: string;
   phone: string | null;
