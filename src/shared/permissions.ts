@@ -97,6 +97,10 @@ export const PERMISSIONS = {
   ADMISSION_LETTER_VIEW: "admission-letter:own:view",
   MESSAGING_OWN_VIEW: "messaging:own:view",
 
+  PROMOTION_BATCH_RUN: "promotion:batch:run",
+  PROMOTION_REVIEW: "promotion:review",
+  PROMOTION_VIEW: "promotion:view",
+
   AUDIT_LOG_READ: "audit:logs:read",
   AUDIT_LOG_EXPORT: "audit:logs:export",
 } as const;

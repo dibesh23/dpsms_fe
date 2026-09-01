@@ -174,6 +174,30 @@ const NAV_SECTIONS: Array<{
     ],
   },
   {
+    label: "Promotion",
+    roles: ["SUPER_ADMIN", "PRINCIPAL"],
+    items: [
+      {
+        label: "Batch Promotion",
+        href: "/promotion/batch",
+        icon: GraduationCapIcon,
+        permission: PERMISSIONS.PROMOTION_BATCH_RUN,
+      },
+      {
+        label: "Review Failed",
+        href: "/promotion/review",
+        icon: ClipboardCheckIcon,
+        permission: PERMISSIONS.PROMOTION_REVIEW,
+      },
+      {
+        label: "Promotion History",
+        href: "/promotion/history",
+        icon: FileTextIcon,
+        permission: PERMISSIONS.PROMOTION_VIEW,
+      },
+    ],
+  },
+  {
     label: "Communication",
     roles: ["SUPER_ADMIN", "PRINCIPAL"],
     items: [
