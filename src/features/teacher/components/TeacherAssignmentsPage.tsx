@@ -14,6 +14,7 @@ import { useTable } from "@/shared/hooks/useTable";
 import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
+import { cn } from "@/shared/lib/cn";
 import { teacherApi } from "../api/teacherApi";
 import {
   teacherAssignmentApi,
@@ -21,8 +22,7 @@ import {
   type SubjectAssignmentRecord,
 } from "../api/teacherAssignmentApi";
 import { academicApi } from "@/features/academic/api/academicApi";
-import { AssignSubjectForm, type AssignSubjectValues } from "./AssignSubjectForm";
-import { AssignClassForm, type AssignClassValues } from "./AssignClassForm";
+import { AssignTeacherForm, type AssignTeacherValues } from "./AssignTeacherForm";
 import { SetClassTeacherForm, type SetClassTeacherValues } from "./SetClassTeacherForm";
 import {
   BanIcon,
@@ -33,29 +33,19 @@ import {
   UserPlusIcon,
 } from "@/shared/components/ui/icons";
 
-interface SubjectAssignmentView {
+interface AssignmentView {
   key: string;
   id: string;
   teacherId: string;
   teacherName: string;
-  subjectName: string;
-  subjectCode: string | null;
+  type: "class" | "subject";
+  subjectName?: string;
+  subjectCode?: string | null;
   classId: string;
   className: string;
   sectionId: string;
   sectionName: string;
-}
-
-interface ClassAssignmentView {
-  key: string;
-  id: string;
-  teacherId: string;
-  teacherName: string;
-  classId: string;
-  className: string;
-  sectionId: string;
-  sectionName: string;
-  academicYearLabel: string;
+  academicYearLabel?: string;
 }
 
 interface SectionRow {
@@ -86,12 +76,10 @@ export function TeacherAssignmentsPage() {
   const [classes, setClasses] = useState<Array<{ id: string; name: string }>>([]);
   const [subjects, setSubjects] = useState<Array<{ id: string; name: string; code: string | null }>>([]);
   const [sessions, setSessions] = useState<Array<{ id: string; label: string; isActive: boolean }>>([]);
-  const [subjectAssignments, setSubjectAssignments] = useState<SubjectAssignmentView[]>([]);
-  const [classAssignments, setClassAssignments] = useState<ClassAssignmentView[]>([]);
+  const [assignments, setAssignments] = useState<AssignmentView[]>([]);
   const [sections, setSections] = useState<SectionRow[]>([]);
 
-  const [assignSubjectOpen, setAssignSubjectOpen] = useState(false);
-  const [assignClassOpen, setAssignClassOpen] = useState(false);
+  const [assignOpen, setAssignOpen] = useState(false);
   const [classTeacherTarget, setClassTeacherTarget] = useState<SectionRow | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<ConfirmTarget | null>(null);
   const [removing, setRemoving] = useState(false);
@@ -134,38 +122,44 @@ export function TeacherAssignmentsPage() {
         ),
       ]);
 
-      setSubjectAssignments(
-        subjectLists.flatMap((records, index) =>
-          records.map((record) => ({
-            key: `${teacherRecords[index].id}:${record.id}`,
+      const merged: AssignmentView[] = [];
+
+      subjectLists.forEach((records, index) => {
+        records.forEach((record) => {
+          merged.push({
+            key: `subject:${teacherRecords[index].id}:${record.id}`,
             id: record.id,
             teacherId: teacherRecords[index].id,
             teacherName: teacherRecords[index].name,
+            type: "subject",
             subjectName: record.subjectName,
             subjectCode: record.subjectCode,
             classId: record.classId,
             className: record.className,
             sectionId: record.sectionId,
             sectionName: record.sectionName,
-          })),
-        ),
-      );
+          });
+        });
+      });
 
-      setClassAssignments(
-        classLists.flatMap((records, index) =>
-          records.map((record) => ({
-            key: `${teacherRecords[index].id}:${record.id}`,
+      classLists.forEach((records, index) => {
+        records.forEach((record) => {
+          merged.push({
+            key: `class:${teacherRecords[index].id}:${record.id}`,
             id: record.id,
             teacherId: teacherRecords[index].id,
             teacherName: teacherRecords[index].name,
+            type: "class",
             classId: record.classId,
             className: record.className,
             sectionId: record.sectionId,
             sectionName: record.sectionName,
             academicYearLabel: record.academicYearLabel,
-          })),
-        ),
-      );
+          });
+        });
+      });
+
+      setAssignments(merged);
 
       const sectionLists = await Promise.all(
         classRecords.map((c) =>
@@ -192,8 +186,7 @@ export function TeacherAssignmentsPage() {
       setClasses([]);
       setSubjects([]);
       setSessions([]);
-      setSubjectAssignments([]);
-      setClassAssignments([]);
+      setAssignments([]);
       setSections([]);
     }
   }, []);
@@ -202,78 +195,88 @@ export function TeacherAssignmentsPage() {
     void load();
   }, [load]);
 
-  const handleAssignSubject = async (values: AssignSubjectValues): Promise<string | null> => {
-    const duplicate = subjectAssignments.some(
+  const handleAssign = async (values: AssignTeacherValues): Promise<string | null> => {
+    const teacher = teachers.find((t) => t.id === values.teacherId);
+    const existingClass = assignments.find(
       (a) =>
-        a.teacherId === values.teacherId &&
-        a.sectionId === values.sectionId &&
-        a.subjectName === subjects.find((s) => s.id === values.subjectId)?.name,
+        a.type === "class" && a.teacherId === values.teacherId && a.sectionId === values.sectionId,
     );
-    if (duplicate) {
-      return "This teacher is already assigned to this subject for the selected section.";
-    }
-    try {
-      const record = await teacherAssignmentApi.createSubjectAssignment(values.teacherId, {
-        subjectId: values.subjectId,
-        sectionId: values.sectionId,
-      });
-      const teacher = teachers.find((t) => t.id === values.teacherId);
-      setSubjectAssignments((current) => [
-        ...current,
-        {
-          key: `${values.teacherId}:${record.id}`,
-          id: record.id,
-          teacherId: values.teacherId,
-          teacherName: teacher?.name ?? "",
-          subjectName: record.subjectName,
-          subjectCode: record.subjectCode,
-          classId: record.classId,
-          className: record.className,
-          sectionId: record.sectionId,
-          sectionName: record.sectionName,
-        },
-      ]);
-      setAssignSubjectOpen(false);
-      toast.success("Subject assigned successfully.");
-      return null;
-    } catch {
-      return "Could not assign the subject. Check the details and try again.";
-    }
-  };
 
-  const handleAssignClass = async (values: AssignClassValues): Promise<string | null> => {
-    const duplicate = classAssignments.some(
-      (a) => a.teacherId === values.teacherId && a.sectionId === values.sectionId,
-    );
-    if (duplicate) {
-      return "This teacher already has a class assignment for the selected section.";
-    }
-    try {
-      const record = await teacherAssignmentApi.createClassAssignment(values.teacherId, {
-        sectionId: values.sectionId,
-        academicYearId: values.academicYearId || undefined,
-      });
-      const teacher = teachers.find((t) => t.id === values.teacherId);
-      setClassAssignments((current) => [
-        ...current,
-        {
-          key: `${values.teacherId}:${record.id}`,
-          id: record.id,
+    let createdClassRow: AssignmentView | null = null;
+    if (!existingClass) {
+      try {
+        const classRecord = await teacherAssignmentApi.createClassAssignment(values.teacherId, {
+          sectionId: values.sectionId,
+          academicYearId: values.academicYearId || undefined,
+        });
+        createdClassRow = {
+          key: `class:${values.teacherId}:${classRecord.id}`,
+          id: classRecord.id,
           teacherId: values.teacherId,
           teacherName: teacher?.name ?? "",
-          classId: record.classId,
-          className: record.className,
-          sectionId: record.sectionId,
-          sectionName: record.sectionName,
-          academicYearLabel: record.academicYearLabel,
-        },
-      ]);
-      setAssignClassOpen(false);
-      toast.success("Class assigned successfully.");
-      return null;
-    } catch {
-      return "Could not assign the class. Check the details and try again.";
+          type: "class",
+          classId: classRecord.classId,
+          className: classRecord.className,
+          sectionId: classRecord.sectionId,
+          sectionName: classRecord.sectionName,
+          academicYearLabel: classRecord.academicYearLabel,
+        };
+      } catch {
+        return "Could not create the class assignment. Check the details and try again.";
+      }
     }
+
+    let subjectRow: AssignmentView | null = null;
+    if (values.subjectId) {
+      const subjectDuplicate = assignments.some(
+        (a) =>
+          a.type === "subject" &&
+          a.teacherId === values.teacherId &&
+          a.sectionId === values.sectionId &&
+          a.subjectName === subjects.find((s) => s.id === values.subjectId)?.name,
+      );
+      if (subjectDuplicate) {
+        return "This teacher is already assigned to this subject for the selected section.";
+      }
+      try {
+        const subjectRecord = await teacherAssignmentApi.createSubjectAssignment(values.teacherId, {
+          subjectId: values.subjectId,
+          sectionId: values.sectionId,
+        });
+        subjectRow = {
+          key: `subject:${values.teacherId}:${subjectRecord.id}`,
+          id: subjectRecord.id,
+          teacherId: values.teacherId,
+          teacherName: teacher?.name ?? "",
+          type: "subject",
+          subjectName: subjectRecord.subjectName,
+          subjectCode: subjectRecord.subjectCode,
+          classId: subjectRecord.classId,
+          className: subjectRecord.className,
+          sectionId: subjectRecord.sectionId,
+          sectionName: subjectRecord.sectionName,
+        };
+      } catch {
+        return "Could not assign the subject. Check the details and try again.";
+      }
+    }
+
+    if (!createdClassRow && !subjectRow) {
+      return "This teacher is already assigned to this section. Choose a subject to assign.";
+    }
+
+    setAssignments((current) => [
+      ...current,
+      ...(createdClassRow ? [createdClassRow] : []),
+      ...(subjectRow ? [subjectRow] : []),
+    ]);
+    setAssignOpen(false);
+    toast.success(
+      subjectRow
+        ? "Teacher assigned to the section and subject successfully."
+        : "Teacher assigned to the class section successfully.",
+    );
+    return null;
   };
 
   const handleSetClassTeacher = async (values: SetClassTeacherValues): Promise<string | null> => {
@@ -307,8 +310,8 @@ export function TeacherAssignmentsPage() {
           confirmTarget.teacherId,
           confirmTarget.assignmentId,
         );
-        setSubjectAssignments((current) =>
-          current.filter((a) => a.id !== confirmTarget.assignmentId),
+        setAssignments((current) =>
+          current.filter((a) => a.id !== confirmTarget.assignmentId || a.type !== "subject"),
         );
         toast.success("Subject assignment removed.");
       } else {
@@ -316,8 +319,8 @@ export function TeacherAssignmentsPage() {
           confirmTarget.teacherId,
           confirmTarget.assignmentId,
         );
-        setClassAssignments((current) =>
-          current.filter((a) => a.id !== confirmTarget.assignmentId),
+        setAssignments((current) =>
+          current.filter((a) => a.id !== confirmTarget.assignmentId || a.type !== "class"),
         );
         toast.success("Class assignment removed.");
       }
@@ -331,21 +334,11 @@ export function TeacherAssignmentsPage() {
 
   const classFilterOptions = classes.map((c) => ({ value: c.id, label: c.name }));
 
-  const subjectTable = useTable<SubjectAssignmentView>({
-    data: subjectAssignments,
+  const table = useTable<AssignmentView>({
+    data: assignments,
     pageSize: 8,
     getSearchText: (row) =>
-      `${row.teacherName} ${row.subjectName} ${row.subjectCode ?? ""} ${row.className} ${row.sectionName}`,
-    filterMatch: (row, value) => row.classId === value,
-    sortValue: sortValueOf,
-    defaultSortKey: "teacherName",
-  });
-
-  const classTable = useTable<ClassAssignmentView>({
-    data: classAssignments,
-    pageSize: 8,
-    getSearchText: (row) =>
-      `${row.teacherName} ${row.className} ${row.sectionName} ${row.academicYearLabel}`,
+      `${row.teacherName} ${row.subjectName ?? ""} ${row.subjectCode ?? ""} ${row.className} ${row.sectionName} ${row.academicYearLabel ?? ""}`,
     filterMatch: (row, value) => row.classId === value,
     sortValue: sortValueOf,
     defaultSortKey: "teacherName",
@@ -360,7 +353,7 @@ export function TeacherAssignmentsPage() {
     defaultSortKey: "className",
   });
 
-  const subjectColumns: Column<SubjectAssignmentView>[] = [
+  const columns: Column<AssignmentView>[] = [
     {
       key: "teacherName",
       header: "Teacher",
@@ -373,73 +366,35 @@ export function TeacherAssignmentsPage() {
           <p className="truncate font-medium text-neutral-900">{row.teacherName}</p>
         </div>
       ),
+    },
+    {
+      key: "type",
+      header: "Type",
+      sortValue: (row) => row.type,
+      render: (row) =>
+        row.type === "subject" ? (
+          <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+            Subject
+          </span>
+        ) : (
+          <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600">
+            Class
+          </span>
+        ),
     },
     {
       key: "subjectName",
       header: "Subject",
-      sortValue: (row) => row.subjectName,
-      render: (row) => (
-        <div className="min-w-0">
-          <p className="truncate font-medium text-neutral-900">{row.subjectName}</p>
-          {row.subjectCode && <p className="text-xs text-neutral-400">{row.subjectCode}</p>}
-        </div>
-      ),
-    },
-    {
-      key: "className",
-      header: "Class",
-      sortValue: (row) => row.className,
-      render: (row) => <span className="text-neutral-600">{row.className}</span>,
-    },
-    {
-      key: "sectionName",
-      header: "Section",
-      sortValue: (row) => row.sectionName,
-      render: (row) => <span className="text-neutral-600">{row.sectionName}</span>,
-    },
-    ...(canManage
-      ? [
-          {
-            key: "subjectActions",
-            header: "",
-            align: "right" as const,
-            render: (row: SubjectAssignmentView) => (
-              <RowActions
-                actions={[
-                  {
-                    label: "Remove assignment",
-                    icon: <BanIcon className="size-3.5" />,
-                    danger: true,
-                    onClick: () =>
-                      setConfirmTarget({
-                        kind: "subject",
-                        teacherId: row.teacherId,
-                        assignmentId: row.id,
-                        title: "Remove subject assignment",
-                        message: `Remove ${row.teacherName}'s assignment for ${row.subjectName} in ${row.className} · Section ${row.sectionName}?`,
-                      }),
-                  },
-                ]}
-              />
-            ),
-          },
-        ]
-      : []),
-  ];
-
-  const classColumns: Column<ClassAssignmentView>[] = [
-    {
-      key: "teacherName",
-      header: "Teacher",
-      sortValue: (row) => row.teacherName,
-      render: (row) => (
-        <div className="flex items-center gap-3">
-          <span className="flex size-8 flex-none items-center justify-center rounded-md border border-neutral-200 bg-bg-subtle text-neutral-500">
-            <GraduationCapIcon className="size-4" />
-          </span>
-          <p className="truncate font-medium text-neutral-900">{row.teacherName}</p>
-        </div>
-      ),
+      sortValue: (row) => row.subjectName ?? "",
+      render: (row) =>
+        row.subjectName ? (
+          <div className="min-w-0">
+            <p className="truncate font-medium text-neutral-900">{row.subjectName}</p>
+            {row.subjectCode && <p className="text-xs text-neutral-400">{row.subjectCode}</p>}
+          </div>
+        ) : (
+          <span className="text-neutral-400">—</span>
+        ),
     },
     {
       key: "className",
@@ -456,16 +411,20 @@ export function TeacherAssignmentsPage() {
     {
       key: "academicYearLabel",
       header: "Academic Year",
-      sortValue: (row) => row.academicYearLabel,
-      render: (row) => <span className="text-neutral-500">{row.academicYearLabel}</span>,
+      sortValue: (row) => row.academicYearLabel ?? "",
+      render: (row) => (
+        <span className={cn("text-neutral-500", !row.academicYearLabel && "text-neutral-300")}>
+          {row.academicYearLabel ?? "—"}
+        </span>
+      ),
     },
     ...(canManage
       ? [
           {
-            key: "classActions",
+            key: "actions",
             header: "",
             align: "right" as const,
-            render: (row: ClassAssignmentView) => (
+            render: (row: AssignmentView) => (
               <RowActions
                 actions={[
                   {
@@ -474,11 +433,17 @@ export function TeacherAssignmentsPage() {
                     danger: true,
                     onClick: () =>
                       setConfirmTarget({
-                        kind: "class",
+                        kind: row.type,
                         teacherId: row.teacherId,
                         assignmentId: row.id,
-                        title: "Remove class assignment",
-                        message: `Remove ${row.teacherName}'s class assignment for ${row.className} · Section ${row.sectionName}?`,
+                        title:
+                          row.type === "subject"
+                            ? "Remove subject assignment"
+                            : "Remove class assignment",
+                        message:
+                          row.type === "subject"
+                            ? `Remove ${row.teacherName}'s assignment for ${row.subjectName} in ${row.className} · Section ${row.sectionName}?`
+                            : `Remove ${row.teacherName}'s class assignment for ${row.className} · Section ${row.sectionName}?`,
                       }),
                   },
                 ]}
@@ -545,6 +510,7 @@ export function TeacherAssignmentsPage() {
   ];
 
   const sectionsWithTeacher = sections.filter((s) => s.classTeacherId).length;
+  const subjectCount = assignments.filter((a) => a.type === "subject").length;
 
   return (
     <div className="space-y-6">
@@ -553,35 +519,26 @@ export function TeacherAssignmentsPage() {
         description="Assign teachers to class sections, subjects, and class teacher roles"
         actions={
           canManage ? (
-            <>
-              <Button
-                text="Assign Class"
-                icon={<PlusIcon className="size-4" />}
-                variant="secondary"
-                className="w-auto"
-                onClick={() => setAssignClassOpen(true)}
-              />
-              <Button
-                text="Assign Subject"
-                icon={<PlusIcon className="size-4" />}
-                className="w-auto"
-                onClick={() => setAssignSubjectOpen(true)}
-              />
-            </>
+            <Button
+              text="Assign Teacher"
+              icon={<PlusIcon className="size-4" />}
+              className="w-auto"
+              onClick={() => setAssignOpen(true)}
+            />
           ) : undefined
         }
       />
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatsCard
-          label="Subject Assignments"
-          value={String(subjectAssignments.length)}
-          icon={<BookOpenIcon className="size-4" />}
+          label="Total Assignments"
+          value={String(assignments.length)}
+          icon={<GraduationCapIcon className="size-4" />}
         />
         <StatsCard
-          label="Class Assignments"
-          value={String(classAssignments.length)}
-          icon={<LayoutGridIcon className="size-4" />}
+          label="Subject Assignments"
+          value={String(subjectCount)}
+          icon={<BookOpenIcon className="size-4" />}
         />
         <StatsCard
           label="Sections with Class Teacher"
@@ -591,90 +548,56 @@ export function TeacherAssignmentsPage() {
       </section>
 
       <div className="space-y-3 pt-2">
-        <div>
-          <h2 className="text-sm font-semibold text-neutral-900">Subject Assignments</h2>
-          <p className="mt-0.5 text-xs text-neutral-500">
-            Who teaches which subject, across every class section
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-neutral-900">Assignments</h2>
+            <p className="mt-0.5 text-xs text-neutral-500">
+              Which teachers are assigned to which class sections and subjects
+            </p>
+          </div>
+          <div className="flex items-center gap-3 text-xs text-neutral-500">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" /> Subject
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-neutral-400" /> Class
+            </span>
+          </div>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <FilterDropdown
             label="Filter by class"
             options={classFilterOptions}
-            value={subjectTable.filter}
-            onChange={subjectTable.setFilter}
+            value={table.filter}
+            onChange={table.setFilter}
           />
           <SearchBar
-            value={subjectTable.query}
-            onChange={subjectTable.setQuery}
+            value={table.query}
+            onChange={table.setQuery}
             placeholder="Search assignments…"
           />
         </div>
         <DataTable
-          columns={subjectColumns}
-          data={subjectTable.pageRows}
+          columns={columns}
+          data={table.pageRows}
           keyExtractor={(row) => row.key}
-          sortKey={subjectTable.sortKey}
-          sortDir={subjectTable.sortDir}
-          onSort={subjectTable.handleSort}
+          sortKey={table.sortKey}
+          sortDir={table.sortDir}
+          onSort={table.handleSort}
+          minWidth="min-w-[760px]"
           empty={{
-            title: "No subject assignments yet",
+            title: "No assignments yet",
             description: canManage
-              ? "Use Assign Subject to assign a teacher to a class section."
+              ? "Use Assign Teacher to assign a teacher to a class section and subject."
               : "Assignments will appear here once created.",
           }}
           footer={
             <Pagination
-              page={subjectTable.page}
-              pageSize={subjectTable.pageSize}
-              total={subjectTable.total}
-              onPageChange={subjectTable.setPage}
-              label="subject assignments"
-            />
-          }
-        />
-      </div>
-
-      <div className="space-y-3 pt-2">
-        <div>
-          <h2 className="text-sm font-semibold text-neutral-900">Class Assignments</h2>
-          <p className="mt-0.5 text-xs text-neutral-500">
-            Sections each teacher is assigned to for the academic year
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <FilterDropdown
-            label="Filter by class"
-            options={classFilterOptions}
-            value={classTable.filter}
-            onChange={classTable.setFilter}
-          />
-          <SearchBar
-            value={classTable.query}
-            onChange={classTable.setQuery}
-            placeholder="Search assignments…"
-          />
-        </div>
-        <DataTable
-          columns={classColumns}
-          data={classTable.pageRows}
-          keyExtractor={(row) => row.key}
-          sortKey={classTable.sortKey}
-          sortDir={classTable.sortDir}
-          onSort={classTable.handleSort}
-          empty={{
-            title: "No class assignments yet",
-            description: canManage
-              ? "Use Assign Class to assign a teacher to a class section."
-              : "Assignments will appear here once created.",
-          }}
-          footer={
-            <Pagination
-              page={classTable.page}
-              pageSize={classTable.pageSize}
-              total={classTable.total}
-              onPageChange={classTable.setPage}
-              label="class assignments"
+              page={table.page}
+              pageSize={table.pageSize}
+              total={table.total}
+              onPageChange={table.setPage}
+              label="assignments"
             />
           }
         />
@@ -725,36 +648,20 @@ export function TeacherAssignmentsPage() {
       </div>
 
       {canManage && (
-        <>
-          <Dialog
-            open={assignSubjectOpen}
-            onClose={() => setAssignSubjectOpen(false)}
-            title="Assign Subject"
-            description="Assign a teacher to a subject in a class section."
-          >
-            <AssignSubjectForm
-              teachers={teachers}
-              classes={classes}
-              onAdd={handleAssignSubject}
-              onClose={() => setAssignSubjectOpen(false)}
-            />
-          </Dialog>
-
-          <Dialog
-            open={assignClassOpen}
-            onClose={() => setAssignClassOpen(false)}
-            title="Assign Class"
-            description="Assign a teacher to a class section for an academic year."
-          >
-            <AssignClassForm
-              teachers={teachers}
-              classes={classes}
-              sessions={sessions}
-              onAdd={handleAssignClass}
-              onClose={() => setAssignClassOpen(false)}
-            />
-          </Dialog>
-        </>
+        <Dialog
+          open={assignOpen}
+          onClose={() => setAssignOpen(false)}
+          title="Assign Teacher"
+          description="Assign a teacher to a class section, and optionally a subject."
+        >
+          <AssignTeacherForm
+            teachers={teachers}
+            classes={classes}
+            sessions={sessions}
+            onAdd={handleAssign}
+            onClose={() => setAssignOpen(false)}
+          />
+        </Dialog>
       )}
 
       {canEditClassTeacher && (

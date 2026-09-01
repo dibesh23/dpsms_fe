@@ -8,16 +8,17 @@ import { Button } from "@/shared/components/ui/button";
 import { Field, Select } from "@/shared/components/ui/form-field";
 import { academicApi, type SectionRecord } from "@/features/academic/api/academicApi";
 
-const AssignClassSchema = z.object({
+const AssignTeacherSchema = z.object({
   teacherId: z.string().min(1, "Select a teacher"),
   classId: z.string().min(1, "Select a class"),
   sectionId: z.string().min(1, "Select a section"),
+  subjectId: z.string().optional(),
   academicYearId: z.string().optional(),
 });
 
-export type AssignClassValues = z.infer<typeof AssignClassSchema>;
+export type AssignTeacherValues = z.infer<typeof AssignTeacherSchema>;
 
-export function AssignClassForm({
+export function AssignTeacherForm({
   teachers,
   classes,
   sessions,
@@ -27,12 +28,16 @@ export function AssignClassForm({
   teachers: Array<{ id: string; name: string }>;
   classes: Array<{ id: string; name: string }>;
   sessions: Array<{ id: string; label: string; isActive: boolean }>;
-  onAdd: (values: AssignClassValues) => Promise<string | null>;
+  onAdd: (values: AssignTeacherValues) => Promise<string | null>;
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
   const [sections, setSections] = useState<SectionRecord[]>([]);
   const [sectionsLoading, setSectionsLoading] = useState(false);
+  const [subjects, setSubjects] = useState<Array<{ id: string; name: string; code: string | null }>>(
+    [],
+  );
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
 
   const {
     register,
@@ -40,9 +45,15 @@ export function AssignClassForm({
     watch,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<AssignClassValues>({
-    resolver: zodResolver(AssignClassSchema),
-    defaultValues: { teacherId: "", classId: "", sectionId: "", academicYearId: "" },
+  } = useForm<AssignTeacherValues>({
+    resolver: zodResolver(AssignTeacherSchema),
+    defaultValues: {
+      teacherId: "",
+      classId: "",
+      sectionId: "",
+      subjectId: "",
+      academicYearId: "",
+    },
   });
 
   const selectedClassId = watch("classId");
@@ -70,7 +81,34 @@ export function AssignClassForm({
     };
   }, [selectedClassId]);
 
-  const onSubmit = async (values: AssignClassValues) => {
+  useEffect(() => {
+    if (!selectedClassId) {
+      setSubjects([]);
+      return;
+    }
+    let cancelled = false;
+    setSubjectsLoading(true);
+    academicApi
+      .listClassSubjects(selectedClassId)
+      .then((records) => {
+        if (!cancelled)
+          setSubjects(
+            records.map((r) => ({ id: r.subjectId, name: r.subjectName, code: null })),
+          );
+      })
+      .catch(() => {
+        if (!cancelled) setSubjects([]);
+      })
+      .finally(() => {
+        if (!cancelled) setSubjectsLoading(false);
+      });
+    setValue("subjectId", "");
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedClassId, setValue]);
+
+  const onSubmit = async (values: AssignTeacherValues) => {
     setApiError(null);
     const error = await onAdd(values);
     if (error) setApiError(error);
@@ -134,6 +172,31 @@ export function AssignClassForm({
       </Field>
 
       <Field
+        label="Subject"
+        error={errors.subjectId?.message}
+        hint={
+          selectedClassId && !subjectsLoading && subjects.length === 0
+            ? "No subjects mapped to this class yet. You can still assign the class."
+            : "Optional. Leave as 'No subject' to assign just the class."
+        }
+      >
+        <Select disabled={isSubmitting || !selectedClassId || subjectsLoading} {...register("subjectId")}>
+          <option value="">No subject (class assignment only)</option>
+          {!selectedClassId || subjectsLoading ? null : subjects.length === 0 ? (
+            <option value="" disabled>
+              No subjects available
+            </option>
+          ) : (
+            subjects.map((subject) => (
+              <option key={subject.id} value={subject.id}>
+                {subject.code ? `${subject.name} (${subject.code})` : subject.name}
+              </option>
+            ))
+          )}
+        </Select>
+      </Field>
+
+      <Field
         label="Academic Year"
         error={errors.academicYearId?.message}
         hint="Leave empty to use the active academic year"
@@ -160,7 +223,7 @@ export function AssignClassForm({
       <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
         <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" />
         <Button
-          text={isSubmitting ? "Assigning…" : "Assign Class"}
+          text={isSubmitting ? "Assigning…" : "Assign Teacher"}
           loading={isSubmitting}
           disabled={isSubmitting}
           className="w-auto"
