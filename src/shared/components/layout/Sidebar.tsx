@@ -237,12 +237,6 @@ const NAV_SECTIONS: Array<{
         permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW,
       },
       {
-        label: "My Subjects",
-        href: "/my-subjects",
-        icon: BookOpenIcon,
-        permission: PERMISSIONS.ACADEMIC_SUBJECT_LIST,
-      },
-      {
         label: "Attendance",
         href: "/attendance/students",
         icon: CheckCircle2Icon,

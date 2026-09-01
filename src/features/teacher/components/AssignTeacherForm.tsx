@@ -7,14 +7,30 @@ import { z } from "zod";
 import { Button } from "@/shared/components/ui/button";
 import { Field, Select } from "@/shared/components/ui/form-field";
 import { academicApi, type SectionRecord } from "@/features/academic/api/academicApi";
+import { cn } from "@/shared/lib/cn";
 
-const AssignTeacherSchema = z.object({
+const ASSIGNMENT_MODES = ["section", "subject"] as const;
+type AssignmentMode = (typeof ASSIGNMENT_MODES)[number];
+
+const SectionAssignSchema = z.object({
+  mode: z.literal("section"),
   teacherId: z.string().min(1, "Select a teacher"),
   classId: z.string().min(1, "Select a class"),
   sectionId: z.string().min(1, "Select a section"),
-  subjectId: z.string().optional(),
   academicYearId: z.string().optional(),
 });
+
+const SubjectAssignSchema = z.object({
+  mode: z.literal("subject"),
+  teacherId: z.string().min(1, "Select a teacher"),
+  subjectId: z.string().min(1, "Select a subject"),
+  academicYearId: z.string().optional(),
+});
+
+const AssignTeacherSchema = z.discriminatedUnion("mode", [
+  SectionAssignSchema,
+  SubjectAssignSchema,
+]);
 
 export type AssignTeacherValues = z.infer<typeof AssignTeacherSchema>;
 
@@ -22,22 +38,21 @@ export function AssignTeacherForm({
   teachers,
   classes,
   sessions,
+  subjects,
   onAdd,
   onClose,
 }: {
   teachers: Array<{ id: string; name: string }>;
   classes: Array<{ id: string; name: string }>;
   sessions: Array<{ id: string; label: string; isActive: boolean }>;
+  subjects: Array<{ id: string; name: string; code: string | null }>;
   onAdd: (values: AssignTeacherValues) => Promise<string | null>;
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
+  const [mode, setMode] = useState<AssignmentMode>("section");
   const [sections, setSections] = useState<SectionRecord[]>([]);
   const [sectionsLoading, setSectionsLoading] = useState(false);
-  const [subjects, setSubjects] = useState<Array<{ id: string; name: string; code: string | null }>>(
-    [],
-  );
-  const [subjectsLoading, setSubjectsLoading] = useState(false);
 
   const {
     register,
@@ -47,16 +62,19 @@ export function AssignTeacherForm({
     formState: { errors, isSubmitting },
   } = useForm<AssignTeacherValues>({
     resolver: zodResolver(AssignTeacherSchema),
-    defaultValues: {
-      teacherId: "",
-      classId: "",
-      sectionId: "",
-      subjectId: "",
-      academicYearId: "",
-    },
+    defaultValues: { mode: "section", academicYearId: "" },
   });
 
   const selectedClassId = watch("classId");
+
+  useEffect(() => {
+    setValue("academicYearId", "");
+    setValue("classId", "");
+    setValue("sectionId", "");
+    setValue("subjectId", "");
+    setSections([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
 
   useEffect(() => {
     if (!selectedClassId) {
@@ -76,33 +94,7 @@ export function AssignTeacherForm({
       .finally(() => {
         if (!cancelled) setSectionsLoading(false);
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedClassId]);
-
-  useEffect(() => {
-    if (!selectedClassId) {
-      setSubjects([]);
-      return;
-    }
-    let cancelled = false;
-    setSubjectsLoading(true);
-    academicApi
-      .listClassSubjects(selectedClassId)
-      .then((records) => {
-        if (!cancelled)
-          setSubjects(
-            records.map((r) => ({ id: r.subjectId, name: r.subjectName, code: null })),
-          );
-      })
-      .catch(() => {
-        if (!cancelled) setSubjects([]);
-      })
-      .finally(() => {
-        if (!cancelled) setSubjectsLoading(false);
-      });
-    setValue("subjectId", "");
+    setValue("sectionId", "");
     return () => {
       cancelled = true;
     };
@@ -114,9 +106,51 @@ export function AssignTeacherForm({
     if (error) setApiError(error);
   };
 
+  const errorMessage = (
+    name: "teacherId" | "classId" | "sectionId" | "subjectId" | "academicYearId",
+  ): string | undefined => {
+    const fieldError = errors[name as keyof typeof errors];
+    return fieldError && typeof fieldError.message === "string"
+      ? fieldError.message
+      : undefined;
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-      <Field label="Teacher" error={errors.teacherId?.message} required>
+      <div className="flex items-center gap-1 rounded-lg border border-neutral-200 bg-bg-subtle p-0.5">
+        <button
+          type="button"
+          onClick={() => {
+            setMode("section");
+            setValue("mode", "section");
+          }}
+          className={cn(
+            "flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+            mode === "section"
+              ? "bg-bg-default text-neutral-900 shadow-sm"
+              : "text-neutral-500 hover:text-neutral-800",
+          )}
+        >
+          Assign to Section
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMode("subject");
+            setValue("mode", "subject");
+          }}
+          className={cn(
+            "flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+            mode === "subject"
+              ? "bg-bg-default text-neutral-900 shadow-sm"
+              : "text-neutral-500 hover:text-neutral-800",
+          )}
+        >
+          Assign Subject
+        </button>
+      </div>
+
+      <Field label="Teacher" error={errorMessage("teacherId")} required>
         <Select disabled={isSubmitting} {...register("teacherId")}>
           <option value="">Select teacher</option>
           {teachers.map((teacher) => (
@@ -127,78 +161,83 @@ export function AssignTeacherForm({
         </Select>
       </Field>
 
-      <Field label="Class" error={errors.classId?.message} required>
-        <Select
-          disabled={isSubmitting}
-          {...register("classId", {
-            onChange: () => setValue("sectionId", ""),
-          })}
+      {mode === "section" ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Class" error={errorMessage("classId")} className="sm:col-span-2" required>
+            <Select
+              disabled={isSubmitting}
+              {...register("classId", {
+                onChange: () => setValue("sectionId", ""),
+              })}
+            >
+              <option value="">Select class</option>
+              {classes.map((cls) => (
+                <option key={cls.id} value={cls.id}>
+                  {cls.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+
+          <Field
+            label="Section"
+            error={errorMessage("sectionId")}
+            className="sm:col-span-2"
+            hint={
+              selectedClassId && !sectionsLoading && sections.length === 0
+                ? "No sections created for this class"
+                : undefined
+            }
+            required
+          >
+            <Select
+              disabled={isSubmitting || !selectedClassId || sectionsLoading}
+              {...register("sectionId")}
+            >
+              <option value="">
+                {!selectedClassId
+                  ? "Select a class first"
+                  : sectionsLoading
+                    ? "Loading sections…"
+                    : sections.length === 0
+                      ? "No sections available"
+                      : "Select section"}
+              </option>
+              {sections.map((section) => (
+                <option key={section.id} value={section.id}>
+                  {section.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+      ) : (
+        <Field
+          label="Subject"
+          error={errorMessage("subjectId")}
+          hint={
+            subjects.length === 0
+              ? "No subjects exist yet. Create subjects under Academics first."
+              : "A subject applies to the whole academic year."
+          }
+          required
         >
-          <option value="">Select class</option>
-          {classes.map((cls) => (
-            <option key={cls.id} value={cls.id}>
-              {cls.name}
+          <Select disabled={isSubmitting || subjects.length === 0} {...register("subjectId")}>
+            <option value="">
+              {subjects.length === 0 ? "No subjects available" : "Select subject"}
             </option>
-          ))}
-        </Select>
-      </Field>
-
-      <Field
-        label="Section"
-        error={errors.sectionId?.message}
-        hint={
-          selectedClassId && !sectionsLoading && sections.length === 0
-            ? "No sections created for this class"
-            : undefined
-        }
-        required
-      >
-        <Select disabled={isSubmitting || !selectedClassId || sectionsLoading} {...register("sectionId")}>
-          <option value="">
-            {!selectedClassId
-              ? "Select a class first"
-              : sectionsLoading
-                ? "Loading sections…"
-                : sections.length === 0
-                  ? "No sections available"
-                  : "Select section"}
-          </option>
-          {sections.map((section) => (
-            <option key={section.id} value={section.id}>
-              {section.name}
-            </option>
-          ))}
-        </Select>
-      </Field>
-
-      <Field
-        label="Subject"
-        error={errors.subjectId?.message}
-        hint={
-          selectedClassId && !subjectsLoading && subjects.length === 0
-            ? "No subjects mapped to this class yet. You can still assign the class."
-            : "Optional. Leave as 'No subject' to assign just the class."
-        }
-      >
-        <Select disabled={isSubmitting || !selectedClassId || subjectsLoading} {...register("subjectId")}>
-          <option value="">No subject (class assignment only)</option>
-          {!selectedClassId || subjectsLoading ? null : subjects.length === 0 ? (
-            <option value="" disabled>
-              No subjects available
-            </option>
-          ) : (
-            subjects.map((subject) => (
+            {subjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
                 {subject.code ? `${subject.name} (${subject.code})` : subject.name}
               </option>
-            ))
-          )}
-        </Select>
-      </Field>
+            ))}
+          </Select>
+        </Field>
+      )}
 
       <Field
         label="Academic Year"
-        error={errors.academicYearId?.message}
+        error={errorMessage("academicYearId")}
         hint="Leave empty to use the active academic year"
       >
         <Select disabled={isSubmitting} {...register("academicYearId")}>
@@ -223,7 +262,7 @@ export function AssignTeacherForm({
       <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
         <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" />
         <Button
-          text={isSubmitting ? "Assigning…" : "Assign Teacher"}
+          text={isSubmitting ? "Assigning…" : mode === "section" ? "Assign to Section" : "Assign Subject"}
           loading={isSubmitting}
           disabled={isSubmitting}
           className="w-auto"

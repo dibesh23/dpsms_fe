@@ -46,6 +46,10 @@ export interface TeacherDetailSubjectAssignment {
     name: string;
     code: string | null;
   };
+  academicYear: {
+    id: string;
+    label: string;
+  };
 }
 
 export interface TeacherDetailRecord {

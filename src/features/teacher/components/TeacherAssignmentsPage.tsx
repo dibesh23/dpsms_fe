@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
@@ -14,7 +14,6 @@ import { useTable } from "@/shared/hooks/useTable";
 import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
-import { cn } from "@/shared/lib/cn";
 import { teacherApi } from "../api/teacherApi";
 import {
   teacherAssignmentApi,
@@ -45,6 +44,7 @@ interface AssignmentView {
   className: string;
   sectionId: string;
   sectionName: string;
+  academicYearId?: string;
   academicYearLabel?: string;
 }
 
@@ -56,6 +56,14 @@ interface SectionRow {
   capacity: number | null;
   classTeacherId: string | null;
   classTeacherName: string;
+}
+
+interface TeacherGroupRow {
+  teacherId: string;
+  teacherName: string;
+  classAssignments: AssignmentView[];
+  subjectAssignments: AssignmentView[];
+  academicYears: string[];
 }
 
 interface ConfirmTarget {
@@ -134,10 +142,12 @@ export function TeacherAssignmentsPage() {
             type: "subject",
             subjectName: record.subjectName,
             subjectCode: record.subjectCode,
-            classId: record.classId,
-            className: record.className,
-            sectionId: record.sectionId,
-            sectionName: record.sectionName,
+            classId: "",
+            className: "",
+            sectionId: "",
+            sectionName: "",
+            academicYearId: record.academicYearId,
+            academicYearLabel: record.academicYearLabel,
           });
         });
       });
@@ -154,6 +164,7 @@ export function TeacherAssignmentsPage() {
             className: record.className,
             sectionId: record.sectionId,
             sectionName: record.sectionName,
+            academicYearId: record.academicYearId,
             academicYearLabel: record.academicYearLabel,
           });
         });
@@ -197,53 +208,27 @@ export function TeacherAssignmentsPage() {
 
   const handleAssign = async (values: AssignTeacherValues): Promise<string | null> => {
     const teacher = teachers.find((t) => t.id === values.teacherId);
-    const existingClass = assignments.find(
-      (a) =>
-        a.type === "class" && a.teacherId === values.teacherId && a.sectionId === values.sectionId,
-    );
+    const explicitYearId = values.academicYearId || undefined;
+    const effectiveYearId =
+      explicitYearId ?? sessions.find((s) => s.isActive)?.id ?? undefined;
 
-    let createdClassRow: AssignmentView | null = null;
-    if (!existingClass) {
-      try {
-        const classRecord = await teacherAssignmentApi.createClassAssignment(values.teacherId, {
-          sectionId: values.sectionId,
-          academicYearId: values.academicYearId || undefined,
-        });
-        createdClassRow = {
-          key: `class:${values.teacherId}:${classRecord.id}`,
-          id: classRecord.id,
-          teacherId: values.teacherId,
-          teacherName: teacher?.name ?? "",
-          type: "class",
-          classId: classRecord.classId,
-          className: classRecord.className,
-          sectionId: classRecord.sectionId,
-          sectionName: classRecord.sectionName,
-          academicYearLabel: classRecord.academicYearLabel,
-        };
-      } catch {
-        return "Could not create the class assignment. Check the details and try again.";
-      }
-    }
-
-    let subjectRow: AssignmentView | null = null;
-    if (values.subjectId) {
+    if (values.mode === "subject") {
       const subjectDuplicate = assignments.some(
         (a) =>
           a.type === "subject" &&
           a.teacherId === values.teacherId &&
-          a.sectionId === values.sectionId &&
-          a.subjectName === subjects.find((s) => s.id === values.subjectId)?.name,
+          a.subjectName === subjects.find((s) => s.id === values.subjectId)?.name &&
+          a.academicYearId === effectiveYearId,
       );
       if (subjectDuplicate) {
-        return "This teacher is already assigned to this subject for the selected section.";
+        return "This teacher is already assigned to this subject for the selected academic year.";
       }
       try {
         const subjectRecord = await teacherAssignmentApi.createSubjectAssignment(values.teacherId, {
           subjectId: values.subjectId,
-          sectionId: values.sectionId,
+          academicYearId: explicitYearId,
         });
-        subjectRow = {
+        const subjectRow: AssignmentView = {
           key: `subject:${values.teacherId}:${subjectRecord.id}`,
           id: subjectRecord.id,
           teacherId: values.teacherId,
@@ -251,32 +236,58 @@ export function TeacherAssignmentsPage() {
           type: "subject",
           subjectName: subjectRecord.subjectName,
           subjectCode: subjectRecord.subjectCode,
-          classId: subjectRecord.classId,
-          className: subjectRecord.className,
-          sectionId: subjectRecord.sectionId,
-          sectionName: subjectRecord.sectionName,
+          classId: "",
+          className: "",
+          sectionId: "",
+          sectionName: "",
+          academicYearId: subjectRecord.academicYearId,
+          academicYearLabel: subjectRecord.academicYearLabel,
         };
+        setAssignments((current) => [...current, subjectRow]);
+        setAssignOpen(false);
+        toast.success("Subject assigned to the teacher for the academic year.");
+        return null;
       } catch {
         return "Could not assign the subject. Check the details and try again.";
       }
     }
 
-    if (!createdClassRow && !subjectRow) {
-      return "This teacher is already assigned to this section. Choose a subject to assign.";
+    const existingClass = assignments.find(
+(a) =>
+          a.type === "class" &&
+          a.teacherId === values.teacherId &&
+          a.sectionId === values.sectionId &&
+          a.academicYearId === effectiveYearId,
+      );
+    if (existingClass) {
+      return "This teacher is already assigned to this section for the selected academic year.";
     }
 
-    setAssignments((current) => [
-      ...current,
-      ...(createdClassRow ? [createdClassRow] : []),
-      ...(subjectRow ? [subjectRow] : []),
-    ]);
-    setAssignOpen(false);
-    toast.success(
-      subjectRow
-        ? "Teacher assigned to the section and subject successfully."
-        : "Teacher assigned to the class section successfully.",
-    );
-    return null;
+    try {
+      const classRecord = await teacherAssignmentApi.createClassAssignment(values.teacherId, {
+        sectionId: values.sectionId,
+        academicYearId: explicitYearId,
+      });
+      const classRow: AssignmentView = {
+        key: `class:${values.teacherId}:${classRecord.id}`,
+        id: classRecord.id,
+        teacherId: values.teacherId,
+        teacherName: teacher?.name ?? "",
+        type: "class",
+        classId: classRecord.classId,
+        className: classRecord.className,
+        sectionId: classRecord.sectionId,
+        sectionName: classRecord.sectionName,
+        academicYearId: classRecord.academicYearId,
+        academicYearLabel: classRecord.academicYearLabel,
+      };
+      setAssignments((current) => [...current, classRow]);
+      setAssignOpen(false);
+      toast.success("Teacher assigned to the class section for the academic year.");
+      return null;
+    } catch {
+      return "Could not create the class assignment. Check the details and try again.";
+    }
   };
 
   const handleSetClassTeacher = async (values: SetClassTeacherValues): Promise<string | null> => {
@@ -334,12 +345,54 @@ export function TeacherAssignmentsPage() {
 
   const classFilterOptions = classes.map((c) => ({ value: c.id, label: c.name }));
 
-  const table = useTable<AssignmentView>({
-    data: assignments,
+  const teacherGroups = useMemo<TeacherGroupRow[]>(() => {
+    const groupsByTeacher = new Map<string, TeacherGroupRow>();
+    for (const assignment of assignments) {
+      let group = groupsByTeacher.get(assignment.teacherId);
+      if (!group) {
+        group = {
+          teacherId: assignment.teacherId,
+          teacherName: assignment.teacherName,
+          classAssignments: [],
+          subjectAssignments: [],
+          academicYears: [],
+        };
+        groupsByTeacher.set(assignment.teacherId, group);
+      }
+      if (assignment.type === "class") {
+        group.classAssignments.push(assignment);
+      } else {
+        group.subjectAssignments.push(assignment);
+      }
+    }
+    const groups = Array.from(groupsByTeacher.values());
+    groups.forEach((group) => {
+      group.classAssignments.sort(
+        (a, b) =>
+          a.className.localeCompare(b.className) || a.sectionName.localeCompare(b.sectionName),
+      );
+      group.subjectAssignments.sort((a, b) =>
+        (a.subjectName ?? "").localeCompare(b.subjectName ?? ""),
+      );
+      const years = new Set<string>();
+      for (const assignment of [...group.classAssignments, ...group.subjectAssignments]) {
+        if (assignment.academicYearLabel) years.add(assignment.academicYearLabel);
+      }
+      group.academicYears = Array.from(years).sort();
+    });
+    return groups;
+  }, [assignments]);
+
+  const table = useTable<TeacherGroupRow>({
+    data: teacherGroups,
     pageSize: 8,
     getSearchText: (row) =>
-      `${row.teacherName} ${row.subjectName ?? ""} ${row.subjectCode ?? ""} ${row.className} ${row.sectionName} ${row.academicYearLabel ?? ""}`,
-    filterMatch: (row, value) => row.classId === value,
+      `${row.teacherName} ${row.academicYears.join(" ")} ${row.classAssignments
+        .map((a) => `${a.className} ${a.sectionName}`)
+        .join(" ")} ${row.subjectAssignments
+        .map((a) => `${a.subjectName ?? ""} ${a.subjectCode ?? ""}`)
+        .join(" ")}`,
+    filterMatch: (row, value) => row.classAssignments.some((a) => a.classId === value),
     sortValue: sortValueOf,
     defaultSortKey: "teacherName",
   });
@@ -353,70 +406,75 @@ export function TeacherAssignmentsPage() {
     defaultSortKey: "className",
   });
 
-  const columns: Column<AssignmentView>[] = [
+  const columns: Column<TeacherGroupRow>[] = [
     {
       key: "teacherName",
       header: "Teacher",
       sortValue: (row) => row.teacherName,
-      render: (row) => (
-        <div className="flex items-center gap-3">
-          <span className="flex size-8 flex-none items-center justify-center rounded-md border border-neutral-200 bg-bg-subtle text-neutral-500">
-            <GraduationCapIcon className="size-4" />
-          </span>
-          <p className="truncate font-medium text-neutral-900">{row.teacherName}</p>
-        </div>
-      ),
-    },
-    {
-      key: "type",
-      header: "Type",
-      sortValue: (row) => row.type,
-      render: (row) =>
-        row.type === "subject" ? (
-          <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
-            Subject
-          </span>
-        ) : (
-          <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600">
-            Class
-          </span>
-        ),
-    },
-    {
-      key: "subjectName",
-      header: "Subject",
-      sortValue: (row) => row.subjectName ?? "",
-      render: (row) =>
-        row.subjectName ? (
-          <div className="min-w-0">
-            <p className="truncate font-medium text-neutral-900">{row.subjectName}</p>
-            {row.subjectCode && <p className="text-xs text-neutral-400">{row.subjectCode}</p>}
+      render: (row) => {
+        const totalAssignments = row.classAssignments.length + row.subjectAssignments.length;
+        return (
+          <div className="flex items-center gap-3">
+            <span className="flex size-8 flex-none items-center justify-center rounded-md border border-neutral-200 bg-bg-subtle text-neutral-500">
+              <GraduationCapIcon className="size-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate font-medium text-neutral-900">{row.teacherName}</p>
+              <p className="text-xs text-neutral-400">{totalAssignments} assignment(s)</p>
+            </div>
           </div>
+        );
+      },
+    },
+    {
+      key: "classes",
+      header: "Classes",
+      sortValue: (row) => row.classAssignments.map((a) => a.className).join(", "),
+      render: (row) =>
+        row.classAssignments.length === 0 ? (
+          <span className="text-neutral-300">—</span>
         ) : (
-          <span className="text-neutral-400">—</span>
+          <div className="flex max-w-72 flex-wrap gap-1.5">
+            {row.classAssignments.map((assignment) => (
+              <span
+                key={assignment.id}
+                title={row.academicYears.length > 1 ? assignment.academicYearLabel : undefined}
+                className="inline-flex items-center rounded-md border border-neutral-200 bg-bg-subtle px-2 py-0.5 text-xs font-medium text-neutral-600"
+              >
+                {assignment.className} · {assignment.sectionName}
+                {row.academicYears.length > 1 && (
+                  <span className="ml-1 text-neutral-400">({assignment.academicYearLabel})</span>
+                )}
+              </span>
+            ))}
+          </div>
         ),
     },
     {
-      key: "className",
-      header: "Class",
-      sortValue: (row) => row.className,
-      render: (row) => <span className="text-neutral-600">{row.className}</span>,
-    },
-    {
-      key: "sectionName",
-      header: "Section",
-      sortValue: (row) => row.sectionName,
-      render: (row) => <span className="text-neutral-600">{row.sectionName}</span>,
-    },
-    {
-      key: "academicYearLabel",
-      header: "Academic Year",
-      sortValue: (row) => row.academicYearLabel ?? "",
-      render: (row) => (
-        <span className={cn("text-neutral-500", !row.academicYearLabel && "text-neutral-300")}>
-          {row.academicYearLabel ?? "—"}
-        </span>
-      ),
+      key: "subjects",
+      header: "Subjects",
+      sortValue: (row) => row.subjectAssignments.map((a) => a.subjectName).join(", "),
+      render: (row) =>
+        row.subjectAssignments.length === 0 ? (
+          <span className="text-neutral-300">—</span>
+        ) : (
+          <div className="flex max-w-72 flex-wrap gap-1.5">
+            {row.subjectAssignments.map((assignment) => (
+              <span
+                key={assignment.id}
+                title={row.academicYears.length > 1 ? assignment.academicYearLabel : undefined}
+                className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"
+              >
+                {assignment.subjectName}
+                {row.academicYears.length > 1 && (
+                  <span className="ml-1 text-emerald-500">
+                    ({assignment.academicYearLabel})
+                  </span>
+                )}
+              </span>
+            ))}
+          </div>
+        ),
     },
     ...(canManage
       ? [
@@ -424,28 +482,35 @@ export function TeacherAssignmentsPage() {
             key: "actions",
             header: "",
             align: "right" as const,
-            render: (row: AssignmentView) => (
+            render: (row: TeacherGroupRow) => (
               <RowActions
                 actions={[
-                  {
-                    label: "Remove assignment",
+                  ...row.classAssignments.map((assignment) => ({
+                    label: `Remove class · ${assignment.className} · ${assignment.sectionName}`,
                     icon: <BanIcon className="size-3.5" />,
                     danger: true,
                     onClick: () =>
                       setConfirmTarget({
-                        kind: row.type,
+                        kind: "class" as const,
                         teacherId: row.teacherId,
-                        assignmentId: row.id,
-                        title:
-                          row.type === "subject"
-                            ? "Remove subject assignment"
-                            : "Remove class assignment",
-                        message:
-                          row.type === "subject"
-                            ? `Remove ${row.teacherName}'s assignment for ${row.subjectName} in ${row.className} · Section ${row.sectionName}?`
-                            : `Remove ${row.teacherName}'s class assignment for ${row.className} · Section ${row.sectionName}?`,
+                        assignmentId: assignment.id,
+                        title: "Remove class assignment",
+                        message: `Remove ${row.teacherName}'s class assignment for ${assignment.className} · Section ${assignment.sectionName}?`,
                       }),
-                  },
+                  })),
+                  ...row.subjectAssignments.map((assignment) => ({
+                    label: `Remove subject · ${assignment.subjectName}`,
+                    icon: <BanIcon className="size-3.5" />,
+                    danger: true,
+                    onClick: () =>
+                      setConfirmTarget({
+                        kind: "subject" as const,
+                        teacherId: row.teacherId,
+                        assignmentId: assignment.id,
+                        title: "Remove subject assignment",
+                        message: `Remove ${row.teacherName}'s assignment for ${assignment.subjectName} in ${assignment.academicYearLabel ?? "the active year"}?`,
+                      }),
+                  })),
                 ]}
               />
             ),
@@ -510,7 +575,10 @@ export function TeacherAssignmentsPage() {
   ];
 
   const sectionsWithTeacher = sections.filter((s) => s.classTeacherId).length;
-  const subjectCount = assignments.filter((a) => a.type === "subject").length;
+  const subjectCount = teacherGroups.reduce(
+    (sum, group) => sum + group.subjectAssignments.length,
+    0,
+  );
 
   return (
     <div className="space-y-6">
@@ -531,8 +599,8 @@ export function TeacherAssignmentsPage() {
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatsCard
-          label="Total Assignments"
-          value={String(assignments.length)}
+          label="Teachers Assigned"
+          value={String(teacherGroups.length)}
           icon={<GraduationCapIcon className="size-4" />}
         />
         <StatsCard
@@ -552,7 +620,7 @@ export function TeacherAssignmentsPage() {
           <div>
             <h2 className="text-sm font-semibold text-neutral-900">Assignments</h2>
             <p className="mt-0.5 text-xs text-neutral-500">
-              Which teachers are assigned to which class sections and subjects
+              Each teacher is listed once, with all their class sections and subjects
             </p>
           </div>
           <div className="flex items-center gap-3 text-xs text-neutral-500">
@@ -580,7 +648,7 @@ export function TeacherAssignmentsPage() {
         <DataTable
           columns={columns}
           data={table.pageRows}
-          keyExtractor={(row) => row.key}
+          keyExtractor={(row) => row.teacherId}
           sortKey={table.sortKey}
           sortDir={table.sortDir}
           onSort={table.handleSort}
@@ -652,12 +720,13 @@ export function TeacherAssignmentsPage() {
           open={assignOpen}
           onClose={() => setAssignOpen(false)}
           title="Assign Teacher"
-          description="Assign a teacher to a class section, and optionally a subject."
+          description="Assign a teacher to a class section, or assign a subject for an academic year."
         >
           <AssignTeacherForm
             teachers={teachers}
             classes={classes}
             sessions={sessions}
+            subjects={subjects}
             onAdd={handleAssign}
             onClose={() => setAssignOpen(false)}
           />

@@ -175,7 +175,6 @@ export function TeachersPage() {
       const record = await teacherApi.create({
         fullName: values.fullName,
         email: values.email,
-        subject: values.subject,
         department: values.department,
         phone: values.phone,
         classesPerWeek: Number(values.classesPerWeek) || 0,

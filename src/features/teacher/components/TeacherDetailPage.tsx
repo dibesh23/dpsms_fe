@@ -133,7 +133,9 @@ export function TeacherDetailPage() {
     id: assignment.id,
     name: assignment.subject.name,
     code: assignment.subject.code,
+    academicYearLabel: assignment.academicYear.label,
   }));
+  const subjectSummary = Array.from(new Set(subjects.map((subject) => subject.name))).join(", ");
   const membership = teacher.teacherSchoolMemberships[0] ?? null;
   const joinedAt = formatDate(membership?.joinedAt);
 
@@ -149,9 +151,7 @@ export function TeacherDetailPage() {
 
       <PageHeader
         title={teacher.fullName}
-        description={
-          subjects.length > 0 ? subjects.map((subject) => subject.name).join(", ") : undefined
-        }
+        description={subjects.length > 0 ? subjectSummary : undefined}
         actions={
           <>
             {canUpdate && (
@@ -244,14 +244,17 @@ export function TeacherDetailPage() {
                 {subjects.map((subject) => (
                   <li
                     key={subject.id}
-                    className="flex items-center justify-between rounded-md bg-bg-subtle px-3 py-2 text-sm"
+                    className="flex items-center justify-between gap-2 rounded-md bg-bg-subtle px-3 py-2 text-sm"
                   >
-                    <span className="truncate text-neutral-800">{subject.name}</span>
-                    {subject.code && (
-                      <span className="ml-2 flex-none text-xs text-neutral-400">
-                        {subject.code}
+                    <span className="min-w-0 truncate text-neutral-800">{subject.name}</span>
+                    <span className="flex flex-none items-center gap-2">
+                      {subject.code && (
+                        <span className="text-xs text-neutral-400">{subject.code}</span>
+                      )}
+                      <span className="rounded-full border border-neutral-200 bg-bg-default px-2 py-0.5 text-[11px] font-medium text-neutral-600">
+                        {subject.academicYearLabel}
                       </span>
-                    )}
+                    </span>
                   </li>
                 ))}
               </ul>

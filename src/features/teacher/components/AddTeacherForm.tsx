@@ -9,23 +9,11 @@ import { Input } from "@/shared/components/ui/input";
 import { Field, Select } from "@/shared/components/ui/form-field";
 import { academicApi } from "@/features/academic/api/academicApi";
 
-const SUBJECTS = [
-  "Mathematics",
-  "Science",
-  "English",
-  "Nepali",
-  "Social Studies",
-  "Computer Science",
-  "Physical Education",
-  "Accountancy",
-];
-
 const STATUSES = ["Active", "On Leave", "Invited"] as const;
 
 const AddTeacherSchema = z.object({
   fullName: z.string().min(1, "Full name is required").max(255),
   email: z.email("Enter a valid email address"),
-  subject: z.string().min(1, "Select a subject"),
   department: z.string().min(1, "Select a department"),
   phone: z.string().min(7, "Enter a valid phone number"),
   classesPerWeek: z.string().min(1, "Classes per week is required"),
@@ -99,20 +87,10 @@ export function AddTeacherForm({
           />
         </Field>
 
-        <Field label="Subject" error={errors.subject?.message}>
-          <Select disabled={isSubmitting} {...register("subject")}>
-            <option value="">Select subject</option>
-            {SUBJECTS.map((subject) => (
-              <option key={subject} value={subject}>
-                {subject}
-              </option>
-            ))}
-          </Select>
-        </Field>
-
         <Field
           label="Department"
           error={errors.department?.message}
+          className="sm:col-span-2"
           hint={
             departments.length === 0
               ? "No departments exist yet. Create one in Departments first."
