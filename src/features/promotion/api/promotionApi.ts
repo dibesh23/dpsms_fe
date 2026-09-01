@@ -1,6 +1,7 @@
 import { apiClient } from "@/shared/lib/apiClient";
 import type {
   RunBatchResponse,
+  PreviewResult,
   ReviewResponse,
   ListResult,
   PromotionRecordRow,
@@ -8,9 +9,18 @@ import type {
   BatchDetail,
   StudentPromotionHistory,
   ReviewDecision,
+  BatchOverride,
 } from "../types";
 
 export interface RunBatchPayload {
+  academicYearFromId: string;
+  academicYearToId: string;
+  marksThreshold?: number;
+  attendanceThreshold?: number;
+  overrides?: BatchOverride[];
+}
+
+export interface PreviewPayload {
   academicYearFromId: string;
   academicYearToId: string;
   marksThreshold?: number;
@@ -24,6 +34,11 @@ export interface ReviewPayload {
 }
 
 export const promotionApi = {
+  async previewBatch(payload: PreviewPayload): Promise<PreviewResult> {
+    const { data } = await apiClient.post<{ data: PreviewResult }>("/promotions/preview", payload);
+    return data.data;
+  },
+
   async runBatch(payload: RunBatchPayload): Promise<RunBatchResponse> {
     const { data } = await apiClient.post<{ data: RunBatchResponse }>("/promotions/batch", payload);
     return data.data;

@@ -35,6 +35,39 @@ export interface RunBatchResponse {
   }[];
 }
 
+export type BatchDecision = "PROMOTE" | "HOLD";
+
+export interface BatchOverride {
+  enrollmentId: string;
+  decision: BatchDecision;
+}
+
+export interface PreviewStudentRow {
+  enrollmentId: string;
+  studentId: string;
+  studentName: string;
+  admissionNumber: string;
+  currentClass: string;
+  currentSection: string;
+  marks?: number;
+  attendance?: number;
+  recommendedOutcome: BatchDecision;
+  targetClass: string | null;
+  targetSection: string | null;
+}
+
+export interface PreviewResult {
+  sourceAcademicYearId: string;
+  targetAcademicYearId: string;
+  summary: {
+    total: number;
+    promote: number;
+    hold: number;
+    skipped: number;
+  };
+  students: PreviewStudentRow[];
+}
+
 export interface ReviewResponse {
   promotionRecordId: string;
   studentName: string;

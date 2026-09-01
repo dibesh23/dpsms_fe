@@ -9,16 +9,20 @@ import { DataTable, type Column } from "@/shared/components/ui/data-table";
 import { Input } from "@/shared/components/ui/input";
 import { StatusBadge } from "@/shared/components/ui/status-badge";
 import { LoadingState } from "@/shared/components/ui/loading-state";
-import { AlertTriangleIcon, CheckCircle2Icon, GraduationCapIcon } from "@/shared/components/ui/icons";
+import {
+  AlertTriangleIcon,
+  CheckCircle2Icon,
+  GraduationCapIcon,
+} from "@/shared/components/ui/icons";
 import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { cn } from "@/shared/lib/cn";
 import { academicApi, type SessionRecord } from "@/features/academic/api/academicApi";
 import { promotionApi, type RunBatchPayload } from "../api/promotionApi";
-import type { RunBatchResponse } from "../types";
+import type { PreviewResult, PreviewStudentRow, RunBatchResponse } from "../types";
 
-type Step = "configure" | "confirm" | "success";
+type Step = "configure" | "preview" | "success";
 
 function getApiErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error && "response" in err) {
@@ -82,6 +86,12 @@ export function BatchPromotionPage() {
   const [targetYearId, setTargetYearId] = useState<string>("");
   const [marksThreshold, setMarksThreshold] = useState<number>(40);
   const [attendanceThreshold, setAttendanceThreshold] = useState<number>(75);
+
+  const [preview, setPreview] = useState<PreviewResult | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [overrides, setOverrides] = useState<Record<string, "PROMOTE" | "HOLD">>({});
+
   const [running, setRunning] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [result, setResult] = useState<RunBatchResponse | null>(null);
@@ -106,16 +116,42 @@ export function BatchPromotionPage() {
   const selectedTarget = sessions.find((s) => s.id === targetYearId);
   const configValid = sourceYearId && targetYearId && sourceYearId !== targetYearId;
 
-  const handleRun = useCallback(async () => {
+  const handlePreview = useCallback(async () => {
     if (!configValid) return;
+    setPreviewLoading(true);
+    setPreviewError(null);
+    setOverrides({});
+    try {
+      const response = await promotionApi.previewBatch({
+        academicYearFromId: sourceYearId,
+        academicYearToId: targetYearId,
+        marksThreshold,
+        attendanceThreshold,
+      });
+      setPreview(response);
+      setStep("preview");
+    } catch (err) {
+      setPreviewError(getApiErrorMessage(err, "Could not preview the promotion. Please try again."));
+    } finally {
+      setPreviewLoading(false);
+    }
+  }, [configValid, sourceYearId, targetYearId, marksThreshold, attendanceThreshold]);
+
+  const handleRun = useCallback(async () => {
+    if (!configValid || !preview) return;
     setRunning(true);
     setApiError(null);
     try {
+      const overridesList = Object.entries(overrides).map(([enrollmentId, decision]) => ({
+        enrollmentId,
+        decision,
+      }));
       const payload: RunBatchPayload = {
         academicYearFromId: sourceYearId,
         academicYearToId: targetYearId,
         marksThreshold,
         attendanceThreshold,
+        overrides: overridesList,
       };
       const response = await promotionApi.runBatch(payload);
       setResult(response);
@@ -132,7 +168,51 @@ export function BatchPromotionPage() {
     } finally {
       setRunning(false);
     }
-  }, [configValid, sourceYearId, targetYearId, marksThreshold, attendanceThreshold, toast]);
+  }, [configValid, sourceYearId, targetYearId, marksThreshold, attendanceThreshold, overrides, preview, toast]);
+
+  const groups = useMemo(() => {
+    if (!preview) return [];
+    const map = new Map<string, PreviewStudentRow[]>();
+    for (const s of preview.students) {
+      const list = map.get(s.currentClass) ?? [];
+      list.push(s);
+      map.set(s.currentClass, list);
+    }
+    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  }, [preview]);
+
+  const effectiveDecision = useCallback(
+    (row: PreviewStudentRow): "PROMOTE" | "HOLD" =>
+      overrides[row.enrollmentId] ?? row.recommendedOutcome,
+    [overrides],
+  );
+
+  const overrideCounts = useMemo(() => {
+    if (!preview) return { promote: 0, hold: 0 };
+    let promote = 0;
+    let hold = 0;
+    for (const s of preview.students) {
+      if (effectiveDecision(s) === "PROMOTE") promote++;
+      else hold++;
+    }
+    return { promote, hold };
+  }, [preview, effectiveDecision]);
+
+  const isOverridden = useCallback(
+    (row: PreviewStudentRow) =>
+      overrides[row.enrollmentId] !== undefined &&
+      overrides[row.enrollmentId] !== row.recommendedOutcome,
+    [overrides],
+  );
+
+  const setOverride = useCallback((row: PreviewStudentRow, value: string) => {
+    setOverrides((prev) => {
+      const next = { ...prev };
+      if (!value) delete next[row.enrollmentId];
+      else next[row.enrollmentId] = value as "PROMOTE" | "HOLD";
+      return next;
+    });
+  }, []);
 
   if (!canRun) {
     return (
@@ -146,10 +226,10 @@ export function BatchPromotionPage() {
     <div className="space-y-4">
       <PageHeader
         title="Batch Promotion"
-        description="Promote all students from one academic year to the next."
+        description="Review and promote all students from one academic year to the next."
         actions={
           <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-bg-subtle px-3 py-1 text-xs font-medium text-neutral-500">
-            Step {step === "configure" ? 1 : step === "confirm" ? 2 : 3} of 3
+            Step {step === "configure" ? 1 : step === "preview" ? 2 : 3} of 3
           </span>
         }
       />
@@ -170,10 +250,7 @@ export function BatchPromotionPage() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Source academic year" required>
-              <Select
-                value={sourceYearId}
-                onChange={(e) => setSourceYearId(e.target.value)}
-              >
+              <Select value={sourceYearId} onChange={(e) => setSourceYearId(e.target.value)}>
                 <option value="">Select source year…</option>
                 {sourceSessions.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -184,10 +261,7 @@ export function BatchPromotionPage() {
             </Field>
 
             <Field label="Target academic year" required>
-              <Select
-                value={targetYearId}
-                onChange={(e) => setTargetYearId(e.target.value)}
-              >
+              <Select value={targetYearId} onChange={(e) => setTargetYearId(e.target.value)}>
                 <option value="">Select target year…</option>
                 {targetSessions.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -227,69 +301,190 @@ export function BatchPromotionPage() {
           </div>
 
           <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-            Students are promoted to the next grade in the target year. If any promoted student has no
-            matching class/section in the target year, the batch will fail and no changes are made.
+            Students are promoted to the next grade in the target year. Any missing next-grade class is
+            created automatically. You can review each student and override the decision before running.
           </p>
 
-          {apiError && (
+          {previewError && (
             <div role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              {apiError}
+              {previewError}
             </div>
           )}
 
           <div className="mt-5 flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
             <Button
-              variant="secondary"
-              text="Cancel"
+              text={previewLoading ? "Previewing…" : "Preview results"}
+              loading={previewLoading}
+              disabled={!configValid || previewLoading}
               className="w-auto"
-              onClick={() => setStep("configure")}
-            />
-            <Button
-              text="Continue"
-              disabled={!configValid}
-              className="w-auto"
-              onClick={() => {
-                setApiError(null);
-                setStep("confirm");
-              }}
+              onClick={() => void handlePreview()}
             />
           </div>
         </section>
       )}
 
-      {step === "confirm" && selectedSource && selectedTarget && (
-        <section className="rounded-lg border border-neutral-200 bg-bg-default p-5">
-          <h2 className="font-medium text-neutral-900">Confirm batch promotion</h2>
-          <p className="mt-0.5 text-sm text-neutral-500">
-            Review the configuration below before running the promotion.
-          </p>
+      {step === "preview" && preview && selectedSource && selectedTarget && (
+        <section className="space-y-4">
+          <div className="rounded-lg border border-neutral-200 bg-bg-default p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <span className="flex size-10 flex-none items-center justify-center rounded-lg border border-neutral-200 bg-bg-subtle text-neutral-600">
+                  <GraduationCapIcon className="size-5" />
+                </span>
+                <div>
+                  <h2 className="font-medium text-neutral-900">Review &amp; preview</h2>
+                  <p className="text-xs text-neutral-400">
+                    {selectedSource.label} → {selectedTarget.label} · marks ≥ {marksThreshold}% · attendance ≥{" "}
+                    {attendanceThreshold}%
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="secondary"
+                text="Reset overrides"
+                className="w-auto"
+                onClick={() => setOverrides({})}
+              />
+            </div>
 
-          <dl className="mt-5 grid grid-cols-1 gap-4 border-t border-neutral-100 pt-5 sm:grid-cols-2">
-            <div>
-              <dt className="text-xs text-neutral-400">Source academic year</dt>
-              <dd className="mt-0.5 font-medium text-neutral-800">{selectedSource.label}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-neutral-400">Target academic year</dt>
-              <dd className="mt-0.5 font-medium text-neutral-800">{selectedTarget.label}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-neutral-400">Marks threshold</dt>
-              <dd className="mt-0.5 font-medium text-neutral-800">{marksThreshold}%</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-neutral-400">Attendance threshold</dt>
-              <dd className="mt-0.5 font-medium text-neutral-800">{attendanceThreshold}%</dd>
-            </div>
-          </dl>
+            <dl className="mt-4 grid grid-cols-2 gap-4 border-t border-neutral-100 pt-4 sm:grid-cols-4">
+              <div>
+                <dt className="text-xs text-neutral-400">Total students</dt>
+                <dd className="mt-0.5 text-2xl font-semibold text-neutral-900">{preview.summary.total}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-neutral-400">Promote</dt>
+                <dd className="mt-0.5 text-2xl font-semibold text-emerald-600">{overrideCounts.promote}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-neutral-400">Hold for review</dt>
+                <dd className="mt-0.5 text-2xl font-semibold text-amber-600">{overrideCounts.hold}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-neutral-400">Not placeable (skipped)</dt>
+                <dd className="mt-0.5 text-2xl font-semibold text-neutral-400">{preview.summary.skipped}</dd>
+              </div>
+            </dl>
+          </div>
 
           {apiError && (
-            <div role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
               {apiError}
             </div>
           )}
 
-          <div className="mt-5 flex items-center justify-between gap-2 border-t border-neutral-100 pt-4">
+          <section className="overflow-hidden rounded-lg border border-neutral-200 bg-bg-default">
+            <header className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 px-5 py-4">
+              <div>
+                <h2 className="font-medium text-neutral-900">Students</h2>
+                <p className="text-xs text-neutral-400">
+                  Grouped by current class. Override the system recommendation where needed.
+                </p>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-neutral-500">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-emerald-500" /> Promote
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-amber-500" /> Hold for review
+                </span>
+              </div>
+            </header>
+
+            {groups.length === 0 ? (
+              <div className="px-5 py-10 text-center text-sm text-neutral-500">No enrolled students found.</div>
+            ) : (
+              <div className="divide-y divide-neutral-100">
+                {groups.map(([className, rows]) => (
+                  <div key={className}>
+                    <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-neutral-100 bg-neutral-50 px-5 py-2.5">
+                      <span className="text-sm font-semibold text-neutral-800">{className}</span>
+                      <span className="text-xs text-neutral-400">{rows.length} students</span>
+                    </div>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-neutral-100 text-left text-xs uppercase tracking-wide text-neutral-400">
+                          <th className="px-5 py-2 font-medium">Student</th>
+                          <th className="px-3 py-2 font-medium">Marks</th>
+                          <th className="px-3 py-2 font-medium">Attendance</th>
+                          <th className="px-3 py-2 font-medium">Target</th>
+                          <th className="px-3 py-2 font-medium">System</th>
+                          <th className="px-5 py-2 text-right font-medium">Override</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-neutral-100">
+                        {rows.map((row) => {
+                          const decision = effectiveDecision(row);
+                          const overridden = isOverridden(row);
+                          const cannotPromote =
+                            row.targetClass === null &&
+                            row.recommendedOutcome === "PROMOTE";
+                          return (
+                            <tr
+                              key={row.enrollmentId}
+                              className={cn("bg-white", overridden && "bg-amber-50/60")}
+                            >
+                              <td className="px-5 py-3">
+                                <p className="font-medium text-neutral-900">{row.studentName}</p>
+                                <p className="text-xs text-neutral-400">{row.admissionNumber}</p>
+                              </td>
+                              <td className="px-3 py-3 text-neutral-500">
+                                {row.marks !== undefined ? `${row.marks}%` : "—"}
+                              </td>
+                              <td className="px-3 py-3 text-neutral-500">
+                                {row.attendance !== undefined ? `${row.attendance}%` : "—"}
+                              </td>
+                              <td className="px-3 py-3">
+                                {row.targetClass ? (
+                                  <span className="text-neutral-600">
+                                    {row.targetClass}
+                                    {row.targetSection ? ` · ${row.targetSection}` : ""}
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-neutral-400">
+                                    {row.recommendedOutcome === "HOLD"
+                                      ? "Held for review"
+                                      : "No grade in class name"}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-3 py-3">
+                                {row.recommendedOutcome === "PROMOTE" ? (
+                                  <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
+                                    <span className="size-2 rounded-full bg-emerald-500" />
+                                    Promote
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700">
+                                    <span className="size-2 rounded-full bg-amber-500" />
+                                    Hold
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-5 py-3 text-right">
+                                <Select
+                                  value={row.recommendedOutcome === decision ? "" : decision}
+                                  onChange={(e) => setOverride(row, e.target.value)}
+                                  disabled={cannotPromote}
+                                  className="w-40"
+                                >
+                                  <option value="">System</option>
+                                  <option value="PROMOTE">Force promote</option>
+                                  <option value="HOLD">Force hold</option>
+                                </Select>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <div className="flex items-center justify-between gap-2">
             <Button
               variant="secondary"
               text="Back"
@@ -300,13 +495,20 @@ export function BatchPromotionPage() {
                 setStep("configure");
               }}
             />
-            <Button
-              text={running ? "Running…" : "Run Promotion"}
-              loading={running}
-              disabled={running}
-              className="w-auto"
-              onClick={() => void handleRun()}
-            />
+            <div className="flex items-center gap-3">
+              <p className="text-sm text-neutral-500">
+                {Object.keys(overrides).filter((k) => overrides[k]).length > 0
+                  ? `${Object.keys(overrides).filter((k) => overrides[k]).length} override(s) will be applied`
+                  : "No overrides — system recommendations will be applied"}
+              </p>
+              <Button
+                text={running ? "Running…" : "Run Promotion"}
+                loading={running}
+                disabled={running}
+                className="w-auto"
+                onClick={() => void handleRun()}
+              />
+            </div>
           </div>
         </section>
       )}
@@ -324,7 +526,7 @@ export function BatchPromotionPage() {
                 </p>
               </div>
             </div>
-            <dl className="mt-4 grid grid-cols-4 gap-4 border-t border-emerald-200 pt-4">
+            <dl className="mt-4 grid grid-cols-3 gap-4 border-t border-emerald-200 pt-4">
               <div>
                 <dt className="text-xs text-emerald-600">Total</dt>
                 <dd className="mt-0.5 text-2xl font-semibold text-emerald-900">
@@ -341,12 +543,6 @@ export function BatchPromotionPage() {
                 <dt className="text-xs text-emerald-600">Need review</dt>
                 <dd className="mt-0.5 text-2xl font-semibold text-red-600">
                   {result.summary.failed}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-emerald-600">Skipped</dt>
-                <dd className="mt-0.5 text-2xl font-semibold text-neutral-500">
-                  {result.summary.skipped ?? 0}
                 </dd>
               </div>
             </dl>
@@ -400,6 +596,8 @@ export function BatchPromotionPage() {
               className="w-auto"
               onClick={() => {
                 setResult(null);
+                setPreview(null);
+                setOverrides({});
                 setApiError(null);
                 setStep("configure");
               }}
