@@ -9,12 +9,14 @@ import { DataTable, type Column } from "@/shared/components/ui/data-table";
 import { Pagination } from "@/shared/components/ui/pagination";
 import { StatusBadge, type StatusVariant } from "@/shared/components/ui/status-badge";
 import { EmptyState } from "@/shared/components/ui/empty-state";
+import { ViewToggle } from "@/shared/components/ui/view-toggle";
+import { Breadcrumbs } from "@/shared/components/ui/breadcrumbs";
+import { useStoredView } from "@/shared/hooks/useStoredView";
 import { feeApi, type InvoiceRecord, type InvoiceStatus, INVOICE_STATUSES } from "../api/feeApi";
 import { academicApi, type ClassRecord } from "@/features/academic/api/academicApi";
 import { formatCurrency } from "@/shared/lib/format";
 import {
   FileTextIcon,
-  ArrowLeftIcon,
   ArrowUpRightIcon,
   GraduationCapIcon,
 } from "@/shared/components/ui/icons";
@@ -35,6 +37,11 @@ const STATUS_VARIANT: Record<InvoiceStatus, StatusVariant> = {
 
 const STATUS_FILTERS = INVOICE_STATUSES.map((s) => ({ value: s.value, label: s.label }));
 
+const VIEW_OPTIONS = [
+  { value: "classes", label: "By Class" },
+  { value: "all", label: "All" },
+];
+
 export function FeeInvoicesPage() {
   const [invoices, setInvoices] = useState<InvoiceRecord[]>([]);
   const [total, setTotal] = useState(0);
@@ -44,6 +51,10 @@ export function FeeInvoicesPage() {
   const [query, setQuery] = useState("");
   const [classes, setClasses] = useState<ClassRecord[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [classFilter, setClassFilter] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useStoredView("fee-invoices-view", "all");
+
+  const activeClassId = viewMode === "all" ? classFilter : selectedClassId;
 
   const loadClasses = useCallback(async () => {
     try {
@@ -59,7 +70,7 @@ export function FeeInvoicesPage() {
       setLoading(true);
       try {
         const result = await feeApi.listInvoices({
-          classId: selectedClassId ?? undefined,
+          classId: activeClassId ?? undefined,
           status: (statusFilter as InvoiceStatus) || undefined,
           page: p,
           pageSize: 15,
@@ -75,7 +86,7 @@ export function FeeInvoicesPage() {
         setLoading(false);
       }
     },
-    [selectedClassId, statusFilter, query],
+    [activeClassId, statusFilter, query],
   );
 
   useEffect(() => {
@@ -88,10 +99,13 @@ export function FeeInvoicesPage() {
 
   const selectedClass = selectedClassId ? classes.find((c) => c.id === selectedClassId) ?? null : null;
 
-  const handleBack = () => {
+  const handleViewModeChange = (mode: string) => {
+    setViewMode(mode as "classes" | "all");
     setSelectedClassId(null);
+    setClassFilter(null);
     setQuery("");
     setStatusFilter(null);
+    setPage(1);
   };
 
   const columns: Column<InvoiceRecord>[] = useMemo(
@@ -161,23 +175,111 @@ export function FeeInvoicesPage() {
     [],
   );
 
+  const invoicesTable = (
+    <DataTable
+      columns={columns}
+      data={invoices}
+      keyExtractor={(inv) => inv.id}
+      sortKey="status"
+      sortDir="asc"
+      onSort={() => {}}
+      empty={{ title: "No results" }}
+      footer={
+        <Pagination
+          page={page}
+          pageSize={15}
+          total={total}
+          onPageChange={(p) => void load(p)}
+          label="invoices"
+        />
+      }
+    />
+  );
+
   return (
     <div className="space-y-4">
       <PageHeader
         title="Invoices"
-        description={selectedClass ? `${selectedClass.name} — Student invoices` : "Select a class to view invoices"}
+        description={
+          viewMode === "all"
+            ? "All student invoices across classes"
+            : selectedClass
+              ? `${selectedClass.name} — Student invoices`
+              : "Select a class to view invoices"
+        }
       />
 
-      {selectedClass ? (
+      {viewMode === "all" ? (
         <>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleBack}
-              className="inline-flex items-center gap-1.5 text-sm text-neutral-500 transition-colors hover:text-neutral-800"
-            >
-              <ArrowLeftIcon className="size-4" />
-              All Classes
-            </button>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <ViewToggle
+                options={VIEW_OPTIONS}
+                value={viewMode}
+                onChange={handleViewModeChange}
+                ariaLabel="Invoices view"
+              />
+              <p className="text-sm text-neutral-500">{total} invoices</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <FilterDropdown
+                label="Filter by class"
+                options={classes.map((c) => ({ value: c.id, label: c.name }))}
+                value={classFilter}
+                onChange={(v) => {
+                  setClassFilter(v);
+                  setPage(1);
+                }}
+              />
+              <FilterDropdown
+                label="Filter by status"
+                options={STATUS_FILTERS}
+                value={statusFilter}
+                onChange={(v) => {
+                  setStatusFilter(v);
+                  setPage(1);
+                }}
+              />
+              <SearchBar value={query} onChange={handleSearch} placeholder="Search student name…" />
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="rounded-lg border border-neutral-200 bg-bg-default p-8 text-center text-sm text-neutral-400">
+              Loading…
+            </div>
+          ) : invoices.length === 0 ? (
+            <div className="rounded-lg border border-neutral-200 bg-bg-default">
+              <EmptyState
+                icon={<FileTextIcon className="size-5" />}
+                title="No invoices found"
+                description={
+                  classFilter || statusFilter || query.trim()
+                    ? "No invoices match the current filters."
+                    : "No invoices have been generated yet."
+                }
+              />
+            </div>
+          ) : (
+            invoicesTable
+          )}
+        </>
+      ) : selectedClass ? (
+        <>
+          <div className="flex flex-wrap items-center gap-3">
+            <ViewToggle
+              options={VIEW_OPTIONS}
+              value={viewMode}
+              onChange={handleViewModeChange}
+              ariaLabel="Invoices view"
+            />
+            <Breadcrumbs
+              items={[
+                { label: "Finance", href: "/finance" },
+                { label: "Invoices", href: "/fees/invoices" },
+                { label: selectedClass.name },
+              ]}
+            />
             <span className="text-neutral-300">|</span>
             <p className="text-sm text-neutral-500">{total} invoices</p>
             <div className="ml-auto flex items-center gap-3">
@@ -207,30 +309,21 @@ export function FeeInvoicesPage() {
               />
             </div>
           ) : (
-            <DataTable
-              columns={columns}
-              data={invoices}
-              keyExtractor={(inv) => inv.id}
-              sortKey="status"
-              sortDir="asc"
-              onSort={() => {}}
-              empty={{ title: "No results" }}
-              footer={
-                <Pagination
-                  page={page}
-                  pageSize={15}
-                  total={total}
-                  onPageChange={(p) => void load(p)}
-                  label="invoices"
-                />
-              }
-            />
+            invoicesTable
           )}
         </>
       ) : (
         <>
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-neutral-500">{classes.length} classes</p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <ViewToggle
+                options={VIEW_OPTIONS}
+                value={viewMode}
+                onChange={handleViewModeChange}
+                ariaLabel="Invoices view"
+              />
+              <p className="text-sm text-neutral-500">{classes.length} classes</p>
+            </div>
             <SearchBar
               value={query}
               onChange={(v) => setQuery(v)}

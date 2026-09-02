@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
@@ -11,16 +11,16 @@ import { Dialog } from "@/shared/components/ui/dialog";
 import { Field } from "@/shared/components/ui/form-field";
 import { Input } from "@/shared/components/ui/input";
 import { StatusBadge } from "@/shared/components/ui/status-badge";
+import { Breadcrumbs } from "@/shared/components/ui/breadcrumbs";
 import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { feeApi, type FeeStructureRecord, type InvoiceGenerationResult } from "../api/feeApi";
+import { academicApi } from "@/features/academic/api/academicApi";
 import { formatCurrency, formatDate } from "@/shared/lib/format";
 import {
-  ArrowLeftIcon,
   CreditCardIcon,
   FileTextIcon,
-  LayoutGridIcon,
   PlusIcon,
   CheckCircle2Icon,
 } from "@/shared/components/ui/icons";
@@ -148,9 +148,10 @@ function AddInstallmentForm({
 
 export function FeeStructureDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const structureId = params.id;
   const [structure, setStructure] = useState<FeeStructureRecord | null>(null);
+  const [className, setClassName] = useState("—");
+  const [yearLabel, setYearLabel] = useState("—");
   const [loading, setLoading] = useState(true);
   const [installmentDialogOpen, setInstallmentDialogOpen] = useState(false);
   const [confirmGenerate, setConfirmGenerate] = useState(false);
@@ -165,9 +166,17 @@ export function FeeStructureDetailPage() {
     setLoading(true);
     try {
       // Fetch structure detail via listStructures and find by id
-      const structs = await feeApi.listStructures();
+      const [structs, cls, sess] = await Promise.all([
+        feeApi.listStructures(),
+        academicApi.listClasses(),
+        academicApi.listSessions(),
+      ]);
       const found = structs.find((s) => s.id === structureId);
       setStructure(found ?? null);
+      if (found) {
+        setClassName(cls.find((c) => c.id === found.classId)?.name ?? "—");
+        setYearLabel(sess.find((s) => s.id === found.academicYearId)?.label ?? "—");
+      }
     } catch {
       setStructure(null);
     } finally {
@@ -247,40 +256,39 @@ export function FeeStructureDetailPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => router.push("/fees/structures")}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-bg-subtle hover:text-neutral-800"
-        >
-          <ArrowLeftIcon className="size-4" />
-        </button>
-        <PageHeader
-          title={structure.feeType?.name ?? "Fee Structure"}
-          description={`${structure.classId} · ${structure.academicYearId}`}
-          actions={
-            <div className="flex items-center gap-2">
-              {canManage && (
-                <Button
-                  text="Add Installments"
-                  icon={<PlusIcon className="size-4" />}
-                  className="w-auto"
-                  onClick={() => setInstallmentDialogOpen(true)}
-                />
-              )}
-              {canGenerate && (
-                <Button
-                  text="Generate Invoices"
-                  icon={<CheckCircle2Icon className="size-4" />}
-                  variant="success"
-                  className="w-auto"
-                  onClick={() => setConfirmGenerate(true)}
-                />
-              )}
-            </div>
-          }
-        />
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: "Finance", href: "/finance" },
+          { label: "Fee Structures", href: "/fees/structures" },
+          { label: className },
+          { label: structure.feeType?.name ?? "Fee Structure" },
+        ]}
+      />
+      <PageHeader
+        title={structure.feeType?.name ?? "Fee Structure"}
+        description={`${className} · ${yearLabel}`}
+        actions={
+          <div className="flex items-center gap-2">
+            {canManage && (
+              <Button
+                text="Add Installments"
+                icon={<PlusIcon className="size-4" />}
+                className="w-auto"
+                onClick={() => setInstallmentDialogOpen(true)}
+              />
+            )}
+            {canGenerate && (
+              <Button
+                text="Generate Invoices"
+                icon={<CheckCircle2Icon className="size-4" />}
+                variant="success"
+                className="w-auto"
+                onClick={() => setConfirmGenerate(true)}
+              />
+            )}
+          </div>
+        }
+      />
 
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div className="rounded-lg border border-neutral-200 bg-bg-default p-4">
