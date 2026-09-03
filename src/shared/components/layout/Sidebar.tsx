@@ -238,6 +238,12 @@ const NAV_SECTIONS: Array<{
         permission: PERMISSIONS.TEACHER_OWN_CLASSES_VIEW,
       },
       {
+        label: "My Timetable",
+        href: "/my-timetable",
+        icon: ClockIcon,
+        permission: PERMISSIONS.TIMETABLE_VIEW,
+      },
+      {
         label: "My Students",
         href: "/my-students",
         icon: UsersIcon,
@@ -296,6 +302,12 @@ const NAV_SECTIONS: Array<{
         href: "/assignments",
         icon: BookUserIcon,
         permission: PERMISSIONS.ASSIGNMENT_OWN_VIEW,
+      },
+      {
+        label: "My Timetable",
+        href: "/my-timetable",
+        icon: ClockIcon,
+        permission: PERMISSIONS.TIMETABLE_VIEW,
       },
     ],
   },

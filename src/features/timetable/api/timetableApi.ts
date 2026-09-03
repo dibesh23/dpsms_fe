@@ -31,6 +31,45 @@ export interface TimetableDetailRecord extends TimetableRecord {
   slots: TimetableSlotRecord[];
 }
 
+export interface TeacherTimetableRecord {
+  dayOfWeek: DayOfWeek;
+  periodNumber: number;
+  startTime: string;
+  endTime: string;
+  className: string;
+  subjectName: string;
+  timetableName: string;
+  isBreak: boolean;
+}
+
+export interface StudentTimetableRecord {
+  timetableId: string;
+  timetableName: string;
+  className: string;
+  academicYearLabel: string;
+  dayOfWeek: DayOfWeek;
+  periodNumber: number;
+  startTime: string;
+  endTime: string;
+  subjectId: string | null;
+  subjectName: string | null;
+  teacherId: string | null;
+  teacherName: string | null;
+  isBreak: boolean;
+}
+
+export type TimetableCellSource = {
+  dayOfWeek: DayOfWeek;
+  periodNumber: number;
+  startTime: string;
+  endTime: string;
+  subjectName: string | null;
+  teacherName?: string | null;
+  className?: string;
+  timetableName?: string;
+  isBreak: boolean;
+};
+
 interface ListResult<T> {
   items: T[];
   total: number;
@@ -109,6 +148,20 @@ export const timetableApi = {
 
   async deleteSlot(timetableId: string, slotId: string): Promise<void> {
     await apiClient.delete(`/timetables/${timetableId}/slots/${slotId}`);
+  },
+
+  async getMyTeacherTimetable(): Promise<TeacherTimetableRecord[]> {
+    const { data } = await apiClient.get<{ data: TeacherTimetableRecord[] }>(
+      "/teachers/me/timetables",
+    );
+    return data.data;
+  },
+
+  async getMyStudentTimetable(): Promise<StudentTimetableRecord[]> {
+    const { data } = await apiClient.get<{ data: StudentTimetableRecord[] }>(
+      "/students/me/timetables",
+    );
+    return data.data;
   },
 };
 
