@@ -12,7 +12,7 @@ import type { SubjectRecord } from "@/features/academic/api/academicApi";
 
 interface TeacherRecord {
   id: string;
-  fullName: string;
+  name: string;
 }
 
 const DAYS: { value: DayOfWeek; label: string }[] = [
@@ -226,7 +226,7 @@ export function SlotForm({
             <Select disabled={isSubmitting} {...register("teacherId")}>
               <option value="">Select a teacher</option>
               {teachers.map((t) => (
-                <option key={t.id} value={t.id}>{t.fullName}</option>
+                <option key={t.id} value={t.id}>{t.name}</option>
               ))}
             </Select>
           </Field>

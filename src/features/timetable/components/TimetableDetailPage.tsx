@@ -22,7 +22,7 @@ const DAY_LABELS: Record<DayOfWeek, string> = {
 
 interface TeacherRecord {
   id: string;
-  fullName: string;
+  name: string;
 }
 
 function getApiErrorMessage(err: unknown, fallback: string): string {
