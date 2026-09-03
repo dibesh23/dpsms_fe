@@ -61,10 +61,10 @@ export function TimetablePage() {
 
   const handleCreate = async (values: { classId: string; academicYearId: string; name: string }): Promise<boolean> => {
     try {
-      await timetableApi.createTimetable(values);
+      const created = await timetableApi.createTimetable(values);
       toast.success("Timetable created");
       setCreateOpen(false);
-      await load();
+      router.push(`/timetable/${created.id}`);
       return true;
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Failed to create timetable"));
