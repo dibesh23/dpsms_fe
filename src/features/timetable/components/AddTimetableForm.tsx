@@ -7,11 +7,12 @@ import { z } from "zod";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Field, Select } from "@/shared/components/ui/form-field";
-import { academicApi, type ClassRecord, type SessionRecord } from "@/features/academic/api/academicApi";
+import { academicApi, type ClassRecord, type SectionRecord, type SessionRecord } from "@/features/academic/api/academicApi";
 
 const AddTimetableSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
   classId: z.string().min(1, "Class is required"),
+  sectionId: z.string().min(1, "Section is required"),
   academicYearId: z.string().min(1, "Academic year is required"),
 });
 
@@ -21,20 +22,25 @@ export function AddTimetableForm({
   onAdd,
   onClose,
 }: {
-  onAdd: (values: AddTimetableValues) => Promise<boolean>;
+  onAdd: (values: { classId: string; academicYearId: string; name: string }) => Promise<boolean>;
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
   const [classes, setClasses] = useState<ClassRecord[]>([]);
+  const [sections, setSections] = useState<SectionRecord[]>([]);
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
 
   const {
     register,
     handleSubmit,
+    watch,
+    resetField,
     formState: { errors, isSubmitting },
   } = useForm<AddTimetableValues>({
     resolver: zodResolver(AddTimetableSchema),
   });
+
+  const selectedClassId = watch("classId");
 
   useEffect(() => {
     void Promise.all([
@@ -46,9 +52,23 @@ export function AddTimetableForm({
     });
   }, []);
 
+  useEffect(() => {
+    if (!selectedClassId) {
+      setSections([]);
+      return;
+    }
+    setSections([]);
+    resetField("sectionId");
+    void academicApi.listSections(selectedClassId).then(setSections);
+  }, [selectedClassId, resetField]);
+
   const onSubmit = async (values: AddTimetableValues) => {
     setApiError(null);
-    const ok = await onAdd(values);
+    const ok = await onAdd({
+      name: values.name,
+      classId: values.sectionId,
+      academicYearId: values.academicYearId,
+    });
     if (!ok) setApiError("Could not create the timetable. Check the details and try again.");
   };
 
@@ -70,6 +90,20 @@ export function AddTimetableForm({
           {classes.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name} ({c.academicYearLabel})
+            </option>
+          ))}
+        </Select>
+      </Field>
+
+      <Field label="Section" error={errors.sectionId?.message}>
+        <Select
+          disabled={isSubmitting || !selectedClassId}
+          {...register("sectionId")}
+        >
+          <option value="">{selectedClassId ? "Select a section" : "Select a class first"}</option>
+          {sections.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
             </option>
           ))}
         </Select>
