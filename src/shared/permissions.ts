@@ -101,6 +101,9 @@ export const PERMISSIONS = {
 
   AUDIT_LOG_READ: "audit:logs:read",
   AUDIT_LOG_EXPORT: "audit:logs:export",
+
+  REPORT_GENERATE: "reports:generate",
+  REPORT_OWN_REQUEST: "reports:own:request",
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

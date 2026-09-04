@@ -221,6 +221,17 @@ const NAV_SECTIONS: Array<{
     ],
   },
   {
+    label: "Reports",
+    items: [
+      {
+        label: "Report Generator",
+        href: "/reports",
+        icon: FileTextIcon,
+        permission: PERMISSIONS.REPORT_OWN_REQUEST,
+      },
+    ],
+  },
+  {
     label: "Teaching",
     roles: ["TEACHER"],
     items: [

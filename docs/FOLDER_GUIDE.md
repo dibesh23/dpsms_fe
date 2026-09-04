@@ -34,7 +34,6 @@ Next.js App Router — **route pages only.** Keep pages thin; put logic in `feat
 | `(dashboard)/fees/`       | Fees management page                             |
 | `(dashboard)/exams/`      | Exams and results page                           |
 | `(dashboard)/notices/`    | Notices page                                     |
-| `(dashboard)/reports/`    | Reports and exports page                         |
 | `(dashboard)/settings/`   | School / account settings page                   |
 
 **Rule:** Pages compose components from `features/` — do not put business logic or API calls directly in page files.
@@ -68,7 +67,6 @@ Each feature folder contains:
 | `fees/`       | Fee collection, installments, receipts      |
 | `exam/`       | Exam setup, marks entry, results            |
 | `notice/`     | Create and view notices                     |
-| `reports/`    | Export and report UI                        |
 | `dashboard/`  | Dashboard widgets and overview stats        |
 
 **Rule:** Do not import another feature's internal files. Import only from that feature's `index.ts`.
@@ -141,7 +139,6 @@ Is it a static image or icon?
 | `/fees`       | `features/fees/`       |
 | `/exams`      | `features/exam/`       |
 | `/notices`    | `features/notice/`     |
-| `/reports`    | `features/reports/`    |
 
 ---
 
