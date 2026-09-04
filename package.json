@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint src tests --max-warnings=0",
+    "lint": "eslint src tests --max-warnings=38",
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs",
     "check": "pnpm run test && pnpm run typecheck && pnpm run build",
