@@ -102,6 +102,10 @@ export const PERMISSIONS = {
   AUDIT_LOG_READ: "audit:logs:read",
   AUDIT_LOG_EXPORT: "audit:logs:export",
 
+  TIMETABLE_CREATE: "timetable:create",
+  TIMETABLE_MANAGE: "timetable:manage",
+  TIMETABLE_VIEW: "timetable:view",
+  TIMETABLE_OWN_VIEW: "timetable:own:view",
   REPORT_GENERATE: "reports:generate",
   REPORT_OWN_REQUEST: "reports:own:request",
 } as const;
