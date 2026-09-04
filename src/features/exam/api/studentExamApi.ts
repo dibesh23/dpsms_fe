@@ -38,9 +38,17 @@ export interface ExamResultSummary {
 }
 
 export interface StudentExamSummary {
+  schoolName: string;
+  studentName: string;
+  admissionNumber: string;
+  className: string;
+  sectionName: string;
+  rollNumber: string;
   academicYearLabel: string;
   results: ExamResultSummary[];
 }
+
+export interface ReportCardData extends StudentExamSummary {}
 
 export const studentExamApi = {
   async getResults(): Promise<StudentExamSummary> {

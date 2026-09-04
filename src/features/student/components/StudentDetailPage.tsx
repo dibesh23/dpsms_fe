@@ -74,6 +74,7 @@ export function StudentDetailPage() {
   const shouldOpenTransfer = searchParams.get("transfer") === "1";
   const toast = useToast();
   const { can } = useAuth();
+  const canRead = can(PERMISSIONS.STUDENT_READ);
   const canUpdate = can(PERMISSIONS.STUDENT_UPDATE);
   const canDelete = can(PERMISSIONS.STUDENT_DELETE);
   const canTransfer = can(PERMISSIONS.STUDENT_TRANSFER);
@@ -317,6 +318,15 @@ export function StudentDetailPage() {
         }`}
         actions={
           <>
+            {canRead && (
+              <Link
+                href={`/students/${studentId}/report-card`}
+                className="inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border-subtle bg-bg-default px-3 text-sm text-content-emphasis transition-all hover:bg-bg-muted"
+              >
+                <FileTextIcon className="size-4" />
+                Report Card
+              </Link>
+            )}
             {canTransfer && (
               <Button
                 variant="secondary"

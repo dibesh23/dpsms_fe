@@ -59,6 +59,7 @@ const ROLE_FALLBACK_PERMISSIONS: Record<string, readonly PermissionKey[]> = {
     P.ASSIGNMENT_MANAGE,
     P.ASSIGNMENT_GRADE,
     P.TIMETABLE_VIEW,
+    P.REPORT_OWN_REQUEST,
   ],
   STUDENT: [
     P.DASHBOARD_VIEW,
