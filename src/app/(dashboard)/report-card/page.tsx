@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/features/common/components/ComingSoon";
+import { ReportCardPage } from "@/features/exam/components/ReportCardPage";
 
-export default function ReportCardPage() {
-  return <ComingSoon feature="My Report Card" />;
+export default function ReportCardRoute() {
+  return <ReportCardPage />;
 }

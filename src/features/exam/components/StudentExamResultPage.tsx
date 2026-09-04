@@ -41,6 +41,12 @@ const SUBJECT_TYPE_LABEL: Record<string, string> = {
 };
 
 const EMPTY_SUMMARY: StudentExamSummary = {
+  schoolName: "",
+  studentName: "",
+  admissionNumber: "",
+  className: "",
+  sectionName: "",
+  rollNumber: "",
   academicYearLabel: "",
   results: [],
 };
