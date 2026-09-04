@@ -2,3 +2,5 @@ allowBuilds:
   core-js: true
   sharp: true
   unrs-resolver: false
+overrides:
+  nanoid: ^3.3.18
