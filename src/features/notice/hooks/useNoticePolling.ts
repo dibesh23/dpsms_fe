@@ -1,13 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { studentNoticeApi, type MyNoticesResult } from "../api/studentNoticeApi";
+import {
+  studentNoticeApi,
+  type MyNoticesResult,
+  type NoticeSummary,
+} from "../api/studentNoticeApi";
 
 const POLL_INTERVAL_MS = 30_000; // 30 seconds
 
 interface Options {
-  /** Called when the poll detects new notices since the last fetch */
-  onNewNotices: (count: number) => void;
+  /** Called with the notices detected as new since the last fetch */
+  onNewNotices: (count: number, newNotices: NoticeSummary[]) => void;
   /** Called every poll cycle with the fresh data so the page can update */
   onRefresh: (data: MyNoticesResult) => void;
   /** Set to false to pause polling (e.g. when tab is hidden) */
@@ -29,8 +33,12 @@ export function useNoticePolling({ onNewNotices, onRefresh, enabled = true }: Op
   const onRefreshRef = useRef(onRefresh);
 
   // Keep callback refs up-to-date without restarting the interval
-  useEffect(() => { onNewNoticesRef.current = onNewNotices; }, [onNewNotices]);
-  useEffect(() => { onRefreshRef.current = onRefresh; }, [onRefresh]);
+  useEffect(() => {
+    onNewNoticesRef.current = onNewNotices;
+  }, [onNewNotices]);
+  useEffect(() => {
+    onRefreshRef.current = onRefresh;
+  }, [onRefresh]);
 
   const poll = useCallback(async () => {
     try {
@@ -47,9 +55,10 @@ export function useNoticePolling({ onNewNotices, onRefresh, enabled = true }: Op
       if (knownIdsRef.current === null) {
         knownIdsRef.current = freshIds;
       } else {
-        const newCount = [...freshIds].filter((id) => !knownIdsRef.current!.has(id)).length;
-        if (newCount > 0) {
-          onNewNoticesRef.current(newCount);
+        const newIds = [...freshIds].filter((id) => !knownIdsRef.current!.has(id));
+        if (newIds.length > 0) {
+          const newNotices = sorted.filter((n) => newIds.includes(n.id));
+          onNewNoticesRef.current(newIds.length, newNotices);
         }
         knownIdsRef.current = freshIds;
       }

@@ -21,6 +21,7 @@ import {
   type SchoolEventCategory,
 } from "../api/studentDashboardApi";
 import { DashboardNoticesWidget } from "@/features/notice/components/DashboardNoticesWidget";
+import { NoticeBell } from "@/features/notice/components/NoticeBell";
 import {
   AlertTriangleIcon,
   ArrowUpRightIcon,
@@ -54,36 +55,34 @@ const ATTENDANCE_LABEL: Record<DayAttendanceStatus, string> = {
 const MIN_ATTENDANCE_PERCENT = 75;
 const NEAR_MIN_ATTENDANCE_BAND = 5;
 
-const TODAY_HERO_STYLES: Record<
-  DayAttendanceStatus,
-  { box: string; icon: string; label: string }
-> = {
-  PRESENT: {
-    box: "border-emerald-200 bg-emerald-50",
-    icon: "bg-bg-default text-emerald-600",
-    label: "text-emerald-800",
-  },
-  ABSENT: {
-    box: "border-red-200 bg-red-50",
-    icon: "bg-bg-default text-red-600",
-    label: "text-red-800",
-  },
-  LATE: {
-    box: "border-amber-200 bg-amber-50",
-    icon: "bg-bg-default text-amber-600",
-    label: "text-amber-800",
-  },
-  EXCUSED: {
-    box: "border-blue-200 bg-blue-50",
-    icon: "bg-bg-default text-blue-600",
-    label: "text-blue-800",
-  },
-  NOT_MARKED: {
-    box: "border-neutral-200 bg-bg-subtle",
-    icon: "bg-bg-default text-neutral-500",
-    label: "text-neutral-700",
-  },
-};
+const TODAY_HERO_STYLES: Record<DayAttendanceStatus, { box: string; icon: string; label: string }> =
+  {
+    PRESENT: {
+      box: "border-emerald-200 bg-emerald-50",
+      icon: "bg-bg-default text-emerald-600",
+      label: "text-emerald-800",
+    },
+    ABSENT: {
+      box: "border-red-200 bg-red-50",
+      icon: "bg-bg-default text-red-600",
+      label: "text-red-800",
+    },
+    LATE: {
+      box: "border-amber-200 bg-amber-50",
+      icon: "bg-bg-default text-amber-600",
+      label: "text-amber-800",
+    },
+    EXCUSED: {
+      box: "border-blue-200 bg-blue-50",
+      icon: "bg-bg-default text-blue-600",
+      label: "text-blue-800",
+    },
+    NOT_MARKED: {
+      box: "border-neutral-200 bg-bg-subtle",
+      icon: "bg-bg-default text-neutral-500",
+      label: "text-neutral-700",
+    },
+  };
 
 const TODAY_ICON: Record<DayAttendanceStatus, React.ReactNode> = {
   PRESENT: <CheckCircle2Icon className="size-5" />,
@@ -276,8 +275,7 @@ function DayStrip({ days }: { days: DayAttendancePoint[] }) {
       >
         {days.map((day) => {
           const weekday = new Date(`${day.date}T12:00:00Z`).getUTCDay();
-          const unmarkedWeekend =
-            day.status === "NOT_MARKED" && (weekday === 0 || weekday === 6);
+          const unmarkedWeekend = day.status === "NOT_MARKED" && (weekday === 0 || weekday === 6);
           return (
             <span
               key={day.date}
@@ -395,9 +393,7 @@ export default function StudentDashboardPage() {
               <StatusBadge status={profile.status.replace(/_/g, " ")} variant="warning" />
             )}
           </div>
-          <p className="mt-1 text-sm text-neutral-500">
-            Here is your academic summary for today.
-          </p>
+          <p className="mt-1 text-sm text-neutral-500">Here is your academic summary for today.</p>
         </div>
         <div className="flex items-center gap-2">
           {profile.academicYearLabel && (
@@ -405,16 +401,7 @@ export default function StudentDashboardPage() {
               Academic Year {profile.academicYearLabel}
             </span>
           )}
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-[#156d39] transition-colors hover:bg-[#eff7f1]"
-          >
-            <BellIcon className="size-4" />
-            {summary.notifications.some((n) => !n.isRead) && (
-              <span className="absolute right-2 top-2 size-1.5 rounded-full bg-red-500" />
-            )}
-          </button>
+          <NoticeBell buttonClassName="flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-[#156d39] transition-colors hover:bg-[#eff7f1]" />
           <Avatar name={user?.fullName ?? "Student"} size="md" />
         </div>
       </header>
@@ -658,9 +645,7 @@ export default function StudentDashboardPage() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-neutral-900">
-                          {exam.percentage}%
-                        </p>
+                        <p className="text-sm font-semibold text-neutral-900">{exam.percentage}%</p>
                         <p className="text-xs text-neutral-400">
                           {exam.totalObtained}/{exam.totalFullMarks}
                         </p>
@@ -733,7 +718,8 @@ export default function StudentDashboardPage() {
                       >
                         <span>{discount.label}</span>
                         <span className="font-medium text-neutral-700">
-                          {discount.kind === "SCHOLARSHIP" && discount.scholarshipType === "PERCENTAGE"
+                          {discount.kind === "SCHOLARSHIP" &&
+                          discount.scholarshipType === "PERCENTAGE"
                             ? `${discount.percentageOrAmount}% off`
                             : formatCurrency(discount.amount ?? discount.percentageOrAmount ?? 0)}
                         </span>

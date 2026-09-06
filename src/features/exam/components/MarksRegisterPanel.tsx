@@ -32,7 +32,7 @@ export function MarksRegisterPanel({ exam, onChanged }: { exam: ExamDetail; onCh
   const [error, setError] = useState<string | null>(null);
 
   const visibleSubjects = exam.subjects;
-  const canEnter = ["MARKS_ENTRY", "SUBMITTED"].includes(exam.status);
+  const canEnter = exam.status === "MARKS_ENTRY";
 
   const loadSections = useCallback(async () => {
     try {
