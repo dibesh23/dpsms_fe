@@ -19,6 +19,7 @@ import { feeApi, type FeeStructureRecord, type InvoiceGenerationResult } from ".
 import { academicApi } from "@/features/academic/api/academicApi";
 import { formatCurrency, formatDate } from "@/shared/lib/format";
 import {
+  AlertTriangleIcon,
   CreditCardIcon,
   FileTextIcon,
   PlusIcon,
@@ -207,6 +208,11 @@ export function FeeStructureDetailPage() {
       setGenResult(result);
       setConfirmGenerate(false);
       toast.success(`Invoices generated: ${result.created} created, ${result.skipped} skipped.`);
+      if (result.priorYearUnpaid.length > 0) {
+        toast.info(
+          `${result.priorYearUnpaid.length} student(s) still owe fees from a previous academic year.`,
+        );
+      }
     } catch {
       toast.error("Could not generate invoices.");
     } finally {
@@ -304,6 +310,24 @@ export function FeeStructureDetailPage() {
           <p className="mt-1 text-lg font-semibold text-neutral-900">{structure.feeType?.category ?? "—"}</p>
         </div>
       </section>
+
+      {genResult && genResult.priorYearUnpaid.length > 0 && (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <AlertTriangleIcon className="mt-0.5 size-4 flex-none" />
+          <div className="space-y-1">
+            <p className="font-semibold">
+              {genResult.priorYearUnpaid.length} student(s) still owe fees from a previous year
+            </p>
+            <ul className="list-inside list-disc space-y-0.5">
+              {genResult.priorYearUnpaid.map((s) => (
+                <li key={s.studentId}>
+                  {s.studentName} — {formatCurrency(s.owed)} outstanding
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">

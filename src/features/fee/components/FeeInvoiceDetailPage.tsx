@@ -21,12 +21,14 @@ import {
   type InvoiceStatus,
   type PaymentMethod,
   type PaymentRecordResult,
+  type StudentFeeSummaryRecord,
   PAYMENT_METHODS,
   SCHOLARSHIP_TYPES,
   type ScholarshipType,
 } from "../api/feeApi";
 import { formatCurrency, formatDate } from "@/shared/lib/format";
 import {
+  AlertTriangleIcon,
   CreditCardIcon,
   FileTextIcon,
 } from "@/shared/components/ui/icons";
@@ -277,6 +279,8 @@ export function FeeInvoiceDetailPage() {
   const invoiceId = params.id;
   const [invoice, setInvoice] = useState<InvoiceDetailRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [studentFees, setStudentFees] = useState<StudentFeeSummaryRecord | null>(null);
+  const [studentFeesLoading, setStudentFeesLoading] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
   const [scholarshipDialogOpen, setScholarshipDialogOpen] = useState(false);
@@ -310,6 +314,28 @@ export function FeeInvoiceDetailPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Fetch the student's full cross-year fee picture so an admin looking up
+  // one student sees every outstanding amount, not just this invoice's year.
+  useEffect(() => {
+    if (!invoice?.enrollment?.studentId) return;
+    let cancelled = false;
+    setStudentFeesLoading(true);
+    feeApi
+      .getStudentFeeSummary(invoice.enrollment.studentId)
+      .then((data) => {
+        if (!cancelled) setStudentFees(data);
+      })
+      .catch(() => {
+        if (!cancelled) setStudentFees(null);
+      })
+      .finally(() => {
+        if (!cancelled) setStudentFeesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [invoice?.enrollment?.studentId]);
 
   const handlePayment = async (values: PaymentValues): Promise<boolean> => {
     try {
@@ -484,6 +510,100 @@ export function FeeInvoiceDetailPage() {
           </div>
         </DashboardWidget>
       )}
+
+      <DashboardWidget
+        title="Student Fee Overview"
+        description="Outstanding fees across every academic year this student has attended"
+      >
+        {studentFeesLoading ? (
+          <div className="text-sm text-neutral-400">Loading student fees…</div>
+        ) : !studentFees ? (
+          <EmptyState
+            title="No fee data"
+            description="This student has no fee records."
+          />
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-lg border border-neutral-200 bg-bg-subtle p-3">
+                <p className="text-xs text-neutral-400">Total billed (all years)</p>
+                <p className="mt-1 font-semibold text-neutral-900">
+                  {formatCurrency(studentFees.totalAnnualFee)}
+                </p>
+              </div>
+              <div className="rounded-lg border border-neutral-200 bg-bg-subtle p-3">
+                <p className="text-xs text-neutral-400">Total paid</p>
+                <p className="mt-1 font-semibold text-emerald-600">
+                  {formatCurrency(studentFees.totalPaid)}
+                </p>
+              </div>
+              <div className="rounded-lg border border-neutral-200 bg-bg-subtle p-3">
+                <p className="text-xs text-neutral-400">Total outstanding</p>
+                <p className={`mt-1 font-semibold ${studentFees.totalDue > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                  {formatCurrency(studentFees.totalDue)}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {studentFees.yearGroups.map((year) => {
+                const yearInvoices = studentFees.invoices.filter(
+                  (inv) => inv.academicYearLabel === year.academicYearLabel,
+                );
+                if (yearInvoices.length === 0) return null;
+                return (
+                  <div key={year.academicYearLabel || "(no year)"}>
+                    {!year.isCurrent ? (
+                      <div className="mb-2 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                        <AlertTriangleIcon className="size-4 flex-none" />
+                        <p className="font-medium">Overdue from {year.academicYearLabel}</p>
+                        {year.totalDue > 0 && (
+                          <p className="text-xs">
+                            {formatCurrency(year.totalDue)} still owed from this session
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <h4 className="mb-2 text-xs font-semibold tracking-wide text-neutral-400 uppercase">
+                        {year.academicYearLabel || "Current year"}
+                      </h4>
+                    )}
+                    <div className="overflow-hidden rounded-lg border border-neutral-200">
+                      <table className="w-full text-left text-sm">
+                        <thead>
+                          <tr className="border-b border-neutral-100 bg-bg-subtle">
+                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">Installment</th>
+                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">Due date</th>
+                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">Amount</th>
+                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">Paid</th>
+                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {yearInvoices.map((inv) => (
+                            <tr key={inv.id} className="border-b border-neutral-50 last:border-0">
+                              <td className="px-4 py-2 text-neutral-800">{inv.installmentLabel}</td>
+                              <td className="px-4 py-2 text-neutral-700">{formatDate(inv.dueDate)}</td>
+                              <td className="px-4 py-2 text-neutral-700">{formatCurrency(inv.amount)}</td>
+                              <td className="px-4 py-2 text-neutral-700">{formatCurrency(inv.amountPaid)}</td>
+                              <td className="px-4 py-2">
+                                <StatusBadge
+                                  status={STATUS_LABEL[inv.status]}
+                                  variant={STATUS_VARIANT[inv.status]}
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </DashboardWidget>
 
       {(isSuperAdmin || isPrincipal) && (
         <div className="flex items-center gap-2">
