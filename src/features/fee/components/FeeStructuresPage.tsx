@@ -9,15 +9,21 @@ import { EmptyState } from "@/shared/components/ui/empty-state";
 import { Dialog } from "@/shared/components/ui/dialog";
 import { Field, Select } from "@/shared/components/ui/form-field";
 import { Input } from "@/shared/components/ui/input";
+import { DataTable, type Column } from "@/shared/components/ui/data-table";
+import { Pagination } from "@/shared/components/ui/pagination";
+import { FilterDropdown } from "@/shared/components/ui/filter-dropdown";
+import { ViewToggle } from "@/shared/components/ui/view-toggle";
+import { Breadcrumbs } from "@/shared/components/ui/breadcrumbs";
 import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useStoredView } from "@/shared/hooks/useStoredView";
+import { useTable } from "@/shared/hooks/useTable";
 import { PERMISSIONS } from "@/shared/permissions";
 import { academicApi, type ClassRecord, type SessionRecord } from "@/features/academic/api/academicApi";
 import { feeApi, type FeeTypeRecord, type FeeStructureRecord, FEE_CATEGORIES, type FeeCategory } from "../api/feeApi";
 import { formatCurrency } from "@/shared/lib/format";
 import {
   ArrowUpRightIcon,
-  ArrowLeftIcon,
   LayoutGridIcon,
   GraduationCapIcon,
   PlusIcon,
@@ -117,6 +123,23 @@ function CreateStructureForm({
   );
 }
 
+const VIEW_OPTIONS = [
+  { value: "classes", label: "By Class" },
+  { value: "all", label: "All" },
+];
+
+interface StructureAllRow {
+  id: string;
+  feeTypeId: string;
+  feeTypeName: string;
+  category: FeeCategory;
+  className: string;
+  classId: string;
+  yearLabel: string;
+  amount: number;
+  installments: number;
+}
+
 export function FeeStructuresPage() {
   const [structures, setStructures] = useState<FeeStructureRecord[]>([]);
   const [feeTypes, setFeeTypes] = useState<FeeTypeRecord[]>([]);
@@ -126,6 +149,7 @@ export function FeeStructuresPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useStoredView("fee-structures-view", "classes");
   const toast = useToast();
   const { can } = useAuth();
   const canManage = can(PERMISSIONS.FEE_STRUCTURE_MANAGE);
@@ -170,7 +194,10 @@ export function FeeStructuresPage() {
     }
   };
 
-  const feeTypeMap = useMemo(() => new Map(feeTypes.map((ft) => [ft.id, ft])), [feeTypes]);
+  const classMap = useMemo(
+    () => new Map(classes.map((c) => [c.id, c])),
+    [classes],
+  );
   const sessionMap = useMemo(() => new Map(sessions.map((s) => [s.id, s])), [sessions]);
 
   const classStructureCount = useMemo(() => {
@@ -208,16 +235,90 @@ export function FeeStructuresPage() {
     });
   }, [structures, selectedClassId, query]);
 
-  const handleBack = () => {
+  const allRows: StructureAllRow[] = useMemo(
+    () =>
+      structures.map((s) => ({
+        id: s.id,
+        feeTypeId: s.feeTypeId,
+        feeTypeName: s.feeType?.name ?? "Unknown Type",
+        category: s.feeType?.category ?? "OTHER",
+        className: classMap.get(s.classId)?.name ?? "—",
+        classId: s.classId,
+        yearLabel: sessionMap.get(s.academicYearId)?.label ?? "—",
+        amount: s.amount,
+        installments: s.installments?.length ?? 0,
+      })),
+    [structures, classMap, sessionMap],
+  );
+
+  const table = useTable<StructureAllRow>({
+    data: allRows,
+    pageSize: 12,
+    getSearchText: (row) => `${row.feeTypeName} ${row.className} ${row.yearLabel}`,
+    filterMatch: (row, value) => row.classId === value,
+    defaultSortKey: "feeTypeName",
+  });
+
+  const handleViewModeChange = (mode: string) => {
+    setViewMode(mode as "classes" | "all");
     setSelectedClassId(null);
     setQuery("");
   };
+
+  const allColumns: Column<StructureAllRow>[] = useMemo(
+    () => [
+      {
+        key: "feeTypeName",
+        header: "Fee Type",
+        sortValue: (row) => row.feeTypeName,
+        render: (row) => (
+          <Link href={`/fees/structures/${row.id}`} className="group">
+            <p className="font-medium text-neutral-900 group-hover:underline">
+              {row.feeTypeName}
+            </p>
+            <p className="text-xs text-neutral-400">{CATEGORY_LABEL[row.category]}</p>
+          </Link>
+        ),
+      },
+      {
+        key: "className",
+        header: "Class",
+        sortValue: (row) => row.className,
+        render: (row) => <span className="text-neutral-700">{row.className}</span>,
+      },
+      {
+        key: "yearLabel",
+        header: "Academic Year",
+        sortValue: (row) => row.yearLabel,
+        render: (row) => <span className="text-neutral-700">{row.yearLabel}</span>,
+      },
+      {
+        key: "amount",
+        header: "Total Amount",
+        sortValue: (row) => row.amount,
+        render: (row) => <span className="text-neutral-700">{formatCurrency(row.amount)}</span>,
+      },
+      {
+        key: "installments",
+        header: "Installments",
+        sortValue: (row) => row.installments,
+        render: (row) => <span className="text-neutral-700">{row.installments}</span>,
+      },
+    ],
+    [],
+  );
 
   return (
     <div className="space-y-4">
       <PageHeader
         title="Fee Structures"
-        description={selectedClass ? `${selectedClass.name} — Fee structures` : "Select a class to view fee structures"}
+        description={
+          viewMode === "all"
+            ? "All fee structures across classes and academic years"
+            : selectedClass
+              ? `${selectedClass.name} — Fee structures`
+              : "Select a class to view fee structures"
+        }
         actions={
           canManage ? (
             <Button
@@ -230,16 +331,78 @@ export function FeeStructuresPage() {
         }
       />
 
-      {selectedClass ? (
+      {viewMode === "all" ? (
         <>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleBack}
-              className="inline-flex items-center gap-1.5 text-sm text-neutral-500 transition-colors hover:text-neutral-800"
-            >
-              <ArrowLeftIcon className="size-4" />
-              All Classes
-            </button>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <ViewToggle
+                options={VIEW_OPTIONS}
+                value={viewMode}
+                onChange={handleViewModeChange}
+                ariaLabel="Fee structures view"
+              />
+              <p className="text-sm text-neutral-500">{table.total} structures</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <FilterDropdown
+                label="Filter by class"
+                options={classes.map((c) => ({ value: c.id, label: c.name }))}
+                value={table.filter}
+                onChange={table.setFilter}
+              />
+              <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search fee types…" />
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="rounded-lg border border-neutral-200 bg-bg-default p-8 text-center text-sm text-neutral-400">
+              Loading…
+            </div>
+          ) : table.rows.length === 0 ? (
+            <div className="rounded-lg border border-neutral-200 bg-bg-default">
+              <EmptyState
+                icon={<LayoutGridIcon className="size-5" />}
+                title="No fee structures found"
+                description="Create a structure to assign fees to a class."
+              />
+            </div>
+          ) : (
+            <DataTable
+              columns={allColumns}
+              data={table.pageRows}
+              keyExtractor={(row) => row.id}
+              sortKey={table.sortKey}
+              sortDir={table.sortDir}
+              onSort={table.handleSort}
+              empty={{ title: "No results" }}
+              footer={
+                <Pagination
+                  page={table.page}
+                  pageSize={table.pageSize}
+                  total={table.total}
+                  onPageChange={(p) => table.setPage(p)}
+                  label="structures"
+                />
+              }
+            />
+          )}
+        </>
+      ) : selectedClass ? (
+        <>
+          <div className="flex flex-wrap items-center gap-3">
+            <ViewToggle
+              options={VIEW_OPTIONS}
+              value={viewMode}
+              onChange={handleViewModeChange}
+              ariaLabel="Fee structures view"
+            />
+            <Breadcrumbs
+              items={[
+                { label: "Finance", href: "/finance" },
+                { label: "Fee Structures", href: "/fees/structures" },
+                { label: selectedClass.name },
+              ]}
+            />
             <span className="text-neutral-300">|</span>
             <p className="text-sm text-neutral-500">{classStructures.length} structures</p>
             <div className="ml-auto">
@@ -262,7 +425,7 @@ export function FeeStructuresPage() {
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {classStructures.map((s) => {
-                const ft = feeTypeMap.get(s.feeTypeId);
+                const ft = s.feeType;
                 const sess = sessionMap.get(s.academicYearId);
                 return (
                   <div
@@ -303,8 +466,16 @@ export function FeeStructuresPage() {
         </>
       ) : (
         <>
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-neutral-500">{classes.length} classes</p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <ViewToggle
+                options={VIEW_OPTIONS}
+                value={viewMode}
+                onChange={handleViewModeChange}
+                ariaLabel="Fee structures view"
+              />
+              <p className="text-sm text-neutral-500">{classes.length} classes</p>
+            </div>
             <SearchBar value={query} onChange={setQuery} placeholder="Search classes…" />
           </div>
 
