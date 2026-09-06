@@ -25,6 +25,7 @@ export interface ExamResultSummary {
   academicYearLabel: string; // Exam.academicYear -> AcademicYear.label
   termName: string | null; // Exam.term -> AcademicTerm.name
   status: ExamStatus; // Exam.status
+  updatedAt: string; // Exam.updatedAt (proxy for publish time)
   totalObtained: number; // sum of (theoryMarks + practicalMarks) across subjects
   totalFullMarks: number; // sum of (fullMarksTheory + fullMarksPractical) across subjects
   percentage: number;

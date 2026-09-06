@@ -11,8 +11,10 @@ import { StatusBadge, type StatusVariant } from "@/shared/components/ui/status-b
 import { EmptyState } from "@/shared/components/ui/empty-state";
 import { formatDate } from "@/shared/lib/format";
 import { DashboardNoticesWidget } from "@/features/notice/components/DashboardNoticesWidget";
+import { NoticeBell } from "@/features/notice/components/NoticeBell";
 import {
-  teacherDashboardApi,  type TeacherDashboardSummary,
+  teacherDashboardApi,
+  type TeacherDashboardSummary,
   type StaffAttendanceStatus,
   type NotificationType,
   type SchoolEventCategory,
@@ -234,16 +236,7 @@ export default function TeacherDashboardPage() {
               Academic Year {summary.academicYearLabel}
             </span>
           )}
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-[#156d39] transition-colors hover:bg-[#eff7f1]"
-          >
-            <BellIcon className="size-4" />
-            {(summary.notifications ?? []).some((n) => !n.isRead) && (
-              <span className="absolute top-2 right-2 size-1.5 rounded-full bg-red-500" />
-            )}
-          </button>
+          <NoticeBell buttonClassName="flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-[#156d39] transition-colors hover:bg-[#eff7f1]" />
           <Avatar name={user?.fullName ?? "Teacher"} size="md" />
         </div>
       </header>

@@ -18,6 +18,12 @@ export interface NoticeSummary {
   isRead: boolean;
   isAcknowledged: boolean;
   attachments: NoticeAttachment[];
+  recipientScopes: Array<{
+    id: string;
+    roleTarget: string | null;
+    classId: string | null;
+    sectionId: string | null;
+  }>;
 }
 
 export interface MyNoticesResult {

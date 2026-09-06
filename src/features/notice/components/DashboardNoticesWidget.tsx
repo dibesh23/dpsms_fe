@@ -7,7 +7,12 @@ import { StatusBadge } from "@/shared/components/ui/status-badge";
 import { EmptyState } from "@/shared/components/ui/empty-state";
 import { formatDate } from "@/shared/lib/format";
 import { studentNoticeApi, type NoticeSummary } from "../api/studentNoticeApi";
-import { noticeApi, type AdminNotice } from "../api/noticeApi";
+import {
+  noticeApi,
+  type AdminNotice,
+  type NoticeRecipientScope,
+  audienceLabel,
+} from "../api/noticeApi";
 import { useNoticePolling } from "../hooks/useNoticePolling";
 import { AlertTriangleIcon, BellIcon } from "@/shared/components/ui/icons";
 
@@ -20,14 +25,31 @@ interface WidgetNotice {
   isUrgent: boolean;
   publishedAt: string;
   isRead: boolean;
+  recipientScopes: NoticeRecipientScope[];
 }
 
 function toWidgetNotice(n: NoticeSummary): WidgetNotice {
-  return { id: n.id, title: n.title, body: n.body, isUrgent: n.isUrgent, publishedAt: n.publishedAt, isRead: n.isRead };
+  return {
+    id: n.id,
+    title: n.title,
+    body: n.body,
+    isUrgent: n.isUrgent,
+    publishedAt: n.publishedAt,
+    isRead: n.isRead,
+    recipientScopes: n.recipientScopes ?? [],
+  };
 }
 
 function adminToWidgetNotice(n: AdminNotice): WidgetNotice {
-  return { id: n.id, title: n.title, body: n.body, isUrgent: n.isUrgent, publishedAt: n.publishedAt ?? n.createdAt, isRead: true };
+  return {
+    id: n.id,
+    title: n.title,
+    body: n.body,
+    isUrgent: n.isUrgent,
+    publishedAt: n.publishedAt ?? n.createdAt,
+    isRead: true,
+    recipientScopes: n.recipientScopes ?? [],
+  };
 }
 
 function sortByNewest<T extends { publishedAt: string }>(items: T[]): T[] {
@@ -39,22 +61,32 @@ function sortByNewest<T extends { publishedAt: string }>(items: T[]): T[] {
 // ── Notice row ────────────────────────────────────────────────────────────────
 
 function NoticeRow({ notice }: { notice: WidgetNotice }) {
+  const audience = audienceLabel(notice.recipientScopes);
   return (
     <li className="flex items-start gap-3 py-2.5">
       <div className="mt-1 flex size-7 flex-none items-center justify-center rounded-md border border-neutral-200 bg-bg-subtle">
         {notice.isUrgent ? (
           <AlertTriangleIcon className="size-3.5 text-red-500" />
         ) : (
-          <BellIcon className={`size-3.5 ${!notice.isRead ? "text-blue-500" : "text-neutral-400"}`} />
+          <BellIcon
+            className={`size-3.5 ${!notice.isRead ? "text-blue-500" : "text-neutral-400"}`}
+          />
         )}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
           {!notice.isRead && <span className="size-1.5 flex-none rounded-full bg-blue-500" />}
-          <p className={`truncate text-sm ${!notice.isRead ? "font-semibold text-neutral-900" : "font-medium text-neutral-700"}`}>
+          <p
+            className={`truncate text-sm ${!notice.isRead ? "font-semibold text-neutral-900" : "font-medium text-neutral-700"}`}
+          >
             {notice.title}
           </p>
           {notice.isUrgent && <StatusBadge status="Urgent" variant="danger" dot={false} />}
+          {audience !== "Everyone" && (
+            <span className="inline-flex items-center rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">
+              {audience}
+            </span>
+          )}
         </div>
         <p className="mt-0.5 line-clamp-1 text-xs text-neutral-500">{notice.body}</p>
         <p className="mt-0.5 text-xs text-neutral-400">{formatDate(notice.publishedAt)}</p>
@@ -108,29 +140,19 @@ export function DashboardNoticesWidget({ role, limit = 5 }: Props) {
   }, [isAdmin, loadAdmin]);
 
   // ── Recipient polling (student / teacher) ─────────────────────────────────
-  const seeded = useRef(false);
-  const { seed } = useNoticePolling({
+  useNoticePolling({
     enabled: !isAdmin,
     onNewNotices: (count) => {
       setHasNew(true);
       setUnreadCount((prev) => prev + count);
     },
     onRefresh: (data) => {
-      // Sort ALL notices first, THEN take the top `limit`.
-      // Slicing before sorting would discard newest notices before they're ranked.
       const sorted = sortByNewest(data.notices.map(toWidgetNotice)).slice(0, limit);
       setNotices(sorted);
       setUnreadCount(data.unreadCount);
       setLoading(false);
     },
   });
-
-  useEffect(() => {
-    if (!seeded.current && notices.length > 0 && !isAdmin) {
-      seeded.current = true;
-      seed(notices.map((n) => n.id));
-    }
-  }, [notices, isAdmin, seed]);
 
   const urgentCount = useMemo(() => notices.filter((n) => n.isUrgent).length, [notices]);
 

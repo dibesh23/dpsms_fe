@@ -4,6 +4,15 @@ import { apiClient } from "@/shared/lib/apiClient";
 
 export type NoticeApprovalStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED";
 
+// ── Recipient scope ───────────────────────────────────────────────────────────
+
+export interface NoticeRecipientScope {
+  id: string;
+  roleTarget: string;
+  classId: string;
+  sectionId: string;
+}
+
 // ── Attachment ────────────────────────────────────────────────────────────────
 
 export interface NoticeAttachment {
@@ -32,6 +41,7 @@ export interface AdminNotice {
   approvedByName: string | null;
   approvedByUserId: string | null;
   attachments: NoticeAttachment[];
+  recipientScopes: NoticeRecipientScope[];
 }
 
 export interface AdminNoticeListResult {
@@ -76,6 +86,11 @@ export interface NoticeCreatePayload {
   body: string;
   isUrgent?: boolean;
   scheduledAt?: string;
+  recipientScopes?: Array<{
+    roleTarget: string;
+    classId?: string;
+    sectionId?: string;
+  }>;
 }
 
 export interface NoticeUpdatePayload {
@@ -83,6 +98,11 @@ export interface NoticeUpdatePayload {
   body?: string;
   isUrgent?: boolean;
   scheduledAt?: string | null;
+  recipientScopes?: Array<{
+    roleTarget: string;
+    classId?: string;
+    sectionId?: string;
+  }>;
 }
 
 // ── API ───────────────────────────────────────────────────────────────────────
@@ -165,6 +185,23 @@ export const noticeApi = {
   },
 
   /**
+   * Fetches an attachment blob and returns an object URL + mime type.
+   * The caller is responsible for revoking the URL when done.
+   */
+  async fetchAttachmentBlob(
+    noticeId: string,
+    attachmentId: string,
+  ): Promise<{ objectUrl: string; mimeType: string }> {
+    const { data, headers } = await apiClient.get<Blob>(
+      `/notices/${noticeId}/attachments/${attachmentId}/download`,
+      { responseType: "blob" },
+    );
+    const mimeType = (headers["content-type"] as string) || "application/octet-stream";
+    const blob = new Blob([data], { type: mimeType });
+    return { objectUrl: URL.createObjectURL(blob), mimeType };
+  },
+
+  /**
    * Downloads an attachment as a blob via the authenticated apiClient,
    * then opens it in a new tab. Call this instead of opening the URL directly.
    */
@@ -190,3 +227,22 @@ export const noticeApi = {
 };
 
 export default noticeApi;
+
+// ── Helper: build human-readable audience label from scopes ───────────────────
+
+export function audienceLabel(scopes: NoticeRecipientScope[]): string {
+  if (scopes.length === 0) return "Everyone";
+  const roles = scopes
+    .map((s) => s.roleTarget)
+    .filter(Boolean);
+  const uniqueRoles = [...new Set(roles)];
+  if (uniqueRoles.includes("ALL") || uniqueRoles.length === 0) return "Everyone";
+  const roleLabel = uniqueRoles
+    .map((r) => (r === "TEACHER" ? "Teachers" : r === "STUDENT" ? "Students" : r))
+    .join(" & ");
+  const hasClass = scopes.some((s) => s.classId);
+  const hasSection = scopes.some((s) => s.sectionId);
+  if (hasSection) return `${roleLabel} (specific section)`;
+  if (hasClass) return `${roleLabel} (specific class)`;
+  return roleLabel;
+}
