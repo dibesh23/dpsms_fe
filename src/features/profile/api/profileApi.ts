@@ -12,6 +12,9 @@ export interface TeacherProfile {
   phone: string | null;
   status: string;
   department: string;
+  classesPerWeek: number;
+  employeeCode: string | null;
+  joinedAt: string;
 }
 
 export interface StudentProfile {
@@ -20,6 +23,11 @@ export interface StudentProfile {
   fullName: string;
   phone: string | null;
   status: string;
+  gender: string | null;
+  dateOfBirth: string | null;
+  bloodGroup: string | null;
+  className: string;
+  sectionName: string;
 }
 
 export interface ProfileRecord {

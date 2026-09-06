@@ -69,6 +69,7 @@ const EMPTY_SUMMARY: StudentFeeSummary = {
   discounts: [],
   invoices: [],
   payments: [],
+  yearGroups: [],
 };
 
 /** Extracted so the DataTable column config below only ever holds a
@@ -339,27 +340,55 @@ export function StudentFeePage() {
             />
           </div>
         </div>
-        <DataTable
-          columns={INVOICE_COLUMNS}
-          data={invoiceTable.pageRows}
-          keyExtractor={(invoice) => invoice.id}
-          sortKey={invoiceTable.sortKey}
-          sortDir={invoiceTable.sortDir}
-          onSort={invoiceTable.handleSort}
-          empty={{
-            title: "No invoices found",
-            description: "Try adjusting your search or filters.",
-          }}
-          footer={
-            <Pagination
-              page={invoiceTable.page}
-              pageSize={invoiceTable.pageSize}
-              total={invoiceTable.total}
-              onPageChange={invoiceTable.setPage}
-              label="invoices"
-            />
-          }
-        />
+
+        {invoiceTable.rows.length === 0 ? (
+          <div className="rounded-lg border border-neutral-200 bg-bg-default p-8 text-center text-sm text-neutral-400">
+            No invoices found. Try adjusting your search or filters.
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {summary.yearGroups.map((year) => {
+              const yearInvoices = invoiceTable.rows.filter(
+                (inv) => inv.academicYearLabel === year.academicYearLabel,
+              );
+              if (yearInvoices.length === 0) return null;
+              return (
+                <section key={year.academicYearLabel || "(no year)"} className="space-y-2">
+                  {!year.isCurrent ? (
+                    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                      <AlertTriangleIcon className="size-4 flex-none" />
+                      <p className="font-medium">Overdue from {year.academicYearLabel}</p>
+                      {year.totalDue > 0 && (
+                        <p className="text-xs">
+                          {formatCurrency(year.totalDue)} still owed from this session
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-semibold tracking-wide text-neutral-400 uppercase">
+                        {year.academicYearLabel || "Current year"}
+                      </h3>
+                      {year.totalDue > 0 && (
+                        <p className="text-xs text-neutral-500">
+                          {formatCurrency(year.totalDue)} due
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  <DataTable
+                    columns={INVOICE_COLUMNS}
+                    data={yearInvoices}
+                    keyExtractor={(invoice) => invoice.id}
+                    sortKey={invoiceTable.sortKey}
+                    sortDir={invoiceTable.sortDir}
+                    onSort={invoiceTable.handleSort}
+                  />
+                </section>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="space-y-3">
