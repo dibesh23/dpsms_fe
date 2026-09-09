@@ -23,7 +23,6 @@ import {
   noticeApi,
   type AdminNotice,
   type NoticeAttachment,
-  type NoticeRecipientScope,
 } from "../api/noticeApi";
 import { RecipientScopeEditor, AudienceBadge } from "./RecipientScopeEditor";
 import {

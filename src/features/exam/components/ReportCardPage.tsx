@@ -74,7 +74,6 @@ export function ReportCardPage({ studentId }: { studentId?: string }) {
     try {
       const doc = new jsPDF({ unit: "mm", format: "a4" });
       const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 16;
       const contentWidth = pageWidth - margin * 2;
 

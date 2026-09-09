@@ -133,9 +133,12 @@ export function useNoticeBell() {
 
   useEffect(() => {
     if (isRecipient) return;
-    void loadAdmin();
+    const initialId = setTimeout(() => void loadAdmin(), 0);
     const id = setInterval(() => void loadAdmin(), 30_000);
-    return () => clearInterval(id);
+    return () => {
+      clearTimeout(initialId);
+      clearInterval(id);
+    };
   }, [isRecipient, loadAdmin]);
 
   const refresh = useCallback(() => {

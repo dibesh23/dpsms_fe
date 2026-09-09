@@ -19,7 +19,6 @@ export interface DisplayAttachment {
 export function AttachmentUploader({
   existing,
   onSubmit,
-  submitLabel = "Add file",
   onOpen,
   onRemove,
   maxFiles = 5,

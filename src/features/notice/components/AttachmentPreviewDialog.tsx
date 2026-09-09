@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog } from "@/shared/components/ui/dialog";
-import { DownloadIcon, FileTextIcon, FileImageIcon, LoadingSpinner } from "@/shared/components/ui/icons";
+import { DownloadIcon, FileTextIcon, LoadingSpinner } from "@/shared/components/ui/icons";
 import { noticeApi, type NoticeAttachment } from "../api/noticeApi";
 
 function formatBytes(bytes: number): string {
@@ -36,53 +36,50 @@ export function AttachmentPreviewDialog({
   const [mimeType, setMimeType] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const objectUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!open || !attachment) {
-      // Revoke previous URL when closing
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-        setObjectUrl(null);
-      }
-      setMimeType("");
-      setError(false);
-      return;
-    }
+    if (!open || !attachment) return;
 
     let cancelled = false;
-    setLoading(true);
-    setError(false);
+    const id = setTimeout(() => {
+      setObjectUrl(null);
+      setMimeType("");
+      setLoading(true);
+      setError(false);
 
-    noticeApi
-      .fetchAttachmentBlob(noticeId, attachment.id)
-      .then(({ objectUrl: url, mimeType: mime }) => {
-        if (cancelled) {
-          URL.revokeObjectURL(url);
-          return;
-        }
-        setObjectUrl(url);
-        setMimeType(mime);
-        setLoading(false);
-      })
-      .catch(() => {
-        if (!cancelled) {
+      noticeApi
+        .fetchAttachmentBlob(noticeId, attachment.id)
+        .then(({ objectUrl: url, mimeType: mime }) => {
+          if (cancelled) {
+            URL.revokeObjectURL(url);
+            return;
+          }
+          if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+          objectUrlRef.current = url;
+          setObjectUrl(url);
+          setMimeType(mime);
           setLoading(false);
-          setError(true);
-        }
-      });
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setLoading(false);
+            setError(true);
+          }
+        });
+    }, 0);
 
     return () => {
       cancelled = true;
+      clearTimeout(id);
     };
   }, [open, attachment?.id, noticeId]);
 
-  // Revoke URL when dialog closes
   useEffect(() => {
-    if (!open && objectUrl) {
-      URL.revokeObjectURL(objectUrl);
-      setObjectUrl(null);
-    }
-  }, [open]);
+    return () => {
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    };
+  }, []);
 
   const handleDownload = () => {
     if (!attachment) return;

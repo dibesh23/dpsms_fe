@@ -24,7 +24,6 @@ export function AddClassSubjectForm({
   const [submitting, setSubmitting] = useState(false);
 
   const allSelected = subjects.length > 0 && selectedIds.length === subjects.length;
-  const someSelected = selectedIds.length > 0 && !allSelected;
 
   const toggle = (id: string) => {
     setSelectedIds((current) =>

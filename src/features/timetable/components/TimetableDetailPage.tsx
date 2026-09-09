@@ -77,7 +77,8 @@ export function TimetableDetailPage() {
   }, [timetableId, toast]);
 
   useEffect(() => {
-    void load();
+    const id = setTimeout(() => void load(), 0);
+    return () => clearTimeout(id);
   }, [load]);
 
   const handleSaveSlot = async (values: {

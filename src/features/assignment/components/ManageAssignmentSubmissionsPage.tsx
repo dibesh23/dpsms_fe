@@ -12,7 +12,6 @@ import { Pagination } from "@/shared/components/ui/pagination";
 import { RowActions } from "@/shared/components/ui/row-actions";
 import { Dialog } from "@/shared/components/ui/dialog";
 import { StatusBadge } from "@/shared/components/ui/status-badge";
-import { EmptyState } from "@/shared/components/ui/empty-state";
 import { LoadingState } from "@/shared/components/ui/loading-state";
 import { useTable } from "@/shared/hooks/useTable";
 import { useToast } from "@/shared/components/ui/toast";

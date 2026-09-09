@@ -160,11 +160,6 @@
       "count": 1
     }
   },
-  "src/features/fee/components/FeeInvoiceDetailPage.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
   "src/features/fee/components/FeeInvoicesPage.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 2
@@ -192,15 +187,10 @@
   },
   "src/features/notice/components/AdminNoticePage.tsx": {
     "react-hooks/set-state-in-effect": {
-      "count": 4
-    }
-  },
-  "src/features/notice/components/DashboardNoticesWidget.tsx": {
-    "react-hooks/set-state-in-effect": {
       "count": 1
     }
   },
-  "src/features/notice/components/TeacherNoticePage.tsx": {
+  "src/features/notice/components/DashboardNoticesWidget.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 1
     }

@@ -14,7 +14,7 @@ import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { AddClassForm, type AddClassValues } from "./AddClassForm";
-import { EditClassForm, type EditClassValues } from "./EditClassForm";
+import { EditClassForm } from "./EditClassForm";
 import { academicApi, type ClassRecord as ClassRecordDto } from "../api/academicApi";
 import {
   ArrowUpRightIcon,

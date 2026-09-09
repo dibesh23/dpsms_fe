@@ -45,8 +45,6 @@ function getApiErrorMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
-const EXAM_STATUSES: ExamStatus[] = ["DRAFT", "MARKS_ENTRY", "SUBMITTED", "PUBLISHED", "CANCELLED"];
-
 const EXAM_TILE: Record<ExamStatus, string> = {
   DRAFT: "border-neutral-200 bg-neutral-100 text-neutral-500",
   MARKS_ENTRY: "border-blue-100 bg-blue-50 text-blue-600",

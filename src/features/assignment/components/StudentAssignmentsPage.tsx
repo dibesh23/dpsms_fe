@@ -9,7 +9,6 @@ import { DataTable, type Column } from "@/shared/components/ui/data-table";
 import { Pagination } from "@/shared/components/ui/pagination";
 import { RowActions } from "@/shared/components/ui/row-actions";
 import { StatusBadge } from "@/shared/components/ui/status-badge";
-import { EmptyState } from "@/shared/components/ui/empty-state";
 import { LoadingState } from "@/shared/components/ui/loading-state";
 import { StatsCard } from "@/shared/components/ui/stats-card";
 import { useTable } from "@/shared/hooks/useTable";
