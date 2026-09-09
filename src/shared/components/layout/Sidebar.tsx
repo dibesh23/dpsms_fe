@@ -34,6 +34,7 @@ import {
 const NAV_SECTIONS: Array<{
   label: string;
   roles?: readonly string[];
+  href?: string;
   items: Array<{
     label: string;
     href: string;
@@ -140,6 +141,7 @@ const NAV_SECTIONS: Array<{
   {
     label: "Finance",
     roles: ["SUPER_ADMIN", "PRINCIPAL"],
+    href: "/finance",
     items: [
       {
         label: "Fee Types",
@@ -368,13 +370,32 @@ function NavList({ onNavigate, expanded = true }: { onNavigate?: () => void; exp
         if (!roleMatch) return null;
         const visibleItems = section.items.filter((item) => can(item.permission));
         if (visibleItems.length === 0) return null;
+        const sectionLabel = section.href ? (
+          <Link
+            href={section.href}
+            onClick={onNavigate}
+            aria-label={`${section.label} overview`}
+            className={cn(
+              "flex h-9 items-center overflow-hidden px-3 pb-2 pt-5 text-xs font-medium tracking-wider whitespace-nowrap uppercase transition-colors",
+              pathname === section.href
+                ? "text-[#0d3320]"
+                : "text-[#52705b] hover:text-[#0d3320]",
+            )}
+          >
+            <span className={cn(!expanded && "invisible group-hover/sidebar:visible")}>
+              {section.label}
+            </span>
+          </Link>
+        ) : (
+          <p className="h-9 overflow-hidden px-3 pb-2 pt-5 text-xs font-medium tracking-wider whitespace-nowrap text-[#52705b] uppercase">
+            <span className={cn(!expanded && "invisible group-hover/sidebar:visible")}>
+              {section.label}
+            </span>
+          </p>
+        );
         return (
           <div key={section.label}>
-            <p className="type-micro-label h-9 overflow-hidden px-3 pb-2 pt-5 font-medium whitespace-nowrap text-[#064E3B]">
-              <span className={cn(!expanded && "invisible group-hover/sidebar:visible")}>
-                {section.label}
-              </span>
-            </p>
+            {sectionLabel}
             <ul className="space-y-0.5">
               {visibleItems.map((item) => {
                 const active = pathname === item.href;

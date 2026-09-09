@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -22,21 +22,23 @@ import { formatDate } from "@/shared/lib/format";
 import {
   noticeApi,
   type AdminNotice,
-  type NoticeApprovalStatus,
   type NoticeAttachment,
+  type NoticeRecipientScope,
 } from "../api/noticeApi";
+import { RecipientScopeEditor, AudienceBadge } from "./RecipientScopeEditor";
 import {
   AlertTriangleIcon,
   BellIcon,
-  CheckCircle2Icon,
   DownloadIcon,
+  EyeIcon,
   FileTextIcon,
   PlusIcon,
   TrashIcon,
   UsersIcon,
 } from "@/shared/components/ui/icons";
+import { AttachmentPreviewDialog } from "./AttachmentPreviewDialog";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function publishStatus(n: AdminNotice): "published" | "scheduled" | "draft" {
   if (n.publishedAt) return "published";
@@ -62,30 +64,16 @@ const PUBLISH_LABEL: Record<string, string> = {
   draft: "Draft",
 };
 
-const APPROVAL_VARIANT: Record<NoticeApprovalStatus, StatusVariant> = {
-  PENDING_APPROVAL: "warning",
-  APPROVED: "success",
-  REJECTED: "danger",
-};
-
-const APPROVAL_LABEL: Record<NoticeApprovalStatus, string> = {
-  PENDING_APPROVAL: "Pending Approval",
-  APPROVED: "Approved",
-  REJECTED: "Rejected",
-};
-
 const FILTER_OPTIONS = [
-  { value: "pending", label: "Pending Approval" },
   { value: "published", label: "Published" },
   { value: "scheduled", label: "Scheduled" },
   { value: "draft", label: "Draft" },
-  { value: "rejected", label: "Rejected" },
   { value: "urgent", label: "Urgent" },
 ];
 
 const ACCEPTED_FILE_TYPES = ".pdf,.jpg,.jpeg,.png,.webp";
 
-// ── Attachment chip ───────────────────────────────────────────────────────────
+// â”€â”€ Attachment chip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function AttachmentChip({
   attachment,
@@ -96,60 +84,77 @@ function AttachmentChip({
   noticeId: string;
   onDelete?: (id: string) => void;
 }) {
-  const [opening, setOpening] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
-  const handleOpen = async () => {
-    if (opening) return;
-    setOpening(true);
-    try {
-      await noticeApi.openAttachment(noticeId, attachment.id, attachment.label);
-    } finally {
-      setOpening(false);
-    }
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    void noticeApi.openAttachment(noticeId, attachment.id, attachment.label);
   };
 
   return (
-    <div className="flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs">
-      <FileTextIcon className="size-3.5 flex-none text-neutral-400" />
-      <button
-        type="button"
-        onClick={() => void handleOpen()}
-        disabled={opening}
-        className="max-w-[160px] truncate font-medium text-neutral-700 hover:underline disabled:opacity-50"
-      >
-        {opening ? "Opening…" : attachment.label}
-      </button>
-      <span className="text-neutral-400">{formatBytes(attachment.sizeBytes)}</span>
-      <button
-        type="button"
-        onClick={() => void handleOpen()}
-        disabled={opening}
-        className="text-neutral-400 hover:text-neutral-700 disabled:opacity-50 transition-colors"
-        aria-label="Download"
-      >
-        <DownloadIcon className="size-3.5" />
-      </button>
-      {onDelete && (
+    <>
+      <div className="flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs">
+        <FileTextIcon className="size-3.5 flex-none text-neutral-400" />
         <button
           type="button"
-          onClick={() => onDelete(attachment.id)}
-          className="text-neutral-400 hover:text-red-500 transition-colors"
-          aria-label="Remove attachment"
+          onClick={() => setPreviewOpen(true)}
+          className="max-w-[160px] truncate font-medium text-neutral-700 hover:underline"
         >
-          <TrashIcon className="size-3.5" />
+          {attachment.label}
         </button>
-      )}
-    </div>
+        <span className="text-neutral-400">{formatBytes(attachment.sizeBytes)}</span>
+        <button
+          type="button"
+          onClick={() => setPreviewOpen(true)}
+          className="text-neutral-400 hover:text-neutral-700 transition-colors"
+          aria-label="Preview"
+        >
+          <EyeIcon className="size-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={handleDownload}
+          className="text-neutral-400 hover:text-neutral-700 transition-colors"
+          aria-label="Download"
+        >
+          <DownloadIcon className="size-3.5" />
+        </button>
+        {onDelete && (
+          <button
+            type="button"
+            onClick={() => onDelete(attachment.id)}
+            className="text-neutral-400 hover:text-red-500 transition-colors"
+            aria-label="Remove attachment"
+          >
+            <TrashIcon className="size-3.5" />
+          </button>
+        )}
+      </div>
+      <AttachmentPreviewDialog
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        noticeId={noticeId}
+        attachment={attachment}
+      />
+    </>
   );
 }
 
-// ── Edit form ─────────────────────────────────────────────────────────────────
+// â”€â”€ Edit form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+const scopeItemSchema = z.object({
+  id: z.string(),
+  roleTarget: z.string(),
+  classId: z.string(),
+  sectionId: z.string(),
+});
 
 const EditSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(255),
   body: z.string().trim().min(1, "Body is required"),
   isUrgent: z.boolean(),
   scheduledAt: z.string().optional(),
+  recipientScopes: z.array(scopeItemSchema),
 });
 type EditForm = z.output<typeof EditSchema>;
 
@@ -174,6 +179,8 @@ function EditNoticeDialog({
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<EditForm>({
     resolver: zodResolver(EditSchema),
@@ -184,6 +191,7 @@ function EditNoticeDialog({
       scheduledAt: notice?.scheduledAt
         ? new Date(notice.scheduledAt).toISOString().slice(0, 16)
         : undefined,
+      recipientScopes: notice?.recipientScopes ?? [],
     },
   });
 
@@ -197,6 +205,7 @@ function EditNoticeDialog({
         scheduledAt: notice.scheduledAt
           ? new Date(notice.scheduledAt).toISOString().slice(0, 16)
           : undefined,
+        recipientScopes: notice.recipientScopes ?? [],
       });
       setNewFiles([]);
     }
@@ -231,9 +240,14 @@ function EditNoticeDialog({
         body: values.body,
         isUrgent: values.isUrgent,
         scheduledAt: values.scheduledAt ? new Date(values.scheduledAt).toISOString() : null,
+        recipientScopes: values.recipientScopes.map(({ roleTarget, classId, sectionId }) => ({
+          roleTarget: roleTarget || "ALL",
+          classId: classId || undefined,
+          sectionId: sectionId || undefined,
+        })),
       });
 
-      // 2. Process replacements (delete old → upload new)
+      // 2. Process replacements (delete old â†’ upload new)
       for (const file of newFiles) {
         const replaces = (file as File & { _replaces?: string })._replaces;
         if (replaces) {
@@ -280,7 +294,7 @@ function EditNoticeDialog({
           <textarea
             {...register("body")}
             rows={4}
-            placeholder="Write the notice content here…"
+            placeholder="Write the notice content hereâ€¦"
             className="w-full resize-none rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
           />
         </Field>
@@ -298,7 +312,12 @@ function EditNoticeDialog({
           <Input type="datetime-local" {...register("scheduledAt")} />
         </Field>
 
-        {/* Existing attachments — each can be replaced */}
+        <RecipientScopeEditor
+          value={watch("recipientScopes")}
+          onChange={(scopes) => setValue("recipientScopes", scopes, { shouldValidate: true })}
+        />
+
+        {/* Existing attachments â€” each can be replaced */}
         {notice.attachments.length > 0 && (
           <div>
             <p className="mb-2 text-sm font-medium text-neutral-700">Attachments</p>
@@ -321,7 +340,7 @@ function EditNoticeDialog({
                     <span className="text-neutral-400">{formatBytes(a.sizeBytes)}</span>
                     {pendingReplacement ? (
                       <span className="text-blue-600 truncate max-w-[100px]">
-                        → {pendingReplacement.name}
+                        â†’ {pendingReplacement.name}
                       </span>
                     ) : (
                       <label className="ml-auto cursor-pointer text-neutral-500 hover:text-blue-600 transition-colors">
@@ -346,7 +365,7 @@ function EditNoticeDialog({
                         }
                         className="text-xs text-neutral-400 hover:text-red-500"
                       >
-                        ✕
+                        âœ•
                       </button>
                     )}
                   </div>
@@ -419,206 +438,37 @@ function EditNoticeDialog({
   );
 }
 
-// ── Create form ───────────────────────────────────────────────────────────────
+// â”€â”€ Create form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const CreateSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(255),
   body: z.string().trim().min(1, "Body is required"),
   isUrgent: z.boolean(),
   scheduledAt: z.string().optional(),
+  recipientScopes: z.array(scopeItemSchema),
 });
 type CreateForm = z.output<typeof CreateSchema>;
 
-// ── Review dialog ─────────────────────────────────────────────────────────────
-
-function ReviewDialog({
-  notice,
-  onClose,
-  onApprove,
-  onReject,
-  approving,
-  rejecting,
-}: {
-  notice: AdminNotice | null;
-  onClose: () => void;
-  onApprove: (id: string) => void;
-  onReject: (id: string, note: string) => void;
-  approving: boolean;
-  rejecting: boolean;
-}) {
-  const [showRejectForm, setShowRejectForm] = useState(false);
-  const [rejectNote, setRejectNote] = useState("");
-
-  useEffect(() => {
-    if (!notice) {
-      setShowRejectForm(false);
-      setRejectNote("");
-    }
-  }, [notice]);
-
-  if (!notice) return null;
-
-  return (
-    <Dialog open={notice !== null} onClose={onClose} title="Review Notice">
-      <div className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-base font-semibold text-neutral-900">{notice.title}</span>
-          {notice.isUrgent && <StatusBadge status="Urgent" variant="danger" />}
-        </div>
-        <p className="whitespace-pre-line rounded-lg border border-neutral-100 bg-neutral-50 p-4 text-sm leading-relaxed text-neutral-700">
-          {notice.body}
-        </p>
-        {/* Attachments in review */}
-        {notice.attachments.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {notice.attachments.map((a) => (
-              <AttachmentChip key={a.id} attachment={a} noticeId={notice.id} />
-            ))}
-          </div>
-        )}
-        <p className="text-xs text-neutral-400">
-          Submitted {formatDate(notice.createdAt)} · by {notice.publishedByName}
-        </p>
-      </div>
-
-      <div className="mt-5 space-y-3 border-t border-neutral-100 pt-4">
-        {!showRejectForm ? (
-          <div className="flex gap-3">
-            <Button
-              text="Approve & Publish"
-              onClick={() => onApprove(notice.id)}
-              loading={approving}
-              className="flex-1"
-            />
-            <Button
-              text="Reject"
-              variant="danger"
-              onClick={() => setShowRejectForm(true)}
-              disabled={approving}
-              className="w-auto"
-            />
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-neutral-700">
-              Reason for rejection <span className="text-red-500">*</span>
-            </p>
-            <textarea
-              value={rejectNote}
-              onChange={(e) => setRejectNote(e.target.value)}
-              rows={3}
-              placeholder="e.g. Please revise the wording in the second paragraph…"
-              className="w-full resize-none rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
-              autoFocus
-            />
-            <div className="flex gap-3">
-              <Button
-                text="Send Rejection"
-                variant="danger"
-                onClick={() => {
-                  if (rejectNote.trim()) onReject(notice.id, rejectNote.trim());
-                }}
-                loading={rejecting}
-                disabled={!rejectNote.trim()}
-                className="flex-1"
-              />
-              <Button
-                text="Back"
-                variant="secondary"
-                onClick={() => setShowRejectForm(false)}
-                disabled={rejecting}
-                className="w-auto"
-              />
-            </div>
-          </div>
-        )}
-        <Button
-          text="Close"
-          variant="secondary"
-          onClick={onClose}
-          disabled={approving || rejecting}
-          className="w-full"
-        />
-      </div>
-    </Dialog>
-  );
-}
-
-// ── Reject dialog ─────────────────────────────────────────────────────────────
-
-function RejectDialog({
-  open,
-  onClose,
-  onConfirm,
-  loading,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onConfirm: (note: string) => void;
-  loading: boolean;
-}) {
-  const [note, setNote] = useState("");
-  useEffect(() => {
-    if (open) setNote("");
-  }, [open]);
-
-  return (
-    <Dialog open={open} onClose={onClose} title="Reject Notice">
-      <p className="mb-3 text-sm text-neutral-600">
-        Provide a reason so the teacher knows what to fix.
-      </p>
-      <textarea
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        rows={3}
-        placeholder="e.g. Please revise the wording in the second paragraph…"
-        className="w-full resize-none rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
-      />
-      <div className="mt-4 flex justify-end gap-3">
-        <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" />
-        <Button
-          variant="danger"
-          text="Reject"
-          onClick={() => {
-            if (note.trim()) onConfirm(note.trim());
-          }}
-          loading={loading}
-          disabled={!note.trim()}
-          className="w-auto"
-        />
-      </div>
-    </Dialog>
-  );
-}
-
-// ── Notice row ────────────────────────────────────────────────────────────────
+// â”€â”€ Notice row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function NoticeRow({
   notice,
-  onReview,
-  onApprove,
-  onReject,
   onPublish,
   onEdit,
   onDelete,
   onAttachmentDeleted,
 }: {
   notice: AdminNotice;
-  onReview: (notice: AdminNotice) => void;
-  onApprove: (id: string) => void;
-  onReject: (id: string) => void;
   onPublish: (id: string) => void;
   onEdit: (notice: AdminNotice) => void;
   onDelete: (id: string) => void;
   onAttachmentDeleted: (noticeId: string, attachmentId: string) => void;
 }) {
   const pubStatus = publishStatus(notice);
-  const isPending = notice.approvalStatus === "PENDING_APPROVAL";
-  const isRejected = notice.approvalStatus === "REJECTED";
 
   const actions = [
     { label: "Edit", onClick: () => onEdit(notice) },
-    ...(notice.approvalStatus === "APPROVED" && (pubStatus === "draft" || pubStatus === "scheduled")
+    ...(pubStatus === "draft" || pubStatus === "scheduled"
       ? [{ label: "Publish now", onClick: () => onPublish(notice.id) }]
       : []),
     { label: "Delete", onClick: () => onDelete(notice.id), danger: true as const },
@@ -631,18 +481,11 @@ function NoticeRow({
         <div className="flex flex-wrap items-center gap-2">
           <span className="truncate text-sm font-semibold text-neutral-900">{notice.title}</span>
           {notice.isUrgent && <StatusBadge status="Urgent" variant="danger" />}
-          {(isPending || isRejected) && (
-            <StatusBadge
-              status={APPROVAL_LABEL[notice.approvalStatus]}
-              variant={APPROVAL_VARIANT[notice.approvalStatus]}
-            />
-          )}
-          {!isPending && (
-            <StatusBadge status={PUBLISH_LABEL[pubStatus]} variant={PUBLISH_VARIANT[pubStatus]} />
-          )}
+          <StatusBadge status={PUBLISH_LABEL[pubStatus]} variant={PUBLISH_VARIANT[pubStatus]} />
+          <AudienceBadge scopes={notice.recipientScopes} />
           {pubStatus === "scheduled" && notice.scheduledAt && (
             <span className="text-xs font-medium text-amber-600">
-              →{" "}
+              â†’{" "}
               {new Date(notice.scheduledAt).toLocaleString("en-GB", {
                 day: "numeric",
                 month: "short",
@@ -656,11 +499,6 @@ function NoticeRow({
 
         {/* Body preview */}
         <p className="line-clamp-2 text-xs text-neutral-500">{notice.body}</p>
-
-        {/* Rejection reason */}
-        {isRejected && notice.approvalNote && (
-          <p className="text-xs text-red-500">Reason: {notice.approvalNote}</p>
-        )}
 
         {/* Attachments */}
         {notice.attachments.length > 0 && (
@@ -682,33 +520,10 @@ function NoticeRow({
             ? `Published ${formatDate(notice.publishedAt)}`
             : pubStatus === "scheduled" && notice.scheduledAt
               ? `Scheduled for ${formatDate(notice.scheduledAt)}`
-              : `Submitted ${formatDate(notice.createdAt)}`}
-          {" · by "}
+              : `Created ${formatDate(notice.createdAt)}`}
+          {" Â· by "}
           {notice.publishedByName}
         </p>
-
-        {/* Approval buttons for pending notices */}
-        {isPending && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Button
-              text="Review & Approve"
-              onClick={() => onReview(notice)}
-              className="w-auto text-xs"
-            />
-            <Button
-              text="Quick Approve"
-              variant="secondary"
-              onClick={() => onApprove(notice.id)}
-              className="w-auto text-xs"
-            />
-            <Button
-              text="Reject"
-              variant="danger"
-              onClick={() => onReject(notice.id)}
-              className="w-auto text-xs"
-            />
-          </div>
-        )}
       </div>
       <div className="flex flex-none items-center self-start">
         <RowActions actions={actions} />
@@ -717,7 +532,7 @@ function NoticeRow({
   );
 }
 
-// ── Create dialog ─────────────────────────────────────────────────────────────
+// â”€â”€ Create dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CreateNoticeDialog({
   open,
@@ -738,10 +553,11 @@ function CreateNoticeDialog({
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<CreateForm>({
     resolver: zodResolver(CreateSchema),
-    defaultValues: { isUrgent: false },
+    defaultValues: { isUrgent: false, recipientScopes: [] },
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -771,6 +587,13 @@ function CreateNoticeDialog({
         body: values.body,
         isUrgent: values.isUrgent,
         ...(values.scheduledAt ? { scheduledAt: new Date(values.scheduledAt).toISOString() } : {}),
+        recipientScopes: (values.recipientScopes ?? []).map(
+          ({ roleTarget, classId, sectionId }) => ({
+            roleTarget: roleTarget || "ALL",
+            classId: classId || undefined,
+            sectionId: sectionId || undefined,
+          }),
+        ),
       });
 
       // Step 2: upload attachments sequentially
@@ -785,7 +608,7 @@ function CreateNoticeDialog({
               attachments: [...updatedNotice.attachments, attachment],
             };
           } catch {
-            // Non-fatal — notice is already created, just log the failure
+            // Non-fatal â€” notice is already created, just log the failure
             error(`Failed to upload ${file.name}`);
           }
         }
@@ -819,7 +642,7 @@ function CreateNoticeDialog({
           <textarea
             {...register("body")}
             rows={5}
-            placeholder="Write the notice content here…"
+            placeholder="Write the notice content hereâ€¦"
             className="w-full resize-none rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
           />
         </Field>
@@ -838,12 +661,17 @@ function CreateNoticeDialog({
           <Input type="datetime-local" {...register("scheduledAt")} />
         </Field>
 
+        <RecipientScopeEditor
+          value={watch("recipientScopes")}
+          onChange={(scopes) => setValue("recipientScopes", scopes, { shouldValidate: true })}
+        />
+
         {/* Attachments */}
         <div className="h-28 overflow-y-auto overscroll-contain pr-1">
           <p className="mb-2 text-sm font-medium text-neutral-700">
             Attachments{" "}
             <span className="text-xs font-normal text-neutral-400">
-              (PDF, image — max 5MB each, up to 5 files)
+              (PDF, image â€” max 5MB each, up to 5 files)
             </span>
           </p>
 
@@ -903,7 +731,7 @@ function CreateNoticeDialog({
           />
           <Button
             type="submit"
-            text={uploadingFiles ? "Uploading…" : watch("scheduledAt") ? "Schedule" : "Publish"}
+            text={uploadingFiles ? "Uploadingâ€¦" : watch("scheduledAt") ? "Schedule" : "Publish"}
             loading={busy}
             className="w-auto"
           />
@@ -913,7 +741,7 @@ function CreateNoticeDialog({
   );
 }
 
-// ── Delete confirm ────────────────────────────────────────────────────────────
+// â”€â”€ Delete confirm â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function DeleteConfirmDialog({
   open,
@@ -943,7 +771,7 @@ function DeleteConfirmDialog({
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function AdminNoticePage() {
   const { success, error } = useToast();
@@ -952,26 +780,29 @@ export function AdminNoticePage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [rejectTarget, setRejectTarget] = useState<string | null>(null);
-  const [rejectLoading, setRejectLoading] = useState(false);
-  const [reviewNotice, setReviewNotice] = useState<AdminNotice | null>(null);
-  const [reviewApproving, setReviewApproving] = useState(false);
-  const [reviewRejecting, setReviewRejecting] = useState(false);
   const [editNotice, setEditNotice] = useState<AdminNotice | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const result = await noticeApi.list({ pageSize: 100 });
       setNotices(result.items);
     } catch {
-      setNotices([]);
+      if (!silent) setNotices([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void load();
+    void load(false);
+  }, [load]);
+
+  // Keep the list fresh so scheduled notices flip to "published" as the
+  // backend scheduler publishes them (no manual reload needed).
+  useEffect(() => {
+    const id = setInterval(() => void load(true), 30_000);
+    return () => clearInterval(id);
   }, [load]);
 
   const table = useTable<AdminNotice>({
@@ -980,8 +811,6 @@ export function AdminNoticePage() {
     getSearchText: (n) => `${n.title} ${n.body} ${n.publishedByName}`,
     filterMatch: (n, value) => {
       if (value === "urgent") return n.isUrgent;
-      if (value === "pending") return n.approvalStatus === "PENDING_APPROVAL";
-      if (value === "rejected") return n.approvalStatus === "REJECTED";
       return publishStatus(n) === value;
     },
     sortValue: (n, _key) => n.publishedAt ?? n.createdAt,
@@ -989,46 +818,11 @@ export function AdminNoticePage() {
     defaultSortDir: "desc",
   });
 
-  const pendingCount = useMemo(
-    () => notices.filter((n) => n.approvalStatus === "PENDING_APPROVAL").length,
-    [notices],
-  );
   const publishedCount = useMemo(() => notices.filter((n) => n.publishedAt).length, [notices]);
   const urgentCount = useMemo(() => notices.filter((n) => n.isUrgent).length, [notices]);
 
   const upsert = (updated: AdminNotice) =>
     setNotices((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
-
-  const handleApprove = async (id: string) => {
-    setReviewApproving(true);
-    try {
-      upsert(await noticeApi.approve(id));
-      success("Notice approved and published");
-      setReviewNotice(null);
-    } catch {
-      error("Failed to approve notice");
-    } finally {
-      setReviewApproving(false);
-    }
-  };
-
-  const handleRejectConfirm = async (note: string, targetId?: string) => {
-    const id = targetId ?? rejectTarget ?? reviewNotice?.id;
-    if (!id) return;
-    setRejectLoading(true);
-    setReviewRejecting(true);
-    try {
-      upsert(await noticeApi.reject(id, note));
-      success("Notice rejected");
-      setReviewNotice(null);
-      setRejectTarget(null);
-    } catch {
-      error("Failed to reject notice");
-    } finally {
-      setRejectLoading(false);
-      setReviewRejecting(false);
-    }
-  };
 
   const handlePublish = async (id: string) => {
     try {
@@ -1074,12 +868,6 @@ export function AdminNoticePage() {
           : n,
       ),
     );
-    // Also update reviewNotice if open
-    setReviewNotice((prev) =>
-      prev?.id === noticeId
-        ? { ...prev, attachments: prev.attachments.filter((a) => a.id !== attachmentId) }
-        : prev,
-    );
     try {
       await noticeApi.deleteAttachment(noticeId, attachmentId);
       success("Attachment removed");
@@ -1094,7 +882,7 @@ export function AdminNoticePage() {
     <div className="space-y-4">
       <PageHeader
         title="Notices & Announcements"
-        description="Create notices and review teacher submissions"
+        description="Create notices for students and teachers"
         actions={
           <Button
             text="New Notice"
@@ -1105,12 +893,7 @@ export function AdminNoticePage() {
         }
       />
 
-      <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <StatsCard
-          label="Pending Approval"
-          value={loading ? "-" : String(pendingCount)}
-          icon={<CheckCircle2Icon className="size-4" />}
-        />
+      <section className="grid grid-cols-2 gap-4 xl:grid-cols-3">
         <StatsCard
           label="Published"
           value={loading ? "-" : String(publishedCount)}
@@ -1128,16 +911,6 @@ export function AdminNoticePage() {
         />
       </section>
 
-      {pendingCount > 0 && (
-        <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-          <CheckCircle2Icon className="size-4 flex-none text-amber-500" />
-          <p className="text-sm text-amber-700">
-            <strong>{pendingCount}</strong> teacher {pendingCount === 1 ? "notice" : "notices"}{" "}
-            waiting for your approval. Filter by <strong>Pending Approval</strong> to review.
-          </p>
-        </div>
-      )}
-
       <div className="flex flex-wrap items-center justify-between gap-3">
         <FilterDropdown
           label="Filter"
@@ -1145,7 +918,7 @@ export function AdminNoticePage() {
           value={table.filter}
           onChange={table.setFilter}
         />
-        <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search notices…" />
+        <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search noticesâ€¦" />
       </div>
 
       <div className="overflow-hidden rounded-lg border border-neutral-200 bg-bg-default">
@@ -1165,9 +938,6 @@ export function AdminNoticePage() {
               <NoticeRow
                 key={notice.id}
                 notice={notice}
-                onReview={(n) => setReviewNotice(n)}
-                onApprove={(id) => void handleApprove(id)}
-                onReject={(id) => setRejectTarget(id)}
                 onPublish={(id) => void handlePublish(id)}
                 onEdit={(n) => setEditNotice(n)}
                 onDelete={(id) => setDeleteTarget(id)}
@@ -1192,24 +962,10 @@ export function AdminNoticePage() {
           upsert(n);
         }}
       />
-      <ReviewDialog
-        notice={reviewNotice}
-        onClose={() => setReviewNotice(null)}
-        onApprove={(id) => void handleApprove(id)}
-        onReject={(id, note) => void handleRejectConfirm(note, id)}
-        approving={reviewApproving}
-        rejecting={reviewRejecting}
-      />
       <CreateNoticeDialog
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onCreated={handleCreated}
-      />
-      <RejectDialog
-        open={rejectTarget !== null}
-        onClose={() => setRejectTarget(null)}
-        onConfirm={(note) => void handleRejectConfirm(note)}
-        loading={rejectLoading}
       />
       <DeleteConfirmDialog
         open={deleteTarget !== null}

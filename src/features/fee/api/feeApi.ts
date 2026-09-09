@@ -83,6 +83,7 @@ export interface InvoiceListResult {
 export interface InvoiceDetailRecord extends InvoiceRecord {
   enrollment?: {
     id: string;
+    studentId: string;
     rollNumber: string;
     studentName: string;
     className: string;
@@ -97,6 +98,57 @@ export interface InvoiceGenerationResult {
   totalPairs: number;
   created: number;
   skipped: number;
+  priorYearUnpaid: Array<{
+    studentId: string;
+    studentName: string;
+    paid: number;
+    owed: number;
+  }>;
+}
+
+export interface StudentFeeYearGroup {
+  academicYearLabel: string;
+  isCurrent: boolean;
+  totalAnnualFee: number;
+  totalPaid: number;
+  totalDue: number;
+}
+
+export interface StudentFeeSummaryRecord {
+  academicYearLabel: string;
+  totalAnnualFee: number;
+  totalPaid: number;
+  totalDue: number;
+  discounts: {
+    id: string;
+    kind: "DISCOUNT" | "SCHOLARSHIP";
+    label: string;
+    amount: number | null;
+    scholarshipType: ScholarshipType | null;
+    percentageOrAmount: number | null;
+  }[];
+  invoices: {
+    id: string;
+    academicYearLabel: string;
+    isCurrentYear: boolean;
+    installmentLabel: string;
+    dueDate: string;
+    amount: number;
+    amountPaid: number;
+    status: InvoiceStatus;
+  }[];
+  payments: {
+    id: string;
+    invoiceId: string;
+    academicYearLabel: string;
+    installmentLabel: string;
+    amountPaid: number;
+    paymentMethod: PaymentMethod;
+    paidAt: string;
+    receiptNumber: string | null;
+    receiptUrl: string | null;
+  }[];
+  yearGroups: StudentFeeYearGroup[];
 }
 
 export interface PaymentRecordResult {
@@ -204,6 +256,15 @@ export const feeApi = {
 
   async getInvoice(id: string): Promise<InvoiceDetailRecord> {
     const { data } = await apiClient.get<{ data: InvoiceDetailRecord }>(`/fees/invoices/${id}`);
+    return data.data;
+  },
+
+  // Admin student fee lookup — grouped across every academic year the
+  // student has ever been enrolled in.
+  async getStudentFeeSummary(studentId: string): Promise<StudentFeeSummaryRecord> {
+    const { data } = await apiClient.get<{ data: StudentFeeSummaryRecord }>(
+      `/fees/students/${studentId}/fees`,
+    );
     return data.data;
   },
 

@@ -25,8 +25,10 @@ import {
   BellIcon,
   CheckCircle2Icon,
   DownloadIcon,
+  EyeIcon,
   FileTextIcon,
 } from "@/shared/components/ui/icons";
+import { AttachmentPreviewDialog } from "./AttachmentPreviewDialog";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -44,32 +46,49 @@ function AttachmentChip({ noticeId, attachment }: {
   noticeId: string;
   attachment: { id: string; label: string; mimeType: string; sizeBytes: number };
 }) {
-  const [opening, setOpening] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
-  const handleOpen = async () => {
-    if (opening) return;
-    setOpening(true);
-    try {
-      await noticeApi.openAttachment(noticeId, attachment.id, attachment.label);
-    } finally {
-      setOpening(false);
-    }
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    void noticeApi.openAttachment(noticeId, attachment.id, attachment.label);
   };
 
   return (
-    <button
-      type="button"
-      onClick={() => void handleOpen()}
-      disabled={opening}
-      className="flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs transition-colors hover:bg-neutral-100 disabled:opacity-50"
-    >
-      <FileTextIcon className="size-3.5 flex-none text-neutral-400" />
-      <span className="max-w-[160px] truncate font-medium text-neutral-700">
-        {opening ? "Opening…" : attachment.label}
-      </span>
-      <span className="text-neutral-400">{formatBytes(attachment.sizeBytes)}</span>
-      <DownloadIcon className="size-3.5 flex-none text-neutral-400" />
-    </button>
+    <>
+      <div className="flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs transition-colors hover:bg-neutral-100">
+        <FileTextIcon className="size-3.5 flex-none text-neutral-400" />
+        <button
+          type="button"
+          onClick={() => setPreviewOpen(true)}
+          className="max-w-[160px] truncate font-medium text-neutral-700 hover:underline"
+        >
+          {attachment.label}
+        </button>
+        <span className="text-neutral-400">{formatBytes(attachment.sizeBytes)}</span>
+        <button
+          type="button"
+          onClick={() => setPreviewOpen(true)}
+          className="text-neutral-400 hover:text-neutral-700 transition-colors"
+          aria-label="Preview"
+        >
+          <EyeIcon className="size-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={handleDownload}
+          className="text-neutral-400 hover:text-neutral-700 transition-colors"
+          aria-label="Download"
+        >
+          <DownloadIcon className="size-3.5" />
+        </button>
+      </div>
+      <AttachmentPreviewDialog
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        noticeId={noticeId}
+        attachment={attachment as import("../api/noticeApi").NoticeAttachment}
+      />
+    </>
   );
 }
 

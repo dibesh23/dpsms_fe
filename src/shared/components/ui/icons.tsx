@@ -280,6 +280,15 @@ export const FileTextIcon = createIcon(
   </>,
 );
 
+export const FileImageIcon = createIcon(
+  <>
+    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+    <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+    <circle cx="10" cy="13" r="2" />
+    <path d="m20 17-1.1-1.1a2 2 0 0 0-2.81 0L10 22" />
+  </>,
+);
+
 export const ShieldIcon = createIcon(
   <>
     <path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3Z" />
@@ -292,6 +301,13 @@ export const DownloadIcon = createIcon(
     <path d="M12 3v12" />
     <path d="m7 10 5 5 5-5" />
     <path d="M5 21h14" />
+  </>,
+);
+
+export const EyeIcon = createIcon(
+  <>
+    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+    <circle cx="12" cy="12" r="3" />
   </>,
 );
 

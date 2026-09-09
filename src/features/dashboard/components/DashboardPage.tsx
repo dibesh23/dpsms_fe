@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import Link from "next/link";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { DashboardNoticesWidget } from "@/features/notice/components/DashboardNoticesWidget";
+import { NoticeBell } from "@/features/notice/components/NoticeBell";
 import { PERMISSIONS, ROLE_LABELS } from "@/shared/permissions";
 import { Avatar } from "@/shared/components/ui/avatar";
 import { cn } from "@/shared/lib/cn";
@@ -169,14 +170,7 @@ export default function DashboardPage() {
             <CalendarDaysIcon className="size-4" />
             Academic Year {summary.academicYear || "—"}
           </div>
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="relative flex size-10 items-center justify-center rounded-xl border border-neutral-200 text-neutral-700 hover:bg-neutral-50"
-          >
-            <BellIcon className="size-4" />
-            <span className="absolute right-2.5 top-2 size-1.5 rounded-full bg-violet-500" />
-          </button>
+          <NoticeBell buttonClassName="relative flex size-10 items-center justify-center rounded-xl border border-neutral-200 text-neutral-700 hover:bg-neutral-50" />
           <Avatar name={user?.fullName ?? "Principal"} size="md" />
         </div>
       </header>

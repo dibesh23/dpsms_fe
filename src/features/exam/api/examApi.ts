@@ -19,7 +19,10 @@ export interface ExamListItem {
   academicYearLabel: string; // Exam.academicYear -> AcademicYear.label
   termName: string | null; // Exam.term -> AcademicTerm.name
   subjectCount: number; // count of non-deleted ExamSubject rows
+  subjectsEntered: number; // subjects with ENTERED/SUBMITTED/APPROVED status
+  subjectsApproved: number; // subjects fully APPROVED
   createdAt: string; // Exam.createdAt
+  updatedAt: string; // Exam.updatedAt (proxy for publish time)
 }
 
 export type ExamSubjectStatus = "NOT_ENTERED" | "ENTERED" | "SUBMITTED" | "APPROVED" | "REJECTED";
@@ -141,7 +144,13 @@ export const examApi = {
   },
 
   // ---------- Exams ----------
-  async listExams(query?: { status?: ExamStatus; academicYearId?: string }): Promise<ExamListItem[]> {
+  async listExams(query?: {
+    status?: ExamStatus;
+    academicYearId?: string;
+    pageSize?: number;
+    sortBy?: string;
+    sortDir?: "asc" | "desc";
+  }): Promise<ExamListItem[]> {
     const { data } = await apiClient.get<{ data: ListResult<ExamListItem> }>("/exams", {
       params: query,
     });
@@ -155,7 +164,10 @@ export const examApi = {
     const { data } = await apiClient.post<{ data: { id: string } }>("/exams", payload);
     return data.data;
   },
-  async updateExam(id: string, payload: { name?: string; examTypeId?: string; termId?: string | null }): Promise<void> {
+  async updateExam(
+    id: string,
+    payload: { name?: string; examTypeId?: string; termId?: string | null },
+  ): Promise<void> {
     await apiClient.patch(`/exams/${id}`, payload);
   },
   async deleteExam(id: string): Promise<void> {

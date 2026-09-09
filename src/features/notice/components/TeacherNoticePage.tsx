@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -9,7 +9,7 @@ import { StatsCard } from "@/shared/components/ui/stats-card";
 import { SearchBar } from "@/shared/components/ui/search-bar";
 import { FilterDropdown } from "@/shared/components/ui/filter-dropdown";
 import { Pagination } from "@/shared/components/ui/pagination";
-import { StatusBadge, type StatusVariant } from "@/shared/components/ui/status-badge";
+import { StatusBadge } from "@/shared/components/ui/status-badge";
 import { EmptyState } from "@/shared/components/ui/empty-state";
 import { Button } from "@/shared/components/ui/button";
 import { Dialog } from "@/shared/components/ui/dialog";
@@ -18,13 +18,14 @@ import { Input } from "@/shared/components/ui/input";
 import { useToast } from "@/shared/components/ui/toast";
 import { useTable } from "@/shared/hooks/useTable";
 import { formatDate } from "@/shared/lib/format";
-import { noticeApi, type AdminNotice, type NoticeApprovalStatus } from "../api/noticeApi";
+import { noticeApi } from "../api/noticeApi";
 import {
   studentNoticeApi,
   type MyNoticesResult,
   type NoticeSummary,
 } from "../api/studentNoticeApi";
 import { useNoticePolling } from "../hooks/useNoticePolling";
+import { RecipientScopeEditor } from "./RecipientScopeEditor";
 import {
   AlertTriangleIcon,
   BellIcon,
@@ -34,60 +35,30 @@ import {
   PlusIcon,
 } from "@/shared/components/ui/icons";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const EMPTY_RESULT: MyNoticesResult = { notices: [], unreadCount: 0 };
 const BODY_PREVIEW_LIMIT = 220;
 
-const APPROVAL_VARIANT: Record<NoticeApprovalStatus, StatusVariant> = {
-  PENDING_APPROVAL: "warning",
-  APPROVED: "success",
-  REJECTED: "danger",
-};
+// â”€â”€ Create form schema â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-const APPROVAL_LABEL: Record<NoticeApprovalStatus, string> = {
-  PENDING_APPROVAL: "Pending Approval",
-  APPROVED: "Approved",
-  REJECTED: "Rejected",
-};
-
-// ── My Submissions section ────────────────────────────────────────────────────
-
-function SubmissionRow({ notice }: { notice: AdminNotice }) {
-  return (
-    <li className="flex flex-col gap-1 px-5 py-3 sm:flex-row sm:items-start sm:justify-between">
-      <div className="flex min-w-0 flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="truncate text-sm font-medium text-neutral-900">{notice.title}</span>
-          <StatusBadge
-            status={APPROVAL_LABEL[notice.approvalStatus]}
-            variant={APPROVAL_VARIANT[notice.approvalStatus]}
-          />
-        </div>
-        {/* Show rejection reason so teacher knows what to fix */}
-        {notice.approvalStatus === "REJECTED" && notice.approvalNote && (
-          <p className="text-xs text-red-500">Reason: {notice.approvalNote}</p>
-        )}
-        <p className="text-xs text-neutral-400">
-          Submitted {formatDate(notice.createdAt)}
-          {notice.approvedByName && ` · reviewed by ${notice.approvedByName}`}
-        </p>
-      </div>
-    </li>
-  );
-}
-
-// ── Create form schema ────────────────────────────────────────────────────────
+const scopeItemSchema = z.object({
+  id: z.string(),
+  roleTarget: z.string(),
+  classId: z.string(),
+  sectionId: z.string(),
+});
 
 const CreateSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(255),
   body: z.string().trim().min(1, "Body is required"),
   isUrgent: z.boolean(),
   scheduledAt: z.string().optional(),
+  recipientScopes: z.array(scopeItemSchema),
 });
 type CreateForm = z.output<typeof CreateSchema>;
 
-// ── Expandable body ───────────────────────────────────────────────────────────
+// â”€â”€ Expandable body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function NoticeBody({ body }: { body: string }) {
   const [expanded, setExpanded] = useState(false);
@@ -114,7 +85,7 @@ function NoticeBody({ body }: { body: string }) {
   );
 }
 
-// ── Notice card ───────────────────────────────────────────────────────────────
+// â”€â”€ Notice card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function NoticeCard({
   notice,
@@ -197,7 +168,7 @@ function NoticeCard({
   );
 }
 
-// ── Create dialog ─────────────────────────────────────────────────────────────
+// â”€â”€ Create dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CreateNoticeDialog({
   open,
@@ -214,10 +185,11 @@ function CreateNoticeDialog({
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<CreateForm>({
     resolver: zodResolver(CreateSchema),
-    defaultValues: { isUrgent: false },
+    defaultValues: { isUrgent: false, recipientScopes: [] },
   });
 
   const onSubmit = async (values: CreateForm) => {
@@ -227,9 +199,15 @@ function CreateNoticeDialog({
         body: values.body,
         isUrgent: values.isUrgent,
         ...(values.scheduledAt ? { scheduledAt: new Date(values.scheduledAt).toISOString() } : {}),
+        recipientScopes: (values.recipientScopes ?? []).map(
+          ({ roleTarget, classId, sectionId }) => ({
+            roleTarget: roleTarget || "ALL",
+            classId: classId || undefined,
+            sectionId: sectionId || undefined,
+          }),
+        ),
       });
-      // Teacher notices go to PENDING_APPROVAL — never publish directly
-      success("Notice submitted for principal approval");
+      success("Notice published");
       reset();
       onCreated();
       onClose();
@@ -248,7 +226,7 @@ function CreateNoticeDialog({
           <textarea
             {...register("body")}
             rows={4}
-            placeholder="Write the notice content…"
+            placeholder="Write the notice contentâ€¦"
             className="w-full resize-none rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
           />
         </Field>
@@ -263,6 +241,10 @@ function CreateNoticeDialog({
         <Field label="Schedule for (optional)" error={undefined}>
           <Input type="datetime-local" {...register("scheduledAt")} />
         </Field>
+        <RecipientScopeEditor
+          value={watch("recipientScopes")}
+          onChange={(scopes) => setValue("recipientScopes", scopes, { shouldValidate: true })}
+        />
         <div className="flex justify-end gap-3 border-t border-neutral-100 pt-3">
           <Button
             type="button"
@@ -271,36 +253,21 @@ function CreateNoticeDialog({
             onClick={onClose}
             className="w-auto"
           />
-          <Button
-            type="submit"
-            text="Submit for Approval"
-            loading={isSubmitting}
-            className="w-auto"
-          />
+          <Button type="submit" text="Publish" loading={isSubmitting} className="w-auto" />
         </div>
       </form>
     </Dialog>
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function TeacherNoticePage() {
   const { success, error } = useToast();
   const [result, setResult] = useState<MyNoticesResult>(EMPTY_RESULT);
   const [loading, setLoading] = useState(true);
-  const [submissions, setSubmissions] = useState<AdminNotice[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
   const [newBanner, setNewBanner] = useState(0);
-
-  const loadSubmissions = useCallback(async () => {
-    try {
-      const res = await noticeApi.getMySubmissions();
-      setSubmissions(res.items);
-    } catch {
-      setSubmissions([]);
-    }
-  }, []);
 
   const { seed, refresh } = useNoticePolling({
     onNewNotices: (count) => setNewBanner(count),
@@ -317,11 +284,6 @@ export function TeacherNoticePage() {
       seed(result.notices.map((n) => n.id));
     }
   }, [result.notices, seed]);
-
-  // Load submissions on mount
-  useEffect(() => {
-    void loadSubmissions();
-  }, [loadSubmissions]);
 
   const handleRead = useCallback((id: string) => {
     setResult((prev) => {
@@ -389,7 +351,7 @@ export function TeacherNoticePage() {
         description="View school notices and post announcements"
         actions={
           <Button
-            text="Submit Notice"
+            text="Post Notice"
             icon={<PlusIcon className="size-4" />}
             onClick={() => setCreateOpen(true)}
             className="w-auto"
@@ -458,7 +420,7 @@ export function TeacherNoticePage() {
           value={table.filter}
           onChange={table.setFilter}
         />
-        <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search notices…" />
+        <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search noticesâ€¦" />
       </div>
 
       <div className="overflow-hidden rounded-lg border border-neutral-200 bg-bg-default">
@@ -498,26 +460,8 @@ export function TeacherNoticePage() {
         onClose={() => setCreateOpen(false)}
         onCreated={() => {
           void refresh();
-          void loadSubmissions(); // refresh submissions list too
         }}
       />
-
-      {/* My Submissions panel */}
-      {submissions.length > 0 && (
-        <div className="overflow-hidden rounded-lg border border-neutral-200 bg-bg-default">
-          <div className="border-b border-neutral-100 px-5 py-3">
-            <h2 className="text-sm font-semibold text-neutral-900">My Submitted Notices</h2>
-            <p className="text-xs text-neutral-500 mt-0.5">
-              Notices you submitted — waiting for principal review
-            </p>
-          </div>
-          <ul className="divide-y divide-neutral-100">
-            {submissions.map((s) => (
-              <SubmissionRow key={s.id} notice={s} />
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 }

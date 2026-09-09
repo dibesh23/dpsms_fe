@@ -203,9 +203,23 @@ export function ReportCardPage({ studentId }: { studentId?: string }) {
     );
   }
 
-  if (!data) {
-    return <LoadingState label="Loading report card…" />;
+if (!data) {
+  if (loadError) {
+    return (
+      <div className="space-y-4">
+        <PageHeader title="Report Card" description="Your official report card" />
+        <div className="rounded-lg border border-neutral-200 bg-bg-default">
+          <EmptyState
+            icon={<GraduationCapIcon className="size-5" />}
+            title="Report card unavailable"
+            description={loadError}
+          />
+        </div>
+      </div>
+    );
   }
+  return <LoadingState label="Loading report card…" />;
+}
 
   // Individual exam detail view (a single printable marksheet).
   if (selectedExam) {

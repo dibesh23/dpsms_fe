@@ -21,6 +21,7 @@ import {
   type SchoolEventCategory,
 } from "../api/studentDashboardApi";
 import { DashboardNoticesWidget } from "@/features/notice/components/DashboardNoticesWidget";
+import { NoticeBell } from "@/features/notice/components/NoticeBell";
 import {
   AlertTriangleIcon,
   ArrowUpRightIcon,
@@ -398,16 +399,7 @@ export default function StudentDashboardPage() {
               Academic Year {profile.academicYearLabel}
             </span>
           )}
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-[#064E3B] transition-colors hover:bg-stone-100"
-          >
-            <BellIcon className="size-4" />
-            {summary.notifications.some((n) => !n.isRead) && (
-              <span className="absolute right-2 top-2 size-1.5 rounded-full bg-red-500" />
-            )}
-          </button>
+          <NoticeBell buttonClassName="flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-[#064E3B] transition-colors hover:bg-stone-100" />
           <Avatar name={user?.fullName ?? "Student"} size="md" />
         </div>
       </header>

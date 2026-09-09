@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { Dialog } from "@/shared/components/ui/dialog";
@@ -10,8 +10,10 @@ import { Input } from "@/shared/components/ui/input";
 import { StatusBadge, type StatusVariant } from "@/shared/components/ui/status-badge";
 import { EmptyState } from "@/shared/components/ui/empty-state";
 import { DashboardWidget } from "@/shared/components/ui/dashboard-widget";
+import { Breadcrumbs } from "@/shared/components/ui/breadcrumbs";
 import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useReceiptPolling } from "../hooks/useReceiptPolling";
 import { PERMISSIONS } from "@/shared/permissions";
 import {
   feeApi,
@@ -19,12 +21,18 @@ import {
   type InvoiceStatus,
   type PaymentMethod,
   type PaymentRecordResult,
+  type StudentFeeSummaryRecord,
   PAYMENT_METHODS,
   SCHOLARSHIP_TYPES,
   type ScholarshipType,
 } from "../api/feeApi";
 import { formatCurrency, formatDate } from "@/shared/lib/format";
-import { ArrowLeftIcon, CreditCardIcon, FileTextIcon } from "@/shared/components/ui/icons";
+import {
+  AlertTriangleIcon,
+  ArrowLeftIcon,
+  CreditCardIcon,
+  FileTextIcon,
+} from "@/shared/components/ui/icons";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -189,7 +197,7 @@ function DiscountForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-700">
-        Only <span className="font-medium">Super Admin</span> can apply discounts.
+        Only <span className="font-medium">Principal</span> can apply discounts.
       </div>
       <Field
         label="Discount Amount"
@@ -322,19 +330,28 @@ function ScholarshipFormComponent({
 
 export function FeeInvoiceDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const invoiceId = params.id;
   const [invoice, setInvoice] = useState<InvoiceDetailRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [studentFees, setStudentFees] = useState<StudentFeeSummaryRecord | null>(null);
+  const [studentFeesLoading, setStudentFeesLoading] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
   const [scholarshipDialogOpen, setScholarshipDialogOpen] = useState(false);
   const [receiptLoading, setReceiptLoading] = useState<string | null>(null);
+  const [readyReceipts, setReadyReceipts] = useState<Record<string, string>>({});
   const toast = useToast();
   const { user, can } = useAuth();
   const canPay = can(PERMISSIONS.FEE_PAYMENT_RECORD);
-  const canDiscount = can(PERMISSIONS.FEE_DISCOUNT_APPLY) && user?.role === "SUPER_ADMIN";
-  const canScholarship = can(PERMISSIONS.FEE_SCHOLARSHIP_APPLY) && user?.role === "PRINCIPAL";
+  const isSuperAdmin = user?.role === "SUPER_ADMIN";
+  const isPrincipal = user?.role === "PRINCIPAL";
+
+  const { pollingPaymentId, startPolling } = useReceiptPolling({
+    onReceiptReady: (paymentId, receiptUrl) => {
+      setReadyReceipts((prev) => ({ ...prev, [paymentId]: receiptUrl }));
+      toast.success("Payment receipt is ready.");
+    },
+  });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -351,6 +368,28 @@ export function FeeInvoiceDetailPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Fetch the student's full cross-year fee picture so an admin looking up
+  // one student sees every outstanding amount, not just this invoice's year.
+  useEffect(() => {
+    if (!invoice?.enrollment?.studentId) return;
+    let cancelled = false;
+    setStudentFeesLoading(true);
+    feeApi
+      .getStudentFeeSummary(invoice.enrollment.studentId)
+      .then((data) => {
+        if (!cancelled) setStudentFees(data);
+      })
+      .catch(() => {
+        if (!cancelled) setStudentFees(null);
+      })
+      .finally(() => {
+        if (!cancelled) setStudentFeesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [invoice?.enrollment?.studentId]);
 
   const handlePayment = async (values: PaymentValues): Promise<boolean> => {
     try {
@@ -380,6 +419,8 @@ export function FeeInvoiceDetailPage() {
       );
       setPaymentDialogOpen(false);
       toast.success("Payment recorded. Receipt will be generated shortly.");
+      // Receipts are generated async — poll until the attachment is ready.
+      startPolling(result.payment.id);
       return true;
     } catch {
       return false;
@@ -415,17 +456,25 @@ export function FeeInvoiceDetailPage() {
   };
 
   const handleViewReceipt = async (paymentId: string) => {
+    const readyUrl = readyReceipts[paymentId];
+    if (readyUrl) {
+      window.open(readyUrl, "_blank");
+      return;
+    }
     setReceiptLoading(paymentId);
     try {
-      // Receipts are generated async — try fetching; if not ready, show message
+      // Receipts are generated async — try fetching; if not ready, poll.
       const receipt = await feeApi.getReceipt(paymentId);
       if (receipt.attachmentUrl) {
+        setReadyReceipts((prev) => ({ ...prev, [paymentId]: receipt.attachmentUrl as string }));
         window.open(receipt.attachmentUrl, "_blank");
-      } else {
-        toast.info("Receipt is being generated. Check back in a moment.");
+        return;
       }
+      startPolling(paymentId);
+      toast.info("Receipt is being generated — it will open automatically when ready.");
     } catch {
-      toast.info("Receipt not ready yet. It will appear shortly.");
+      startPolling(paymentId);
+      toast.info("Receipt not ready yet — it will open automatically when ready.");
     } finally {
       setReceiptLoading(null);
     }
@@ -451,33 +500,31 @@ export function FeeInvoiceDetailPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => router.push("/fees/invoices")}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-bg-subtle hover:text-neutral-800"
-        >
-          <ArrowLeftIcon className="size-4" />
-        </button>
-        <PageHeader
-          title={`Invoice ${invoice.id.slice(0, 8)}…`}
-          description={
-            invoice.enrollment
-              ? `${invoice.enrollment.studentName} · ${invoice.enrollment.className} ${invoice.enrollment.sectionName}`
-              : undefined
-          }
-          actions={
-            canPay && outstanding > 0 ? (
-              <Button
-                text="Record Payment"
-                icon={<CreditCardIcon className="size-4" />}
-                className="w-auto"
-                onClick={() => setPaymentDialogOpen(true)}
-              />
-            ) : undefined
-          }
-        />
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: "Finance", href: "/finance" },
+          { label: "Invoices", href: "/fees/invoices" },
+          { label: `Invoice ${invoice.id.slice(0, 8)}…` },
+        ]}
+      />
+      <PageHeader
+        title={`Invoice ${invoice.id.slice(0, 8)}…`}
+        description={
+          invoice.enrollment
+            ? `${invoice.enrollment.studentName} · ${invoice.enrollment.className} ${invoice.enrollment.sectionName}`
+            : undefined
+        }
+        actions={
+          canPay && outstanding > 0 ? (
+            <Button
+              text="Record Payment"
+              icon={<CreditCardIcon className="size-4" />}
+              className="w-auto"
+              onClick={() => setPaymentDialogOpen(true)}
+            />
+          ) : undefined
+        }
+      />
 
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-lg border border-neutral-200 bg-bg-default p-4">
@@ -534,24 +581,118 @@ export function FeeInvoiceDetailPage() {
         </DashboardWidget>
       )}
 
-      {(canDiscount || canScholarship) && (
+      <DashboardWidget
+        title="Student Fee Overview"
+        description="Outstanding fees across every academic year this student has attended"
+      >
+        {studentFeesLoading ? (
+          <div className="text-sm text-neutral-400">Loading student fees…</div>
+        ) : !studentFees ? (
+          <EmptyState
+            title="No fee data"
+            description="This student has no fee records."
+          />
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-lg border border-neutral-200 bg-bg-subtle p-3">
+                <p className="text-xs text-neutral-400">Total billed (all years)</p>
+                <p className="mt-1 font-semibold text-neutral-900">
+                  {formatCurrency(studentFees.totalAnnualFee)}
+                </p>
+              </div>
+              <div className="rounded-lg border border-neutral-200 bg-bg-subtle p-3">
+                <p className="text-xs text-neutral-400">Total paid</p>
+                <p className="mt-1 font-semibold text-emerald-600">
+                  {formatCurrency(studentFees.totalPaid)}
+                </p>
+              </div>
+              <div className="rounded-lg border border-neutral-200 bg-bg-subtle p-3">
+                <p className="text-xs text-neutral-400">Total outstanding</p>
+                <p className={`mt-1 font-semibold ${studentFees.totalDue > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                  {formatCurrency(studentFees.totalDue)}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {studentFees.yearGroups.map((year) => {
+                const yearInvoices = studentFees.invoices.filter(
+                  (inv) => inv.academicYearLabel === year.academicYearLabel,
+                );
+                if (yearInvoices.length === 0) return null;
+                return (
+                  <div key={year.academicYearLabel || "(no year)"}>
+                    {!year.isCurrent ? (
+                      <div className="mb-2 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                        <AlertTriangleIcon className="size-4 flex-none" />
+                        <p className="font-medium">Overdue from {year.academicYearLabel}</p>
+                        {year.totalDue > 0 && (
+                          <p className="text-xs">
+                            {formatCurrency(year.totalDue)} still owed from this session
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <h4 className="mb-2 text-xs font-semibold tracking-wide text-neutral-400 uppercase">
+                        {year.academicYearLabel || "Current year"}
+                      </h4>
+                    )}
+                    <div className="overflow-hidden rounded-lg border border-neutral-200">
+                      <table className="w-full text-left text-sm">
+                        <thead>
+                          <tr className="border-b border-neutral-100 bg-bg-subtle">
+                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">Installment</th>
+                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">Due date</th>
+                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">Amount</th>
+                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">Paid</th>
+                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {yearInvoices.map((inv) => (
+                            <tr key={inv.id} className="border-b border-neutral-50 last:border-0">
+                              <td className="px-4 py-2 text-neutral-800">{inv.installmentLabel}</td>
+                              <td className="px-4 py-2 text-neutral-700">{formatDate(inv.dueDate)}</td>
+                              <td className="px-4 py-2 text-neutral-700">{formatCurrency(inv.amount)}</td>
+                              <td className="px-4 py-2 text-neutral-700">{formatCurrency(inv.amountPaid)}</td>
+                              <td className="px-4 py-2">
+                                <StatusBadge
+                                  status={STATUS_LABEL[inv.status]}
+                                  variant={STATUS_VARIANT[inv.status]}
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </DashboardWidget>
+
+      {(isSuperAdmin || isPrincipal) && (
         <div className="flex items-center gap-2">
-          {canDiscount && (
-            <Button
-              text="Apply Discount"
-              variant="outline"
-              className="w-auto"
-              onClick={() => setDiscountDialogOpen(true)}
-            />
-          )}
-          {canScholarship && (
-            <Button
-              text="Apply Scholarship"
-              variant="outline"
-              className="w-auto"
-              onClick={() => setScholarshipDialogOpen(true)}
-            />
-          )}
+          <Button
+            text="Apply Discount"
+            variant="outline"
+            className="w-auto"
+            disabled={!isPrincipal}
+            title={isPrincipal ? undefined : "Only Principal can apply discounts"}
+            onClick={() => setDiscountDialogOpen(true)}
+          />
+          <Button
+            text="Apply Scholarship"
+            variant="outline"
+            className="w-auto"
+            disabled={!isPrincipal}
+            title={isPrincipal ? undefined : "Only Principal can apply scholarships"}
+            onClick={() => setScholarshipDialogOpen(true)}
+          />
         </div>
       )}
 
@@ -584,15 +725,28 @@ export function FeeInvoiceDetailPage() {
                       {PAYMENT_LABEL[p.paymentMethod]}
                     </td>
                     <td className="px-4 py-2.5">
-                      <button
-                        type="button"
-                        onClick={() => void handleViewReceipt(p.id)}
-                        disabled={receiptLoading === p.id}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline disabled:opacity-50"
-                      >
-                        <FileTextIcon className="size-3.5" />
-                        {receiptLoading === p.id ? "Loading…" : "View"}
-                      </button>
+                      {readyReceipts[p.id] ? (
+                        <button
+                          type="button"
+                          onClick={() => window.open(readyReceipts[p.id], "_blank")}
+                          className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 hover:underline"
+                        >
+                          <FileTextIcon className="size-3.5" />
+                          Open Receipt
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => void handleViewReceipt(p.id)}
+                          disabled={receiptLoading === p.id || pollingPaymentId === p.id}
+                          className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline disabled:opacity-50"
+                        >
+                          <FileTextIcon className="size-3.5" />
+                          {receiptLoading === p.id || pollingPaymentId === p.id
+                            ? "Loading…"
+                            : "View"}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

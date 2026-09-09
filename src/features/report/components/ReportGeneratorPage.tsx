@@ -401,7 +401,7 @@ export function ReportGeneratorPage() {
 
   const table = useTable<ReportRequestRecord>({
     data: requests,
-    pageSize: 10,
+    pageSize: 20,
     getSearchText: (r) => `${REPORT_TYPE_LABELS[r.type]} ${REPORT_STATUS_LABELS[r.status]}`,
     filterMatch: (r, value) => r.type === value,
     sortValue: (r, key) => (key === "type" ? r.type : key === "status" ? r.status : r.createdAt),
