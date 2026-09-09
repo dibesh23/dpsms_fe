@@ -12,7 +12,13 @@ import { Dialog } from "@/shared/components/ui/dialog";
 import { PageHeader } from "@/shared/components/ui/page-header";
 import { StatusBadge } from "@/shared/components/ui/status-badge";
 import { LoadingState } from "@/shared/components/ui/loading-state";
-import { ArrowLeftIcon, LogOutIcon, MailIcon, PencilIcon, ShieldIcon } from "@/shared/components/ui/icons";
+import {
+  ArrowLeftIcon,
+  LogOutIcon,
+  MailIcon,
+  PencilIcon,
+  ShieldIcon,
+} from "@/shared/components/ui/icons";
 import { useToast } from "@/shared/components/ui/toast";
 import { formatDate } from "@/shared/lib/format";
 import { profileApi, type ProfileRecord } from "../api/profileApi";
@@ -141,7 +147,9 @@ export function ProfilePage() {
             <div className="flex items-center gap-4">
               <Avatar name={fullName || user?.fullName || "User"} size="lg" />
               <div>
-                <p className="font-medium text-neutral-900">{fullName || user?.fullName || "User"}</p>
+                <p className="font-medium text-neutral-900">
+                  {fullName || user?.fullName || "User"}
+                </p>
                 <p className="mt-0.5 text-sm text-neutral-500">{profile?.school.name}</p>
                 <div className="mt-2">
                   <StatusBadge status={roleLabel(role)} variant="info" dot={false} />
@@ -202,22 +210,24 @@ export function ProfilePage() {
             </div>
           </dl>
 
-          {dirty && (
-            <div className="mt-4 flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
-              <Button
-                variant="secondary"
-                text="Cancel"
-                className="w-auto"
-                onClick={() => void load()}
-              />
-              <Button
-                text={saving ? "Saving…" : "Save Changes"}
-                className="w-auto"
-                loading={saving}
-                onClick={handleSave}
-              />
-            </div>
-          )}
+          <div className="mt-4 min-h-[4.25rem]">
+            {dirty && (
+              <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
+                <Button
+                  variant="secondary"
+                  text="Cancel"
+                  className="w-auto"
+                  onClick={() => void load()}
+                />
+                <Button
+                  text={saving ? "Saving…" : "Save Changes"}
+                  className="w-auto"
+                  loading={saving}
+                  onClick={handleSave}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Sidebar */}
@@ -227,9 +237,7 @@ export function ProfilePage() {
             <div className="rounded-lg border border-neutral-200 bg-bg-default p-5">
               <h3 className="text-sm font-semibold text-neutral-900">Teacher Details</h3>
               <dl className="mt-3 space-y-3">
-                {teacher.department && (
-                  <DetailRow label="Department" value={teacher.department} />
-                )}
+                {teacher.department && <DetailRow label="Department" value={teacher.department} />}
                 {teacher.employeeCode && (
                   <DetailRow label="Employee Code" value={teacher.employeeCode} />
                 )}
@@ -262,9 +270,7 @@ export function ProfilePage() {
                     value={student.gender.charAt(0) + student.gender.slice(1).toLowerCase()}
                   />
                 )}
-                {student.bloodGroup && (
-                  <DetailRow label="Blood Group" value={student.bloodGroup} />
-                )}
+                {student.bloodGroup && <DetailRow label="Blood Group" value={student.bloodGroup} />}
                 {student.dateOfBirth && (
                   <DetailRow label="Date of Birth" value={formatDate(student.dateOfBirth)} />
                 )}

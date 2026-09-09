@@ -38,23 +38,16 @@ export function ResetPasswordForm({ token }: { token: string }) {
       router.push("/login?message=password-reset");
     } catch (err: unknown) {
       const msg =
-        (err as { response?: { data?: { error?: { message?: string } } } })
-          ?.response?.data?.error?.message ??
-        "Failed to reset password. The link may have expired.";
+        (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
+          ?.message ?? "Failed to reset password. The link may have expired.";
       setApiError(msg);
     }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      noValidate
-      className="flex w-full flex-col gap-y-6"
-    >
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex w-full flex-col gap-y-6">
       <label>
-        <span className="text-content-emphasis mb-2 block text-sm font-medium leading-none">
-          New password
-        </span>
+        <span className="type-label mb-2 block">New password</span>
         <Input
           type="password"
           autoComplete="new-password"
@@ -67,9 +60,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
       </label>
 
       <label>
-        <span className="text-content-emphasis mb-2 block text-sm font-medium leading-none">
-          Confirm password
-        </span>
+        <span className="type-label mb-2 block">Confirm password</span>
         <Input
           type="password"
           autoComplete="new-password"

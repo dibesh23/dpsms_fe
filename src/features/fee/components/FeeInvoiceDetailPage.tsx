@@ -29,6 +29,7 @@ import {
 import { formatCurrency, formatDate } from "@/shared/lib/format";
 import {
   AlertTriangleIcon,
+  ArrowLeftIcon,
   CreditCardIcon,
   FileTextIcon,
 } from "@/shared/components/ui/icons";
@@ -102,9 +103,17 @@ function RecordPaymentForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       <div className="rounded-md bg-neutral-50 p-3 text-sm text-neutral-600">
-        Outstanding amount: <span className="font-medium text-neutral-900">{formatCurrency(outstanding)}</span>
+        Outstanding amount:{" "}
+        <span className="font-medium text-neutral-900">{formatCurrency(outstanding)}</span>
       </div>
-      <Field label="Amount" error={errors.amountPaid?.message || (wouldOverpay ? "Amount exceeds outstanding" : undefined)} required>
+      <Field
+        label="Amount"
+        error={
+          errors.amountPaid?.message || (wouldOverpay ? "Amount exceeds outstanding" : undefined)
+        }
+        hint={`Maximum ${formatCurrency(outstanding)}`}
+        required
+      >
         <Input
           type="number"
           {...register("amountPaid", { valueAsNumber: true })}
@@ -130,7 +139,13 @@ function RecordPaymentForm({
         </div>
       )}
       <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
-        <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" type="button" />
+        <Button
+          variant="secondary"
+          text="Cancel"
+          onClick={onClose}
+          className="w-auto"
+          type="button"
+        />
         <Button
           text={isSubmitting ? "Recording…" : "Record Payment"}
           loading={isSubmitting}
@@ -158,7 +173,9 @@ function DiscountForm({
 }: {
   enrollmentId: string;
   feeStructureId: string;
-  onApply: (values: DiscountValues & { enrollmentId: string; feeStructureId: string }) => Promise<boolean>;
+  onApply: (
+    values: DiscountValues & { enrollmentId: string; feeStructureId: string },
+  ) => Promise<boolean>;
   onClose: () => void;
 }) {
   const [apiError, setApiError] = useState<string | null>(null);
@@ -182,11 +199,24 @@ function DiscountForm({
       <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-700">
         Only <span className="font-medium">Principal</span> can apply discounts.
       </div>
-      <Field label="Discount Amount" error={errors.amount?.message} required hint="Fixed amount in your currency">
-        <Input type="number" {...register("amount", { valueAsNumber: true })} disabled={isSubmitting} />
+      <Field
+        label="Discount Amount"
+        error={errors.amount?.message}
+        required
+        hint="Fixed amount in your currency"
+      >
+        <Input
+          type="number"
+          {...register("amount", { valueAsNumber: true })}
+          disabled={isSubmitting}
+        />
       </Field>
       <Field label="Reason" hint="Optional">
-        <Input {...register("reason")} placeholder="e.g. Sibling discount" disabled={isSubmitting} />
+        <Input
+          {...register("reason")}
+          placeholder="e.g. Sibling discount"
+          disabled={isSubmitting}
+        />
       </Field>
       {apiError && (
         <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
@@ -194,8 +224,18 @@ function DiscountForm({
         </div>
       )}
       <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
-        <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" type="button" />
-        <Button text={isSubmitting ? "Applying…" : "Apply Discount"} loading={isSubmitting} className="w-auto" />
+        <Button
+          variant="secondary"
+          text="Cancel"
+          onClick={onClose}
+          className="w-auto"
+          type="button"
+        />
+        <Button
+          text={isSubmitting ? "Applying…" : "Apply Discount"}
+          loading={isSubmitting}
+          className="w-auto"
+        />
       </div>
     </form>
   );
@@ -257,7 +297,11 @@ function ScholarshipFormComponent({
         required
         hint={type === "PERCENTAGE" ? "Capped at 100%" : "Amount in your currency"}
       >
-        <Input type="number" {...register("percentageOrAmount", { valueAsNumber: true })} disabled={isSubmitting} />
+        <Input
+          type="number"
+          {...register("percentageOrAmount", { valueAsNumber: true })}
+          disabled={isSubmitting}
+        />
       </Field>
       {apiError && (
         <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
@@ -265,8 +309,18 @@ function ScholarshipFormComponent({
         </div>
       )}
       <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
-        <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" type="button" />
-        <Button text={isSubmitting ? "Applying…" : "Apply Scholarship"} loading={isSubmitting} className="w-auto" />
+        <Button
+          variant="secondary"
+          text="Cancel"
+          onClick={onClose}
+          className="w-auto"
+          type="button"
+        />
+        <Button
+          text={isSubmitting ? "Applying…" : "Apply Scholarship"}
+          loading={isSubmitting}
+          className="w-auto"
+        />
       </div>
     </form>
   );
@@ -353,7 +407,12 @@ export function FeeInvoiceDetailPage() {
               owed: result.due,
               payments: [
                 ...(prev.payments ?? []),
-                { id: result.payment.id, amountPaid: result.payment.amountPaid, paymentMethod: result.payment.paymentMethod, paidAt: result.payment.paidAt },
+                {
+                  id: result.payment.id,
+                  amountPaid: result.payment.amountPaid,
+                  paymentMethod: result.payment.paymentMethod,
+                  paidAt: result.payment.paidAt,
+                },
               ],
             }
           : prev,
@@ -469,23 +528,28 @@ export function FeeInvoiceDetailPage() {
 
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-lg border border-neutral-200 bg-bg-default p-4">
-          <p className="text-xs text-neutral-400">Amount</p>
-          <p className="mt-1 text-lg font-semibold text-neutral-900">{formatCurrency(invoice.amount)}</p>
+          <p className="type-kpi-label">Amount</p>
+          <p className="type-kpi-sm mt-1">{formatCurrency(invoice.amount)}</p>
         </div>
         <div className="rounded-lg border border-neutral-200 bg-bg-default p-4">
-          <p className="text-xs text-neutral-400">Paid</p>
-          <p className="mt-1 text-lg font-semibold text-emerald-600">{formatCurrency(invoice.paidToDate)}</p>
+          <p className="type-kpi-label">Paid</p>
+          <p className="type-kpi-sm mt-1 text-emerald-600">{formatCurrency(invoice.paidToDate)}</p>
         </div>
         <div className="rounded-lg border border-neutral-200 bg-bg-default p-4">
-          <p className="text-xs text-neutral-400">Outstanding</p>
-          <p className={`mt-1 text-lg font-semibold ${outstanding > 0 ? "text-red-600" : "text-emerald-600"}`}>
+          <p className="type-kpi-label">Outstanding</p>
+          <p
+            className={`type-kpi-sm mt-1 ${outstanding > 0 ? "text-red-600" : "text-emerald-600"}`}
+          >
             {formatCurrency(outstanding)}
           </p>
         </div>
         <div className="rounded-lg border border-neutral-200 bg-bg-default p-4">
-          <p className="text-xs text-neutral-400">Status</p>
+          <p className="type-kpi-label">Status</p>
           <div className="mt-1">
-            <StatusBadge status={STATUS_LABEL[invoice.status]} variant={STATUS_VARIANT[invoice.status]} />
+            <StatusBadge
+              status={STATUS_LABEL[invoice.status]}
+              variant={STATUS_VARIANT[invoice.status]}
+            />
           </div>
         </div>
       </section>
@@ -495,16 +559,22 @@ export function FeeInvoiceDetailPage() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div>
               <p className="text-xs text-neutral-400">Due Date</p>
-              <p className="mt-0.5 text-sm font-medium text-neutral-900">{formatDate(invoice.installment.dueDate)}</p>
+              <p className="mt-0.5 text-sm font-medium text-neutral-900">
+                {formatDate(invoice.installment.dueDate)}
+              </p>
             </div>
             <div>
               <p className="text-xs text-neutral-400">Installment Amount</p>
-              <p className="mt-0.5 text-sm font-medium text-neutral-900">{formatCurrency(invoice.installment.amount)}</p>
+              <p className="mt-0.5 text-sm font-medium text-neutral-900">
+                {formatCurrency(invoice.installment.amount)}
+              </p>
             </div>
             {invoice.installment.billingPeriod && (
               <div>
                 <p className="text-xs text-neutral-400">Period</p>
-                <p className="mt-0.5 text-sm font-medium text-neutral-900">{invoice.installment.billingPeriod}</p>
+                <p className="mt-0.5 text-sm font-medium text-neutral-900">
+                  {invoice.installment.billingPeriod}
+                </p>
               </div>
             )}
           </div>
@@ -648,8 +718,12 @@ export function FeeInvoiceDetailPage() {
                 {invoice.payments.map((p) => (
                   <tr key={p.id} className="border-b border-neutral-50 last:border-0">
                     <td className="px-4 py-2.5 text-neutral-700">{formatDate(p.paidAt)}</td>
-                    <td className="px-4 py-2.5 font-medium text-neutral-900">{formatCurrency(p.amountPaid)}</td>
-                    <td className="px-4 py-2.5 text-neutral-700">{PAYMENT_LABEL[p.paymentMethod]}</td>
+                    <td className="px-4 py-2.5 font-medium text-neutral-900">
+                      {formatCurrency(p.amountPaid)}
+                    </td>
+                    <td className="px-4 py-2.5 text-neutral-700">
+                      {PAYMENT_LABEL[p.paymentMethod]}
+                    </td>
                     <td className="px-4 py-2.5">
                       {readyReceipts[p.id] ? (
                         <button
@@ -688,7 +762,11 @@ export function FeeInvoiceDetailPage() {
         title="Record Payment"
         description="Record a cash, bank, or cheque payment against this invoice."
       >
-        <RecordPaymentForm outstanding={outstanding} onPay={handlePayment} onClose={() => setPaymentDialogOpen(false)} />
+        <RecordPaymentForm
+          outstanding={outstanding}
+          onPay={handlePayment}
+          onClose={() => setPaymentDialogOpen(false)}
+        />
       </Dialog>
 
       <Dialog

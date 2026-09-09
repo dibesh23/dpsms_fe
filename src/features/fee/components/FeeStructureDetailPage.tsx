@@ -88,43 +88,57 @@ function AddInstallmentForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-      <div className="space-y-3">
-        {installments.map((_, index) => (
-          <div key={index} className="flex items-end gap-2">
-            <Field label={index === 0 ? "Due Date" : undefined} error={errors.installments?.[index]?.dueDate?.message} className="flex-1">
-              <Input
-                type="date"
-                {...register(`installments.${index}.dueDate`)}
-                disabled={isSubmitting}
-              />
-            </Field>
-            <Field label={index === 0 ? "Amount" : undefined} error={errors.installments?.[index]?.amount?.message} className="w-28">
-              <Input
-                type="number"
-                {...register(`installments.${index}.amount`, { valueAsNumber: true })}
-                placeholder="Amount"
-                disabled={isSubmitting}
-              />
-            </Field>
-            <Field label={index === 0 ? "Label" : undefined} className="w-32">
-              <Input
-                {...register(`installments.${index}.billingPeriod`)}
-                placeholder="e.g. Jan"
-                disabled={isSubmitting}
-              />
-            </Field>
-            {installments.length > 1 && (
-              <button
-                type="button"
-                onClick={() => removeRow(index)}
-                className="mb-0.5 text-neutral-400 hover:text-red-500"
-                disabled={isSubmitting}
+      <div className="h-[18rem] overflow-y-auto overscroll-contain pr-1">
+        <div className="space-y-3">
+          {installments.map((_, index) => (
+            <div
+              key={index}
+              className="grid grid-cols-1 items-end gap-2 sm:grid-cols-[minmax(0,1fr)_7rem_8rem_auto]"
+            >
+              <Field
+                label={index === 0 ? "Due Date" : undefined}
+                error={errors.installments?.[index]?.dueDate?.message}
+                className="flex-1"
               >
-                &times;
-              </button>
-            )}
-          </div>
-        ))}
+                <Input
+                  type="date"
+                  {...register(`installments.${index}.dueDate`)}
+                  disabled={isSubmitting}
+                />
+              </Field>
+              <Field
+                label={index === 0 ? "Amount" : undefined}
+                error={errors.installments?.[index]?.amount?.message}
+                className="sm:w-28"
+              >
+                <Input
+                  type="number"
+                  {...register(`installments.${index}.amount`, { valueAsNumber: true })}
+                  placeholder="Amount"
+                  disabled={isSubmitting}
+                />
+              </Field>
+              <Field label={index === 0 ? "Label" : undefined} className="sm:w-32">
+                <Input
+                  {...register(`installments.${index}.billingPeriod`)}
+                  placeholder="e.g. Jan"
+                  disabled={isSubmitting}
+                />
+              </Field>
+              {installments.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeRow(index)}
+                  className="mb-0.5 h-10 px-2 text-neutral-400 hover:text-red-500"
+                  disabled={isSubmitting}
+                  aria-label={`Remove installment ${index + 1}`}
+                >
+                  &times;
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
       <button
         type="button"
@@ -140,8 +154,18 @@ function AddInstallmentForm({
         </div>
       )}
       <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
-        <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" type="button" />
-        <Button text={isSubmitting ? "Adding…" : "Add Installments"} loading={isSubmitting} className="w-auto" />
+        <Button
+          variant="secondary"
+          text="Cancel"
+          onClick={onClose}
+          className="w-auto"
+          type="button"
+        />
+        <Button
+          text={isSubmitting ? "Adding…" : "Add Installments"}
+          loading={isSubmitting}
+          className="w-auto"
+        />
       </div>
     </form>
   );
@@ -231,12 +255,20 @@ export function FeeStructureDetailPage() {
   if (!structure) {
     return (
       <div className="space-y-4">
-        <EmptyState title="Structure not found" description="This fee structure may have been removed." />
+        <EmptyState
+          title="Structure not found"
+          description="This fee structure may have been removed."
+        />
       </div>
     );
   }
 
-  const columns: Column<{ id: string; dueDate: string; amount: number; billingPeriod: string | null }>[] = [
+  const columns: Column<{
+    id: string;
+    dueDate: string;
+    amount: number;
+    billingPeriod: string | null;
+  }>[] = [
     {
       key: "billingPeriod",
       header: "Label",
@@ -298,16 +330,16 @@ export function FeeStructureDetailPage() {
 
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div className="rounded-lg border border-neutral-200 bg-bg-default p-4">
-          <p className="text-xs text-neutral-400">Total Amount</p>
-          <p className="mt-1 text-lg font-semibold text-neutral-900">{formatCurrency(structure.amount)}</p>
+          <p className="type-kpi-label">Total Amount</p>
+          <p className="type-kpi-sm mt-1">{formatCurrency(structure.amount)}</p>
         </div>
         <div className="rounded-lg border border-neutral-200 bg-bg-default p-4">
-          <p className="text-xs text-neutral-400">Installments</p>
-          <p className="mt-1 text-lg font-semibold text-neutral-900">{installments.length}</p>
+          <p className="type-kpi-label">Installments</p>
+          <p className="type-kpi-sm mt-1">{installments.length}</p>
         </div>
         <div className="rounded-lg border border-neutral-200 bg-bg-default p-4">
-          <p className="text-xs text-neutral-400">Category</p>
-          <p className="mt-1 text-lg font-semibold text-neutral-900">{structure.feeType?.category ?? "—"}</p>
+          <p className="type-kpi-label">Category</p>
+          <p className="type-section-title mt-1">{structure.feeType?.category ?? "—"}</p>
         </div>
       </section>
 
@@ -369,7 +401,10 @@ export function FeeStructureDetailPage() {
           title="Add Installments"
           description="Split this fee into one or more due-date slices."
         >
-          <AddInstallmentForm onAdd={handleAddInstallments} onClose={() => setInstallmentDialogOpen(false)} />
+          <AddInstallmentForm
+            onAdd={handleAddInstallments}
+            onClose={() => setInstallmentDialogOpen(false)}
+          />
         </Dialog>
       )}
 

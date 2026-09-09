@@ -165,7 +165,9 @@ export function SlotForm({
       <Field label="Day" error={errors.dayOfWeek?.message}>
         <Select disabled={isSubmitting} {...register("dayOfWeek")}>
           {DAYS.map((d) => (
-            <option key={d.value} value={d.value}>{d.label}</option>
+            <option key={d.value} value={d.value}>
+              {d.label}
+            </option>
           ))}
         </Select>
       </Field>
@@ -211,30 +213,39 @@ export function SlotForm({
         </label>
       </Field>
 
-      {!isBreak && (
-        <>
-          <Field label="Subject" error={errors.subjectId?.message}>
-            <Select disabled={isSubmitting} {...register("subjectId")}>
-              <option value="">Select a subject</option>
-              {subjects.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </Select>
-          </Field>
+      <div className="min-h-[10.5rem]">
+        {!isBreak && (
+          <div className="space-y-4">
+            <Field label="Subject" error={errors.subjectId?.message}>
+              <Select disabled={isSubmitting} {...register("subjectId")}>
+                <option value="">Select a subject</option>
+                {subjects.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
 
-          <Field label="Teacher" error={errors.teacherId?.message}>
-            <Select disabled={isSubmitting} {...register("teacherId")}>
-              <option value="">Select a teacher</option>
-              {teachers.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </Select>
-          </Field>
-        </>
-      )}
+            <Field label="Teacher" error={errors.teacherId?.message}>
+              <Select disabled={isSubmitting} {...register("teacherId")}>
+                <option value="">Select a teacher</option>
+                {teachers.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+        )}
+      </div>
 
       {apiError && (
-        <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div
+          role="alert"
+          className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
           {apiError}
         </div>
       )}

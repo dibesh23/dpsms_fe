@@ -60,7 +60,9 @@ const FAILED_COLUMNS: Column<RunBatchResponse["failedStudents"][number]>[] = [
     header: "Marks",
     sortValue: (s) => s.marks ?? -1,
     render: (s) => (
-      <span className={cn("text-neutral-500", s.marks !== undefined && s.marks < 40 && "text-red-600")}>
+      <span
+        className={cn("text-neutral-500", s.marks !== undefined && s.marks < 40 && "text-red-600")}
+      >
         {s.marks !== undefined ? `${s.marks}%` : "—"}
       </span>
     ),
@@ -70,7 +72,9 @@ const FAILED_COLUMNS: Column<RunBatchResponse["failedStudents"][number]>[] = [
     header: "Attendance",
     sortValue: (s) => s.attendance ?? -1,
     render: (s) => (
-      <span className="text-neutral-500">{s.attendance !== undefined ? `${s.attendance}%` : "—"}</span>
+      <span className="text-neutral-500">
+        {s.attendance !== undefined ? `${s.attendance}%` : "—"}
+      </span>
     ),
   },
 ];
@@ -131,7 +135,9 @@ export function BatchPromotionPage() {
       setPreview(response);
       setStep("preview");
     } catch (err) {
-      setPreviewError(getApiErrorMessage(err, "Could not preview the promotion. Please try again."));
+      setPreviewError(
+        getApiErrorMessage(err, "Could not preview the promotion. Please try again."),
+      );
     } finally {
       setPreviewLoading(false);
     }
@@ -168,7 +174,16 @@ export function BatchPromotionPage() {
     } finally {
       setRunning(false);
     }
-  }, [configValid, sourceYearId, targetYearId, marksThreshold, attendanceThreshold, overrides, preview, toast]);
+  }, [
+    configValid,
+    sourceYearId,
+    targetYearId,
+    marksThreshold,
+    attendanceThreshold,
+    overrides,
+    preview,
+    toast,
+  ]);
 
   const groups = useMemo(() => {
     if (!preview) return [];
@@ -301,12 +316,16 @@ export function BatchPromotionPage() {
           </div>
 
           <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-            Students are promoted to the next grade in the target year. Any missing next-grade class is
-            created automatically. You can review each student and override the decision before running.
+            Students are promoted to the next grade in the target year. Any missing next-grade class
+            is created automatically. You can review each student and override the decision before
+            running.
           </p>
 
           {previewError && (
-            <div role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div
+              role="alert"
+              className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+            >
               {previewError}
             </div>
           )}
@@ -334,8 +353,8 @@ export function BatchPromotionPage() {
                 <div>
                   <h2 className="font-medium text-neutral-900">Review &amp; preview</h2>
                   <p className="text-xs text-neutral-400">
-                    {selectedSource.label} → {selectedTarget.label} · marks ≥ {marksThreshold}% · attendance ≥{" "}
-                    {attendanceThreshold}%
+                    {selectedSource.label} → {selectedTarget.label} · marks ≥ {marksThreshold}% ·
+                    attendance ≥ {attendanceThreshold}%
                   </p>
                 </div>
               </div>
@@ -350,25 +369,28 @@ export function BatchPromotionPage() {
             <dl className="mt-4 grid grid-cols-2 gap-4 border-t border-neutral-100 pt-4 sm:grid-cols-4">
               <div>
                 <dt className="text-xs text-neutral-400">Total students</dt>
-                <dd className="mt-0.5 text-2xl font-semibold text-neutral-900">{preview.summary.total}</dd>
+                <dd className="type-kpi mt-0.5">{preview.summary.total}</dd>
               </div>
               <div>
                 <dt className="text-xs text-neutral-400">Promote</dt>
-                <dd className="mt-0.5 text-2xl font-semibold text-emerald-600">{overrideCounts.promote}</dd>
+                <dd className="type-kpi mt-0.5 text-emerald-600">{overrideCounts.promote}</dd>
               </div>
               <div>
                 <dt className="text-xs text-neutral-400">Hold for review</dt>
-                <dd className="mt-0.5 text-2xl font-semibold text-amber-600">{overrideCounts.hold}</dd>
+                <dd className="type-kpi mt-0.5 text-amber-600">{overrideCounts.hold}</dd>
               </div>
               <div>
                 <dt className="text-xs text-neutral-400">Not placeable (skipped)</dt>
-                <dd className="mt-0.5 text-2xl font-semibold text-neutral-400">{preview.summary.skipped}</dd>
+                <dd className="type-kpi mt-0.5 text-neutral-500">{preview.summary.skipped}</dd>
               </div>
             </dl>
           </div>
 
           {apiError && (
-            <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div
+              role="alert"
+              className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+            >
               {apiError}
             </div>
           )}
@@ -392,7 +414,9 @@ export function BatchPromotionPage() {
             </header>
 
             {groups.length === 0 ? (
-              <div className="px-5 py-10 text-center text-sm text-neutral-500">No enrolled students found.</div>
+              <div className="px-5 py-10 text-center text-sm text-neutral-500">
+                No enrolled students found.
+              </div>
             ) : (
               <div className="divide-y divide-neutral-100">
                 {groups.map(([className, rows]) => (
@@ -417,8 +441,7 @@ export function BatchPromotionPage() {
                           const decision = effectiveDecision(row);
                           const overridden = isOverridden(row);
                           const cannotPromote =
-                            row.targetClass === null &&
-                            row.recommendedOutcome === "PROMOTE";
+                            row.targetClass === null && row.recommendedOutcome === "PROMOTE";
                           return (
                             <tr
                               key={row.enrollmentId}
@@ -529,21 +552,15 @@ export function BatchPromotionPage() {
             <dl className="mt-4 grid grid-cols-3 gap-4 border-t border-emerald-200 pt-4">
               <div>
                 <dt className="text-xs text-emerald-600">Total</dt>
-                <dd className="mt-0.5 text-2xl font-semibold text-emerald-900">
-                  {result.summary.total}
-                </dd>
+                <dd className="type-kpi mt-0.5 text-emerald-900">{result.summary.total}</dd>
               </div>
               <div>
                 <dt className="text-xs text-emerald-600">Promoted</dt>
-                <dd className="mt-0.5 text-2xl font-semibold text-emerald-900">
-                  {result.summary.promoted}
-                </dd>
+                <dd className="type-kpi mt-0.5 text-emerald-900">{result.summary.promoted}</dd>
               </div>
               <div>
                 <dt className="text-xs text-emerald-600">Need review</dt>
-                <dd className="mt-0.5 text-2xl font-semibold text-red-600">
-                  {result.summary.failed}
-                </dd>
+                <dd className="type-kpi mt-0.5 text-red-600">{result.summary.failed}</dd>
               </div>
             </dl>
           </div>

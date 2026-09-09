@@ -297,7 +297,7 @@ function GradeDialog({
             rows={3}
             placeholder="Private note for the student…"
             disabled={busy}
-            className="w-full resize-y rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-500 focus:outline-none focus:ring-neutral-500"
+            className="w-full resize-none rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-500 focus:outline-none focus:ring-neutral-500"
           />
         </Field>
 

@@ -75,13 +75,13 @@ const QUICK_ACTIONS = [
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const CALENDAR_EVENTS = new Set([5, 12, 18, 21]);
 const DISTRIBUTION_COLORS = [
-  "#156d39",
-  "#1f914c",
-  "#22c55e",
-  "#4ade80",
-  "#86efac",
-  "#a7f3c0",
-  "#d1fae0",
+  "#064e3b",
+  "#475569",
+  "#4f46e5",
+  "#0369a1",
+  "#a16207",
+  "#7e22ce",
+  "#78716c",
 ];
 
 function buildMonthGrid() {
@@ -122,7 +122,7 @@ function Panel({
       )}
     >
       <div className="flex min-h-12 items-center justify-between border-b border-neutral-100 px-5">
-        <h2 className="text-sm font-semibold text-neutral-950">{title}</h2>
+        <h2 className="type-card-title">{title}</h2>
         {action}
       </div>
       {children}
@@ -156,14 +156,12 @@ export default function DashboardPage() {
       <header className="flex flex-wrap items-center justify-between gap-4 rounded-[18px] border border-neutral-200 bg-white px-5 py-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl font-semibold tracking-tight text-neutral-950">
-              Good morning, {firstName}
-            </h1>
-            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+            <h1 className="type-page-title">Good morning, {firstName}</h1>
+            <span className="type-badge rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-[#064E3B]">
               {roleLabel}
             </span>
           </div>
-          <p className="mt-1 text-sm text-neutral-500">
+          <p className="type-body-secondary mt-1">
             Here is what is happening at Digital Pathshala today.
           </p>
         </div>
@@ -172,7 +170,7 @@ export default function DashboardPage() {
             <CalendarDaysIcon className="size-4" />
             Academic Year {summary.academicYear || "—"}
           </div>
-          <NoticeBell />
+          <NoticeBell buttonClassName="relative flex size-10 items-center justify-center rounded-xl border border-neutral-200 text-neutral-700 hover:bg-neutral-50" />
           <Avatar name={user?.fullName ?? "Principal"} size="md" />
         </div>
       </header>
@@ -190,15 +188,15 @@ export default function DashboardPage() {
               </span>
               <span>{stat.label}</span>
               {stat.deltaDirection === "up" && (
-                <span className="ml-auto rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-600">
+                <span className="type-badge ml-auto rounded-full bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-600">
                   Active
                 </span>
               )}
             </div>
-            <p className="mt-5 text-3xl font-medium tracking-tight text-neutral-950">
+            <p className="type-kpi mt-5 sm:text-[28px] sm:leading-8">
               {loading ? "—" : stat.value}
             </p>
-            <div className="mt-4 flex h-8 items-center justify-between rounded-lg border border-neutral-200 px-3 text-xs text-neutral-500">
+            <div className="type-caption mt-4 flex h-8 items-center justify-between rounded-lg border border-neutral-200 px-3">
               <span>{loading ? "Loading…" : stat.delta}</span>
               <ArrowUpRightIcon className="size-3.5 text-neutral-700" />
             </div>
@@ -228,18 +226,18 @@ export default function DashboardPage() {
                       className={cn(
                         "relative w-full rounded-t-xl",
                         highlighted
-                          ? "bg-gradient-to-b from-[#22c55e] to-[#86efac] shadow-[0_8px_30px_rgba(34,197,94,.18)]"
-                          : "bg-[repeating-linear-gradient(135deg,#dce9e0_0,#dce9e0_3px,#f3f8f4_3px,#f3f8f4_6px)]",
+                          ? "bg-[#064E3B] shadow-[0_8px_30px_rgba(6,78,59,.14)]"
+                          : "bg-[repeating-linear-gradient(135deg,#e7e5e4_0,#e7e5e4_3px,#f5f5f4_3px,#f5f5f4_6px)]",
                       )}
                       style={{ height: `${Math.max((item.value / maxAttendance) * 86, 4)}%` }}
                     >
                       {highlighted && (
-                        <span className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-[#156d39] px-2.5 py-1 text-[11px] font-medium text-white">
+                        <span className="type-badge type-numeric absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-[#064E3B] px-2.5 py-1 text-white">
                           {item.valueLabel}
                         </span>
                       )}
                     </div>
-                    <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-neutral-500">
+                    <span className="type-caption absolute -bottom-6 left-1/2 -translate-x-1/2">
                       {item.label}
                     </span>
                   </div>
@@ -296,13 +294,13 @@ export default function DashboardPage() {
             <ul className="divide-y divide-neutral-100 px-4">
               {summary.upcomingEvents.map((event) => (
                 <li key={event.id} className="flex items-center gap-3 py-3">
-                  <div className="flex size-10 shrink-0 flex-col items-center justify-center rounded-full bg-violet-50 text-violet-700">
-                    <b className="text-sm leading-none">{event.day}</b>
-                    <span className="text-[9px] uppercase">{event.month}</span>
+                  <div className="type-numeric flex size-10 shrink-0 flex-col items-center justify-center rounded-full bg-violet-50 text-violet-700">
+                    <b className="text-sm leading-4">{event.day}</b>
+                    <span className="type-micro-label text-violet-700">{event.month}</span>
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-neutral-900">{event.title}</p>
-                    <p className="truncate text-xs text-neutral-500">{event.meta}</p>
+                    <p className="type-caption truncate">{event.meta}</p>
                   </div>
                 </li>
               ))}
@@ -314,14 +312,14 @@ export default function DashboardPage() {
       <Panel
         title="Recent Activities"
         action={
-          <span className="flex items-center gap-2 text-xs text-neutral-400">
+          <span className="type-caption flex items-center gap-2">
             Last 24 hours <MoreIcon className="size-4" />
           </span>
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[680px] text-left text-sm">
-            <thead className="text-xs text-neutral-400">
+          <table className="type-table-cell w-full min-w-[680px] text-left">
+            <thead className="type-table-header">
               <tr>
                 <th className="px-5 py-3 font-medium">Activity</th>
                 <th className="px-5 py-3 font-medium">Type</th>
@@ -337,9 +335,9 @@ export default function DashboardPage() {
                 >
                   <td className="px-5 py-3.5 font-medium text-neutral-900">{activity.title}</td>
                   <td className="px-5 py-3.5 capitalize text-neutral-500">{activity.type}</td>
-                  <td className="px-5 py-3.5 text-neutral-500">{activity.time}</td>
+                  <td className="type-numeric px-5 py-3.5 text-neutral-500">{activity.time}</td>
                   <td className="px-5 py-3.5 text-right">
-                    <span className="rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700">
+                    <span className="type-badge rounded-full bg-emerald-50 px-2 py-1 text-emerald-700">
                       Completed
                     </span>
                   </td>
@@ -393,11 +391,11 @@ export default function DashboardPage() {
         </Panel>
         <Panel
           title={`${calendar.monthName} ${calendar.year}`}
-          action={<span className="text-xs text-neutral-400">Today: {calendar.today}</span>}
+          action={<span className="type-caption type-numeric">Today: {calendar.today}</span>}
         >
-          <div className="grid grid-cols-7 gap-1 p-4 text-center">
+          <div className="type-numeric grid grid-cols-7 gap-1 p-4 text-center">
             {WEEKDAYS.map((day) => (
-              <span key={day} className="py-1 text-[10px] font-semibold uppercase text-neutral-400">
+              <span key={day} className="type-micro-label py-1">
                 {day}
               </span>
             ))}

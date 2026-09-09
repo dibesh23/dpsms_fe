@@ -7,10 +7,8 @@ const DEFAULT_TENANT_ID = process.env["NEXT_PUBLIC_TENANT_ID"] ?? "";
 export default function ForgotPasswordPage() {
   return (
     <div className="w-full max-w-sm">
-      <h3 className="text-center text-xl font-semibold">
-        Reset your password
-      </h3>
-      <p className="mt-1 text-center text-sm text-neutral-500">
+      <h1 className="type-page-title text-center">Reset your password</h1>
+      <p className="type-body-secondary mt-1 text-center">
         Enter your email and we&apos;ll send a reset link if an account exists.
       </p>
 
@@ -18,7 +16,7 @@ export default function ForgotPasswordPage() {
         <ForgotPasswordForm defaultTenantId={DEFAULT_TENANT_ID} />
       </div>
 
-      <p className="mt-6 text-center text-sm font-medium text-neutral-500">
+      <p className="type-body-secondary mt-6 text-center font-medium">
         Remember your password?{" "}
         <Link
           href="/login"

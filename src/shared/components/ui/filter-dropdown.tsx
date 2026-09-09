@@ -26,7 +26,7 @@ export function FilterDropdown({
           type="button"
           onClick={toggle}
           className={cn(
-            "flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors",
+            "type-button flex h-9 items-center gap-2 rounded-lg border px-3 transition-colors",
             open
               ? "border-neutral-400 bg-bg-default text-neutral-900 ring-2 ring-neutral-100"
               : "border-neutral-200 bg-bg-default text-neutral-700 hover:bg-bg-muted",
@@ -50,7 +50,7 @@ export function FilterDropdown({
               close();
             }}
             className={cn(
-              "flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-bg-subtle",
+              "type-button flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left transition-colors hover:bg-bg-subtle",
               value === null ? "font-medium text-neutral-900" : "text-neutral-600",
             )}
           >
@@ -68,7 +68,7 @@ export function FilterDropdown({
                   close();
                 }}
                 className={cn(
-                  "flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-bg-subtle",
+                  "type-button flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left transition-colors hover:bg-bg-subtle",
                   active ? "font-medium text-neutral-900" : "text-neutral-600",
                 )}
               >

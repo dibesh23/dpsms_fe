@@ -131,18 +131,20 @@ export function GuardianForm({
           />
         </Field>
 
-        {showPrimary && (
-          <label className="flex items-center gap-2 text-sm text-neutral-700 sm:col-span-2">
-            <input
-              type="checkbox"
-              checked={isPrimary}
-              onChange={(event) => setIsPrimary(event.target.checked)}
-              disabled={isSubmitting}
-              className="size-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-500"
-            />
-            Set as primary guardian
-          </label>
-        )}
+        <div className="min-h-6 sm:col-span-2">
+          {showPrimary && (
+            <label className="flex items-center gap-2 text-sm text-neutral-700">
+              <input
+                type="checkbox"
+                checked={isPrimary}
+                onChange={(event) => setIsPrimary(event.target.checked)}
+                disabled={isSubmitting}
+                className="size-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-500"
+              />
+              Set as primary guardian
+            </label>
+          )}
+        </div>
       </div>
 
       {apiError && (

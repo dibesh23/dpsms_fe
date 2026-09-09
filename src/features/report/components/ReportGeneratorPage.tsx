@@ -36,7 +36,10 @@ import {
 } from "@/shared/components/ui/icons";
 import { ReportPreviewDialog } from "./ReportPreviewDialog";
 
-const STATUS_VARIANT: Record<ReportRequestRecord["status"], "success" | "warning" | "danger" | "neutral" | "info"> = {
+const STATUS_VARIANT: Record<
+  ReportRequestRecord["status"],
+  "success" | "warning" | "danger" | "neutral" | "info"
+> = {
   QUEUED: "info",
   RUNNING: "warning",
   PROCESSING: "warning",
@@ -91,7 +94,8 @@ function RequestForm({
   const [submitting, setSubmitting] = useState(false);
 
   const reportTypes = useMemo(
-    () => (Object.keys(REPORT_TYPE_LABELS) as ReportType[]).filter((t) => canRequestFee || t !== "FEE"),
+    () =>
+      (Object.keys(REPORT_TYPE_LABELS) as ReportType[]).filter((t) => canRequestFee || t !== "FEE"),
     [canRequestFee],
   );
 
@@ -105,21 +109,21 @@ function RequestForm({
 
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [sections, setSections] = useState<{ id: string; name: string }[]>([]);
-  const [students, setStudents] = useState<{ id: string; fullName: string; admissionNumber: string }[]>(
-    [],
-  );
+  const [students, setStudents] = useState<
+    { id: string; fullName: string; admissionNumber: string }[]
+  >([]);
   const [sessions, setSessions] = useState<{ id: string; label: string }[]>([]);
 
   const loadedScopeRef = useRef(false);
   useEffect(() => {
     if (loadedScopeRef.current) return;
     loadedScopeRef.current = true;
-    void academicApi.listClasses().then((c) =>
-      setClasses(c.map((c) => ({ id: c.id, name: c.name }))),
-    );
-    void academicApi.listSessions().then((s) =>
-      setSessions(s.map((s) => ({ id: s.id, label: s.label }))),
-    );
+    void academicApi
+      .listClasses()
+      .then((c) => setClasses(c.map((c) => ({ id: c.id, name: c.name }))));
+    void academicApi
+      .listSessions()
+      .then((s) => setSessions(s.map((s) => ({ id: s.id, label: s.label }))));
   }, []);
 
   useEffect(() => {
@@ -130,9 +134,9 @@ function RequestForm({
       setSections([]);
       return;
     }
-    void academicApi.listSections(classId).then((s) =>
-      setSections(s.map((s) => ({ id: s.id, name: s.name }))),
-    );
+    void academicApi
+      .listSections(classId)
+      .then((s) => setSections(s.map((s) => ({ id: s.id, name: s.name }))));
   }, [classId]);
 
   useEffect(() => {
@@ -140,10 +144,7 @@ function RequestForm({
     setStudents([]);
     if (!classId) return;
     void academicApi.listClassStudents(classId).then((rows) => {
-      const filtered =
-        sectionId === ALL
-          ? rows
-          : rows.filter((r) => r.sectionId === sectionId);
+      const filtered = sectionId === ALL ? rows : rows.filter((r) => r.sectionId === sectionId);
       setStudents(
         filtered.map((r) => ({
           id: r.studentId,
@@ -182,9 +183,7 @@ function RequestForm({
   return (
     <div className="space-y-6">
       <div>
-        <p className="mb-2 text-xs font-semibold tracking-wider text-neutral-400 uppercase">
-          Report type
-        </p>
+        <p className="type-micro-label mb-2">Report type</p>
         <div className="grid grid-cols-3 gap-2">
           {reportTypes.map((t) => {
             const Icon = TYPE_ICONS[t];
@@ -211,9 +210,7 @@ function RequestForm({
       </div>
 
       <div>
-        <p className="mb-2 text-xs font-semibold tracking-wider text-neutral-400 uppercase">
-          Format
-        </p>
+        <p className="type-micro-label mb-2">Format</p>
         <div className="grid grid-cols-2 gap-2">
           {(Object.keys(REPORT_FORMAT_LABELS) as ReportFormat[]).map((f) => {
             const active = format === f;
@@ -237,15 +234,18 @@ function RequestForm({
       </div>
 
       {ShowScope && (
-        <div>
-          <p className="mb-2 text-xs font-semibold tracking-wider text-neutral-400 uppercase">
+        <div className="min-h-[18rem]">
+          <p className="type-micro-label mb-2">
             Scope <span className="font-normal normal-case">(optional)</span>
           </p>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               {type === "FEE" && (
                 <Field label="Academic year">
-                  <Select value={academicYearId} onChange={(e) => setAcademicYearId(e.target.value)}>
+                  <Select
+                    value={academicYearId}
+                    onChange={(e) => setAcademicYearId(e.target.value)}
+                  >
                     <option value={ALL}>Active year</option>
                     {sessions.map((s) => (
                       <option key={s.id} value={s.id}>
@@ -293,7 +293,11 @@ function RequestForm({
             {type === "ATTENDANCE" && (
               <div className="grid grid-cols-2 gap-3">
                 <Field label="From date">
-                  <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+                  <Input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                  />
                 </Field>
                 <Field label="To date">
                   <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
@@ -310,8 +314,19 @@ function RequestForm({
         </div>
       )}
       <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
-        <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" type="button" />
-        <Button text={submitting ? "Requesting…" : "Request Report"} loading={submitting} onClick={onSubmit} className="w-auto" />
+        <Button
+          variant="secondary"
+          text="Cancel"
+          onClick={onClose}
+          className="w-auto"
+          type="button"
+        />
+        <Button
+          text={submitting ? "Requesting…" : "Request Report"}
+          loading={submitting}
+          onClick={onSubmit}
+          className="w-auto"
+        />
       </div>
     </div>
   );
@@ -326,8 +341,7 @@ export function ReportGeneratorPage() {
   const [previewReport, setPreviewReport] = useState<ReportRequestRecord | null>(null);
   const toast = useToast();
   const { user } = useAuth();
-  const canRequestFee =
-    user?.role === "SUPER_ADMIN" || user?.role === "PRINCIPAL";
+  const canRequestFee = user?.role === "SUPER_ADMIN" || user?.role === "PRINCIPAL";
   const pollTimer = useRef<number | null>(null);
 
   const load = useCallback(async (p = 1, silent = false) => {
@@ -375,8 +389,8 @@ export function ReportGeneratorPage() {
       toast.success("Report requested. It will be ready shortly.");
       return { success: true };
     } catch (err: unknown) {
-      const axiosData = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data
-        ?.error?.message;
+      const axiosData = (err as { response?: { data?: { error?: { message?: string } } } })
+        ?.response?.data?.error?.message;
       return { success: false, error: axiosData ?? "Could not request report." };
     }
   };
@@ -390,8 +404,7 @@ export function ReportGeneratorPage() {
     pageSize: 20,
     getSearchText: (r) => `${REPORT_TYPE_LABELS[r.type]} ${REPORT_STATUS_LABELS[r.status]}`,
     filterMatch: (r, value) => r.type === value,
-    sortValue: (r, key) =>
-      key === "type" ? r.type : key === "status" ? r.status : r.createdAt,
+    sortValue: (r, key) => (key === "type" ? r.type : key === "status" ? r.status : r.createdAt),
     defaultSortKey: "createdAt",
     defaultSortDir: "desc",
   });

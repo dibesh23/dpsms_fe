@@ -47,7 +47,7 @@ export function DataTable<T>({
             action={empty?.action}
           />
         ) : (
-          <table className={cn("w-full text-left text-sm", minWidth)}>
+          <table className={cn("w-full text-left", minWidth)}>
             <thead>
               <tr className="border-b border-neutral-200 bg-bg-subtle">
                 {columns.map((column) => {
@@ -56,7 +56,7 @@ export function DataTable<T>({
                     <th
                       key={column.key}
                       className={cn(
-                        "px-5 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-700",
+                        "type-table-header px-5 py-3 uppercase",
                         column.align === "right" && "text-right",
                         column.headerClassName,
                       )}
@@ -93,7 +93,7 @@ export function DataTable<T>({
                     <td
                       key={column.key}
                       className={cn(
-                        "px-5 py-3.5 text-neutral-700",
+                        "type-table-cell px-5 py-3.5",
                         column.align === "right" && "text-right",
                         column.className,
                       )}

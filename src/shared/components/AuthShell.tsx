@@ -20,11 +20,7 @@ export function AuthShell({
             "[mask-composite:intersect] [mask-image:linear-gradient(black,transparent_320px),linear-gradient(90deg,transparent,black_5%,black_95%,transparent)]",
           )}
         >
-          <Grid
-            cellSize={60}
-            patternOffset={[0.75, 0]}
-            className="text-neutral-200"
-          />
+          <Grid cellSize={60} patternOffset={[0.75, 0]} className="text-neutral-200" />
         </div>
 
         {/* Gradient */}
@@ -70,7 +66,7 @@ export function AuthShell({
 
           <div className="flex grow basis-0 flex-col justify-end">
             {showTerms && (
-              <p className="px-20 py-8 text-center text-xs font-medium text-neutral-500 md:px-0">
+              <p className="type-caption px-20 py-8 text-center font-medium md:px-0">
                 By continuing, you agree to our{" "}
                 <Link
                   href="/terms"

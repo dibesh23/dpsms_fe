@@ -19,8 +19,7 @@ import { authApi } from "../api/authApi";
 import { useAuth } from "../hooks/useAuth";
 import { saveLastSchool } from "../../../shared/lib/schoolStorage";
 
-const SUBDOMAIN_PATTERN =
-  /^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/;
+const SUBDOMAIN_PATTERN = /^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/;
 
 const RegisterSchoolSchema = z
   .object({
@@ -34,20 +33,10 @@ const RegisterSchoolSchema = z
       .trim()
       .min(3, "At least 3 characters")
       .max(63, "Too long")
-      .regex(
-        SUBDOMAIN_PATTERN,
-        "Use lowercase letters, numbers, and hyphens only",
-      ),
-    fullName: z
-      .string()
-      .trim()
-      .min(1, "Admin name is required")
-      .max(255, "Name too long"),
+      .regex(SUBDOMAIN_PATTERN, "Use lowercase letters, numbers, and hyphens only"),
+    fullName: z.string().trim().min(1, "Admin name is required").max(255, "Name too long"),
     email: z.email("Enter a valid email address").trim(),
-    password: z
-      .string()
-      .min(8, "At least 8 characters")
-      .max(128, "Password too long"),
+    password: z.string().min(8, "At least 8 characters").max(128, "Password too long"),
     confirmPassword: z.string().min(1, "Please confirm your password"),
   })
   .refine((d) => d.password === d.confirmPassword, {
@@ -107,12 +96,8 @@ function SectionHeading({
         {icon}
       </span>
       <div>
-        <h4 className="text-content-emphasis text-sm font-semibold leading-tight">
-          {title}
-        </h4>
-        {description && (
-          <p className="mt-0.5 text-xs text-neutral-500">{description}</p>
-        )}
+        <h4 className="text-content-emphasis text-sm font-semibold leading-tight">{title}</h4>
+        {description && <p className="mt-0.5 text-xs text-neutral-500">{description}</p>}
       </div>
     </div>
   );
@@ -131,13 +116,9 @@ function Field({
 }) {
   return (
     <div>
-      <label className="text-content-emphasis mb-2 block text-sm font-medium leading-none">
-        {label}
-      </label>
+      <label className="type-label mb-2 block">{label}</label>
       {children}
-      {!error && hint ? (
-        <span className="mt-2 block text-sm text-neutral-500">{hint}</span>
-      ) : null}
+      {!error && hint ? <span className="mt-2 block text-sm text-neutral-500">{hint}</span> : null}
     </div>
   );
 }
@@ -145,8 +126,7 @@ function Field({
 export function RegisterForm() {
   const { registerSchool } = useAuth();
   const [apiError, setApiError] = useState<string | null>(null);
-  const [subdomainStatus, setSubdomainStatus] =
-    useState<SubdomainStatus>("idle");
+  const [subdomainStatus, setSubdomainStatus] = useState<SubdomainStatus>("idle");
   const lastAutoSubdomain = useRef<string>("");
   const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -165,10 +145,7 @@ export function RegisterForm() {
   const watchedSubdomain = watch("subdomain") ?? "";
   const watchedPassword = watch("password") ?? "";
 
-  const strength = useMemo<PasswordStrength>(
-    () => strengthOf(watchedPassword),
-    [watchedPassword],
-  );
+  const strength = useMemo<PasswordStrength>(() => strengthOf(watchedPassword), [watchedPassword]);
 
   useEffect(() => {
     const slug = slugify(watchedSchoolName);
@@ -217,14 +194,10 @@ export function RegisterForm() {
       });
     } catch (err: unknown) {
       const msg =
-        (err as { response?: { data?: { error?: { message?: string } } } })
-          ?.response?.data?.error?.message ??
-        "Registration failed. Please try again.";
+        (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
+          ?.message ?? "Registration failed. Please try again.";
       setApiError(msg);
-      if (
-        msg.toLowerCase().includes("subdomain") &&
-        watchedSubdomain.trim()
-      ) {
+      if (msg.toLowerCase().includes("subdomain") && watchedSubdomain.trim()) {
         setSubdomainStatus("taken");
       }
     }
@@ -234,11 +207,7 @@ export function RegisterForm() {
 
   return (
     <div className="flex w-full flex-col gap-3">
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        noValidate
-        className="flex w-full flex-col gap-y-8"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex w-full flex-col gap-y-8">
         <div className="flex flex-col gap-5">
           <SectionHeading
             icon={<Building2Icon className="size-5" />}
@@ -246,10 +215,7 @@ export function RegisterForm() {
             description="This creates a new school and a full set of roles."
           />
 
-          <Field
-            label="School name"
-            error={errors.schoolName?.message}
-          >
+          <Field label="School name" error={errors.schoolName?.message}>
             <Input
               type="text"
               autoComplete="organization"
@@ -285,10 +251,7 @@ export function RegisterForm() {
                   This subdomain is already taken.
                 </span>
               ) : (
-                <>
-                  This is your school&apos;s web address. You can change it
-                  before you finish.
-                </>
+                <>This is your school&apos;s web address. You can change it before you finish.</>
               )
             }
             error={errors.subdomain?.message}
@@ -363,18 +326,12 @@ export function RegisterForm() {
                         key={segment}
                         className={cn(
                           "h-1 w-6 rounded-full transition-colors",
-                          segment <= strength
-                            ? STRENGTH_COLORS[strength]
-                            : "bg-neutral-200",
+                          segment <= strength ? STRENGTH_COLORS[strength] : "bg-neutral-200",
                         )}
                       />
                     ))}
                   </span>
-                  <span
-                    className={cn(
-                      strength >= 2 ? "text-neutral-600" : "text-neutral-500",
-                    )}
-                  >
+                  <span className={cn(strength >= 2 ? "text-neutral-600" : "text-neutral-500")}>
                     {STRENGTH_LABELS[strength] || "Min. 8 characters"}
                   </span>
                 </span>
@@ -417,11 +374,7 @@ export function RegisterForm() {
 
         <div className="flex flex-col gap-3">
           <Button
-            text={
-              isSubmitting
-                ? "Creating your school..."
-                : "Create my school"
-            }
+            text={isSubmitting ? "Creating your school..." : "Create my school"}
             loading={isSubmitting}
             disabled={isSubmitting || subdomainTaken}
           />

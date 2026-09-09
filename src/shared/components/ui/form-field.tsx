@@ -19,17 +19,17 @@ export function Field({
 }) {
   return (
     <label className={cn("block", className)}>
-      <span className="mb-1.5 block text-sm font-medium text-neutral-800">
+      <span className="type-label mb-1.5 block">
         {label}
         {required && <span className="ml-0.5 text-red-500">*</span>}
       </span>
       {children}
       {error ? (
-        <span className="mt-1.5 block text-sm text-red-600" role="alert">
+        <span className="type-error mt-1.5 block" role="alert">
           {error}
         </span>
       ) : hint ? (
-        <span className="mt-1.5 block text-sm text-neutral-400">{hint}</span>
+        <span className="type-helper mt-1.5 block">{hint}</span>
       ) : null}
     </label>
   );
@@ -41,7 +41,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({ className, ...props
   <select
     ref={ref}
     className={cn(
-      "w-full rounded-md border border-neutral-300 bg-bg-default px-3 py-2 text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none focus:ring-neutral-500",
+      "type-input w-full rounded-md border border-neutral-300 bg-bg-default px-3 py-2 focus:border-neutral-500 focus:outline-none focus:ring-neutral-500",
       className,
     )}
     {...props}

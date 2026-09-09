@@ -13,8 +13,8 @@ function ResetPasswordContent() {
   if (!token) {
     return (
       <div className="w-full max-w-sm">
-        <h3 className="text-center text-xl font-semibold">Invalid link</h3>
-        <p className="mt-1 text-center text-sm text-neutral-500">
+        <h1 className="type-page-title text-center">Invalid link</h1>
+        <p className="type-body-secondary mt-1 text-center">
           This password reset link is invalid or has expired.
         </p>
         <div className="mt-8">
@@ -28,8 +28,8 @@ function ResetPasswordContent() {
 
   return (
     <div className="w-full max-w-sm">
-      <h3 className="text-center text-xl font-semibold">Set new password</h3>
-      <p className="mt-1 text-center text-sm text-neutral-500">
+      <h1 className="type-page-title text-center">Set new password</h1>
+      <p className="type-body-secondary mt-1 text-center">
         Choose a strong password for your account.
       </p>
 

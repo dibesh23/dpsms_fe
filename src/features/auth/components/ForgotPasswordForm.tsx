@@ -15,11 +15,7 @@ const ForgotSchema = z.object({
 });
 type ForgotFormValues = z.infer<typeof ForgotSchema>;
 
-export function ForgotPasswordForm({
-  defaultTenantId = "",
-}: {
-  defaultTenantId?: string;
-}) {
+export function ForgotPasswordForm({ defaultTenantId = "" }: { defaultTenantId?: string }) {
   const [submitted, setSubmitted] = useState(false);
   const knownTenantId = defaultTenantId || getLastSchool()?.tenantId || "";
 
@@ -44,25 +40,18 @@ export function ForgotPasswordForm({
   if (submitted) {
     return (
       <div className="flex flex-col items-center gap-1 text-center">
-        <h3 className="text-xl font-semibold">Check your inbox</h3>
-        <p className="text-base font-medium text-neutral-500">
-          If that email is registered, a reset link has been sent. Check your
-          spam folder too.
+        <h2 className="type-page-title">Check your inbox</h2>
+        <p className="type-body-reading text-neutral-600">
+          If that email is registered, a reset link has been sent. Check your spam folder too.
         </p>
       </div>
     );
   }
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      noValidate
-      className="flex w-full flex-col gap-y-6"
-    >
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex w-full flex-col gap-y-6">
       <label>
-        <span className="text-content-emphasis mb-2 block text-sm font-medium leading-none">
-          Work email
-        </span>
+        <span className="type-label mb-2 block">Work email</span>
         <Input
           type="email"
           autoComplete="email"

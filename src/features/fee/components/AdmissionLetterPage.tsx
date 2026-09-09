@@ -37,16 +37,16 @@ export function AdmissionLetterPage() {
     printWindow.document.write(`
       <html><head><title>Admission Letter</title>
       <style>
-        body { font-family: Georgia, 'Times New Roman', serif; margin: 40px; color: #1a1a1a; line-height: 1.6; }
-        .header { text-align: center; border-bottom: 2px solid #1a1a1a; padding-bottom: 16px; margin-bottom: 24px; }
-        .school-name { font-size: 24px; font-weight: bold; margin: 0; }
-        .subtitle { font-size: 14px; color: #555; margin-top: 4px; }
-        .date { text-align: right; margin-bottom: 24px; font-size: 14px; }
-        .body { font-size: 15px; }
+        body { font-family: Satoshi, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 40px; color: #404040; font-size: 15px; line-height: 24px; }
+        .header { text-align: center; border-bottom: 2px solid #171717; padding-bottom: 16px; margin-bottom: 24px; }
+        .school-name { font-family: Satoshi, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 24px; line-height: 32px; font-weight: 700; letter-spacing: -0.015em; color: #064e3b; margin: 0; }
+        .subtitle { font-size: 14px; line-height: 20px; color: #525252; margin-top: 4px; }
+        .date { text-align: right; margin-bottom: 24px; font-size: 12px; line-height: 18px; color: #525252; font-variant-numeric: tabular-nums; }
+        .body { font-size: 15px; line-height: 24px; }
         .body p { margin: 12px 0; }
         .details-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        .details-table td { padding: 8px 12px; border: 1px solid #ddd; font-size: 14px; }
-        .details-table td:first-child { font-weight: bold; width: 40%; background: #f9f9f9; }
+        .details-table td { padding: 8px 12px; border: 1px solid #ddd; font-size: 14px; font-variant-numeric: tabular-nums; }
+        .details-table td:first-child { font-weight: 600; color: #171717; width: 40%; background: #f9f9f9; }
         .signature { margin-top: 48px; display: flex; justify-content: space-between; }
         .sig-block { text-align: center; width: 200px; }
         .sig-line { border-top: 1px solid #1a1a1a; margin-top: 40px; padding-top: 8px; font-size: 13px; }
@@ -102,22 +102,26 @@ export function AdmissionLetterPage() {
         }
       />
 
-      <div className="rounded-lg border border-neutral-200 bg-white p-6 sm:p-10 shadow-sm" ref={letterRef}>
+      <div
+        className="rounded-lg border border-neutral-200 bg-white p-6 sm:p-10 shadow-sm"
+        ref={letterRef}
+      >
         <div className="header text-center border-b-2 border-neutral-900 pb-4 mb-6">
-          <p className="text-2xl font-bold text-neutral-900">{data.schoolName}</p>
-          <p className="text-sm text-neutral-500 mt-1">Official Admission Letter</p>
+          <p className="school-name type-display text-content-brand">{data.schoolName}</p>
+          <p className="subtitle type-body-secondary mt-1">Official Admission Letter</p>
         </div>
 
-        <div className="text-right text-sm text-neutral-500 mb-6">
-          Date: {today}
-        </div>
+        <div className="date type-caption type-numeric mb-6 text-right">Date: {today}</div>
 
-        <div className="body text-sm text-neutral-700 space-y-4">
-          <p>Dear <span className="font-semibold text-neutral-900">{data.studentName}</span>,</p>
+        <div className="body type-body-reading space-y-4">
+          <p>
+            Dear <span className="font-semibold text-neutral-900">{data.studentName}</span>,
+          </p>
 
           <p>
-            We are pleased to confirm your admission to <span className="font-semibold">{data.schoolName}</span> for
-            the academic year <span className="font-semibold">{data.academicYear || "N/A"}</span>.
+            We are pleased to confirm your admission to{" "}
+            <span className="font-semibold">{data.schoolName}</span> for the academic year{" "}
+            <span className="font-semibold">{data.academicYear || "N/A"}</span>.
           </p>
 
           <p>Please find your admission details below:</p>
@@ -125,47 +129,71 @@ export function AdmissionLetterPage() {
           <table className="details-table w-full border-collapse my-5">
             <tbody>
               <tr>
-                <td className="font-bold bg-neutral-50 border border-neutral-200 px-3 py-2">Student Name</td>
+                <td className="font-semibold bg-neutral-50 border border-neutral-200 px-3 py-2">
+                  Student Name
+                </td>
                 <td className="border border-neutral-200 px-3 py-2">{data.studentName}</td>
               </tr>
               <tr>
-                <td className="font-bold bg-neutral-50 border border-neutral-200 px-3 py-2">Admission Number</td>
+                <td className="font-semibold bg-neutral-50 border border-neutral-200 px-3 py-2">
+                  Admission Number
+                </td>
                 <td className="border border-neutral-200 px-3 py-2">{data.admissionNumber}</td>
               </tr>
               <tr>
-                <td className="font-bold bg-neutral-50 border border-neutral-200 px-3 py-2">Admission Date</td>
-                <td className="border border-neutral-200 px-3 py-2">{formatDate(data.admissionDate)}</td>
+                <td className="font-semibold bg-neutral-50 border border-neutral-200 px-3 py-2">
+                  Admission Date
+                </td>
+                <td className="border border-neutral-200 px-3 py-2">
+                  {formatDate(data.admissionDate)}
+                </td>
               </tr>
               <tr>
-                <td className="font-bold bg-neutral-50 border border-neutral-200 px-3 py-2">Class</td>
+                <td className="font-semibold bg-neutral-50 border border-neutral-200 px-3 py-2">
+                  Class
+                </td>
                 <td className="border border-neutral-200 px-3 py-2">{data.className || "N/A"}</td>
               </tr>
               <tr>
-                <td className="font-bold bg-neutral-50 border border-neutral-200 px-3 py-2">Section</td>
+                <td className="font-semibold bg-neutral-50 border border-neutral-200 px-3 py-2">
+                  Section
+                </td>
                 <td className="border border-neutral-200 px-3 py-2">{data.sectionName || "N/A"}</td>
               </tr>
               {data.dateOfBirth && (
                 <tr>
-                  <td className="font-bold bg-neutral-50 border border-neutral-200 px-3 py-2">Date of Birth</td>
-                  <td className="border border-neutral-200 px-3 py-2">{formatDate(data.dateOfBirth)}</td>
+                  <td className="font-semibold bg-neutral-50 border border-neutral-200 px-3 py-2">
+                    Date of Birth
+                  </td>
+                  <td className="border border-neutral-200 px-3 py-2">
+                    {formatDate(data.dateOfBirth)}
+                  </td>
                 </tr>
               )}
               {data.gender && (
                 <tr>
-                  <td className="font-bold bg-neutral-50 border border-neutral-200 px-3 py-2">Gender</td>
-                  <td className="border border-neutral-200 px-3 py-2">{genderLabel(data.gender)}</td>
+                  <td className="font-semibold bg-neutral-50 border border-neutral-200 px-3 py-2">
+                    Gender
+                  </td>
+                  <td className="border border-neutral-200 px-3 py-2">
+                    {genderLabel(data.gender)}
+                  </td>
                 </tr>
               )}
               <tr>
-                <td className="font-bold bg-neutral-50 border border-neutral-200 px-3 py-2">Academic Year</td>
-                <td className="border border-neutral-200 px-3 py-2">{data.academicYear || "N/A"}</td>
+                <td className="font-semibold bg-neutral-50 border border-neutral-200 px-3 py-2">
+                  Academic Year
+                </td>
+                <td className="border border-neutral-200 px-3 py-2">
+                  {data.academicYear || "N/A"}
+                </td>
               </tr>
             </tbody>
           </table>
 
           <p>
-            We wish you a successful and enriching academic journey with us. Should you have any questions,
-            please do not hesitate to contact the school office.
+            We wish you a successful and enriching academic journey with us. Should you have any
+            questions, please do not hesitate to contact the school office.
           </p>
 
           <p>Warm regards,</p>
@@ -173,13 +201,15 @@ export function AdmissionLetterPage() {
           <div className="mt-12 flex justify-between">
             <div className="text-center w-48">
               <div className="border-t border-neutral-900 mt-10 pt-2 text-sm">
-                Principal<br />
+                Principal
+                <br />
                 <span className="text-xs text-neutral-500">{data.schoolName}</span>
               </div>
             </div>
             <div className="text-center w-48">
               <div className="border-t border-neutral-900 mt-10 pt-2 text-sm">
-                Student / Parent<br />
+                Student / Parent
+                <br />
                 <span className="text-xs text-neutral-500">Signature</span>
               </div>
             </div>

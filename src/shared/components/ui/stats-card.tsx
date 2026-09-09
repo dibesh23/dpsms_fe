@@ -19,14 +19,14 @@ export function StatsCard({
   href?: string;
 }) {
   const body = (
-    <div className="group flex items-start justify-between gap-3 rounded-[18px] border border-neutral-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,.02)] transition hover:-translate-y-0.5 hover:border-[#b8d4c0] hover:shadow-sm">
+    <div className="group flex items-start justify-between gap-3 rounded-[18px] border border-neutral-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,.02)] transition hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-sm">
       <div className="min-w-0">
-        <p className="text-sm text-neutral-500">{label}</p>
-        <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-900">{value}</p>
+        <p className="type-kpi-label">{label}</p>
+        <p className="type-kpi mt-2">{value}</p>
         {delta && (
           <p
             className={cn(
-              "mt-1 flex items-center gap-1 text-xs font-medium",
+              "type-badge mt-1 flex items-center gap-1",
               deltaDirection === "up" && "text-emerald-600",
               deltaDirection === "down" && "text-red-600",
               deltaDirection === "neutral" && "text-neutral-500",
@@ -39,7 +39,7 @@ export function StatsCard({
         )}
       </div>
       {icon && (
-        <div className="flex size-9 flex-none items-center justify-center rounded-full border border-[#c9dfcf] bg-[#eff7f1] text-[#156d39]">
+        <div className="flex size-9 flex-none items-center justify-center rounded-full border border-stone-200 bg-stone-50 text-[#064E3B]">
           {icon}
         </div>
       )}

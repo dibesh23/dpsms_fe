@@ -53,8 +53,8 @@ export function Dialog({
       >
         <div className="flex items-start justify-between gap-4 border-b border-neutral-100 px-5 py-4">
           <div className="min-w-0">
-            <h2 className="text-base font-semibold tracking-tight text-neutral-900">{title}</h2>
-            {description && <p className="mt-0.5 text-sm text-neutral-500">{description}</p>}
+            <h2 className="type-modal-title">{title}</h2>
+            {description && <p className="type-body-secondary mt-0.5">{description}</p>}
           </div>
           <button
             type="button"

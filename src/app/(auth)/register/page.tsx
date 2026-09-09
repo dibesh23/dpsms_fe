@@ -5,15 +5,13 @@ import { RegisterForm } from "../../../features/auth/components/RegisterForm";
 export default function RegisterPage() {
   return (
     <div className="w-full max-w-sm">
-      <h3 className="text-center text-xl font-semibold">
-        Create your school
-      </h3>
+      <h1 className="type-page-title text-center">Create your school</h1>
 
       <div className="mt-8">
         <RegisterForm />
       </div>
 
-      <p className="mt-6 text-center text-sm font-medium text-neutral-500">
+      <p className="type-body-secondary mt-6 text-center font-medium">
         Already registered your school?{" "}
         <Link
           href="/login"

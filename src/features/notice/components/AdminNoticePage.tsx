@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -38,7 +38,7 @@ import {
 } from "@/shared/components/ui/icons";
 import { AttachmentPreviewDialog } from "./AttachmentPreviewDialog";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function publishStatus(n: AdminNotice): "published" | "scheduled" | "draft" {
   if (n.publishedAt) return "published";
@@ -73,7 +73,7 @@ const FILTER_OPTIONS = [
 
 const ACCEPTED_FILE_TYPES = ".pdf,.jpg,.jpeg,.png,.webp";
 
-// ── Attachment chip ───────────────────────────────────────────────────────────
+// â”€â”€ Attachment chip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function AttachmentChip({
   attachment,
@@ -140,7 +140,7 @@ function AttachmentChip({
   );
 }
 
-// ── Edit form ─────────────────────────────────────────────────────────────────
+// â”€â”€ Edit form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const scopeItemSchema = z.object({
   id: z.string(),
@@ -247,7 +247,7 @@ function EditNoticeDialog({
         })),
       });
 
-      // 2. Process replacements (delete old → upload new)
+      // 2. Process replacements (delete old â†’ upload new)
       for (const file of newFiles) {
         const replaces = (file as File & { _replaces?: string })._replaces;
         if (replaces) {
@@ -294,8 +294,8 @@ function EditNoticeDialog({
           <textarea
             {...register("body")}
             rows={4}
-            placeholder="Write the notice content here…"
-            className="w-full resize-y rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+            placeholder="Write the notice content hereâ€¦"
+            className="w-full resize-none rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
           />
         </Field>
 
@@ -317,7 +317,7 @@ function EditNoticeDialog({
           onChange={(scopes) => setValue("recipientScopes", scopes, { shouldValidate: true })}
         />
 
-        {/* Existing attachments — each can be replaced */}
+        {/* Existing attachments â€” each can be replaced */}
         {notice.attachments.length > 0 && (
           <div>
             <p className="mb-2 text-sm font-medium text-neutral-700">Attachments</p>
@@ -340,7 +340,7 @@ function EditNoticeDialog({
                     <span className="text-neutral-400">{formatBytes(a.sizeBytes)}</span>
                     {pendingReplacement ? (
                       <span className="text-blue-600 truncate max-w-[100px]">
-                        → {pendingReplacement.name}
+                        â†’ {pendingReplacement.name}
                       </span>
                     ) : (
                       <label className="ml-auto cursor-pointer text-neutral-500 hover:text-blue-600 transition-colors">
@@ -365,7 +365,7 @@ function EditNoticeDialog({
                         }
                         className="text-xs text-neutral-400 hover:text-red-500"
                       >
-                        ✕
+                        âœ•
                       </button>
                     )}
                   </div>
@@ -438,7 +438,7 @@ function EditNoticeDialog({
   );
 }
 
-// ── Create form ───────────────────────────────────────────────────────────────
+// â”€â”€ Create form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const CreateSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(255),
@@ -449,7 +449,7 @@ const CreateSchema = z.object({
 });
 type CreateForm = z.output<typeof CreateSchema>;
 
-// ── Notice row ────────────────────────────────────────────────────────────────
+// â”€â”€ Notice row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function NoticeRow({
   notice,
@@ -485,7 +485,7 @@ function NoticeRow({
           <AudienceBadge scopes={notice.recipientScopes} />
           {pubStatus === "scheduled" && notice.scheduledAt && (
             <span className="text-xs font-medium text-amber-600">
-              →{" "}
+              â†’{" "}
               {new Date(notice.scheduledAt).toLocaleString("en-GB", {
                 day: "numeric",
                 month: "short",
@@ -521,7 +521,7 @@ function NoticeRow({
             : pubStatus === "scheduled" && notice.scheduledAt
               ? `Scheduled for ${formatDate(notice.scheduledAt)}`
               : `Created ${formatDate(notice.createdAt)}`}
-          {" · by "}
+          {" Â· by "}
           {notice.publishedByName}
         </p>
       </div>
@@ -532,7 +532,7 @@ function NoticeRow({
   );
 }
 
-// ── Create dialog ─────────────────────────────────────────────────────────────
+// â”€â”€ Create dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CreateNoticeDialog({
   open,
@@ -608,7 +608,7 @@ function CreateNoticeDialog({
               attachments: [...updatedNotice.attachments, attachment],
             };
           } catch {
-            // Non-fatal — notice is already created, just log the failure
+            // Non-fatal â€” notice is already created, just log the failure
             error(`Failed to upload ${file.name}`);
           }
         }
@@ -642,8 +642,8 @@ function CreateNoticeDialog({
           <textarea
             {...register("body")}
             rows={5}
-            placeholder="Write the notice content here…"
-            className="w-full resize-y rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+            placeholder="Write the notice content hereâ€¦"
+            className="w-full resize-none rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
           />
         </Field>
 
@@ -667,11 +667,11 @@ function CreateNoticeDialog({
         />
 
         {/* Attachments */}
-        <div>
+        <div className="h-28 overflow-y-auto overscroll-contain pr-1">
           <p className="mb-2 text-sm font-medium text-neutral-700">
             Attachments{" "}
             <span className="text-xs font-normal text-neutral-400">
-              (PDF, image — max 5MB each, up to 5 files)
+              (PDF, image â€” max 5MB each, up to 5 files)
             </span>
           </p>
 
@@ -731,7 +731,7 @@ function CreateNoticeDialog({
           />
           <Button
             type="submit"
-            text={uploadingFiles ? "Uploading…" : watch("scheduledAt") ? "Schedule" : "Publish"}
+            text={uploadingFiles ? "Uploadingâ€¦" : watch("scheduledAt") ? "Schedule" : "Publish"}
             loading={busy}
             className="w-auto"
           />
@@ -741,7 +741,7 @@ function CreateNoticeDialog({
   );
 }
 
-// ── Delete confirm ────────────────────────────────────────────────────────────
+// â”€â”€ Delete confirm â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function DeleteConfirmDialog({
   open,
@@ -771,7 +771,7 @@ function DeleteConfirmDialog({
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function AdminNoticePage() {
   const { success, error } = useToast();
@@ -918,7 +918,7 @@ export function AdminNoticePage() {
           value={table.filter}
           onChange={table.setFilter}
         />
-        <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search notices…" />
+        <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search noticesâ€¦" />
       </div>
 
       <div className="overflow-hidden rounded-lg border border-neutral-200 bg-bg-default">

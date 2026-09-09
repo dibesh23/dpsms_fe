@@ -22,7 +22,7 @@ export function SearchBar({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-9 w-full rounded-lg border border-neutral-200 bg-bg-default pl-9 pr-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-100 sm:w-64"
+        className="type-input h-9 w-full rounded-lg border border-neutral-200 bg-bg-default pl-9 pr-3 placeholder:text-content-muted focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-100 sm:w-64"
       />
     </div>
   );

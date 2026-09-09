@@ -166,9 +166,7 @@ function SectionRow({ snapshot }: { snapshot: SectionAttendanceSnapshot }) {
                 }}
               />
             </div>
-            <p className="mt-1 text-right text-[11px] text-neutral-400">
-              {snapshot.attendanceRate}%
-            </p>
+            <p className="type-caption type-numeric mt-1 text-right">{snapshot.attendanceRate}%</p>
           </div>
           <StatusBadge
             status={marked ? "Marked" : "Pending"}
@@ -217,10 +215,8 @@ export default function TeacherDashboardPage() {
       <header className="flex flex-wrap items-center justify-between gap-4 rounded-[18px] border border-neutral-200 bg-white px-5 py-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold tracking-tight text-neutral-950">
-              Welcome back, {firstName}
-            </h1>
-            <StatusBadge status="Teacher" variant="success" />
+            <h1 className="type-page-title">Welcome back, {firstName}</h1>
+            <StatusBadge status="Teacher" variant="neutral" />
             {profile.status !== "ACTIVE" && (
               <StatusBadge
                 status={TEACHER_STATUS_LABEL[profile.status]}
@@ -232,11 +228,11 @@ export default function TeacherDashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           {summary.academicYearLabel && (
-            <span className="rounded-full border border-[#c9dfcf] bg-[#eff7f1] px-3 py-1 text-xs font-medium text-[#156d39]">
+            <span className="rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-xs font-medium text-[#064E3B]">
               Academic Year {summary.academicYearLabel}
             </span>
           )}
-          <NoticeBell buttonClassName="flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-[#156d39] transition-colors hover:bg-[#eff7f1]" />
+          <NoticeBell buttonClassName="flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-[#064E3B] transition-colors hover:bg-stone-100" />
           <Avatar name={user?.fullName ?? "Teacher"} size="md" />
         </div>
       </header>
@@ -367,21 +363,15 @@ export default function TeacherDashboardPage() {
               <div className="grid grid-cols-3 gap-2">
                 <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
                   <p className="text-xs font-medium text-emerald-700">Present</p>
-                  <p className="mt-1 text-xl font-semibold text-emerald-800">
-                    {ownAttendance.presentDays}
-                  </p>
+                  <p className="type-kpi-sm mt-1 text-emerald-800">{ownAttendance.presentDays}</p>
                 </div>
                 <div className="rounded-lg border border-red-200 bg-red-50 p-3">
                   <p className="text-xs font-medium text-red-700">Absent</p>
-                  <p className="mt-1 text-xl font-semibold text-red-800">
-                    {ownAttendance.absentDays}
-                  </p>
+                  <p className="type-kpi-sm mt-1 text-red-800">{ownAttendance.absentDays}</p>
                 </div>
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
                   <p className="text-xs font-medium text-amber-700">On Leave</p>
-                  <p className="mt-1 text-xl font-semibold text-amber-800">
-                    {ownAttendance.onLeaveDays}
-                  </p>
+                  <p className="type-kpi-sm mt-1 text-amber-800">{ownAttendance.onLeaveDays}</p>
                 </div>
               </div>
 
@@ -460,12 +450,7 @@ export default function TeacherDashboardPage() {
                       className="rounded-lg border border-neutral-200 bg-bg-subtle p-3"
                     >
                       <p className="text-xs text-neutral-500">{cell.label} (month)</p>
-                      <p
-                        className={cn(
-                          "mt-1 text-lg font-semibold",
-                          cell.tone ?? "text-neutral-900",
-                        )}
-                      >
+                      <p className={cn("type-kpi-sm mt-1", cell.tone ?? "text-neutral-900")}>
                         {cell.value.toLocaleString("en-US")}
                       </p>
                     </div>
@@ -501,10 +486,10 @@ export default function TeacherDashboardPage() {
                     return (
                       <li key={event.id} className="flex items-center gap-3">
                         <div className="flex size-11 flex-none flex-col items-center justify-center rounded-lg border border-neutral-200 bg-bg-subtle">
-                          <span className="text-sm leading-none font-semibold text-neutral-900">
+                          <span className="type-numeric text-sm font-semibold leading-4 text-neutral-900">
                             {day}
                           </span>
-                          <span className="mt-0.5 text-[10px] leading-none text-neutral-500">
+                          <span className="type-micro-label mt-0.5 normal-case text-neutral-500">
                             {month}
                           </span>
                         </div>
@@ -535,7 +520,7 @@ export default function TeacherDashboardPage() {
             <DashboardWidget
               title="Notifications"
               className="lg:col-span-2"
-              action={<span className="text-xs font-medium text-[#156d39]">View all</span>}
+              action={<span className="text-xs font-medium text-[#064E3B]">View all</span>}
             >
               {(summary.notifications ?? []).length === 0 ? (
                 <EmptyState icon={<BellIcon className="size-5" />} title="You're all caught up" />

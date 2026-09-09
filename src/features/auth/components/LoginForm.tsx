@@ -112,17 +112,17 @@ export function LoginForm({ defaultTenantId = "", schoolName, defaultRole }: Log
           })}
         </div>
 
-        {schoolName && (
-          <p className="text-content-subtle -mt-3 flex items-center justify-center gap-1.5 text-xs">
-            <Building2Icon className="size-3.5" />
-            Logging in to <span className="font-semibold text-neutral-700">{schoolName}</span>
-          </p>
-        )}
+        <div className="-mt-3 min-h-4">
+          {schoolName && (
+            <p className="text-content-subtle flex items-center justify-center gap-1.5 text-xs">
+              <Building2Icon className="size-3.5" />
+              Logging in to <span className="font-semibold text-neutral-700">{schoolName}</span>
+            </p>
+          )}
+        </div>
 
         <label>
-          <span className="text-content-emphasis mb-2 block text-sm font-medium leading-none">
-            Work email
-          </span>
+          <span className="type-label mb-2 block">Work email</span>
           <Input
             type="email"
             autoComplete="email"
@@ -136,12 +136,10 @@ export function LoginForm({ defaultTenantId = "", schoolName, defaultRole }: Log
 
         <label>
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-content-emphasis block text-sm font-medium leading-none">
-              Password
-            </span>
+            <span className="type-label block">Password</span>
             <Link
               href="/forgot-password"
-              className="text-content-subtle hover:text-content-emphasis text-xs leading-none underline underline-offset-2 transition-colors"
+              className="type-caption hover:text-content-emphasis underline underline-offset-2 transition-colors"
             >
               Forgot password?
             </Link>

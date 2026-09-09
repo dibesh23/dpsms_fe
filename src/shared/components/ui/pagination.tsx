@@ -42,7 +42,7 @@ function PageButton({
       disabled={disabled}
       aria-label={ariaLabel}
       className={cn(
-        "flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 text-sm transition-colors",
+        "type-button type-numeric flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 transition-colors",
         active ? "bg-neutral-900 font-medium text-white" : "text-neutral-600 hover:bg-bg-subtle",
         disabled && "cursor-not-allowed text-neutral-300 hover:bg-transparent",
       )}
@@ -71,7 +71,7 @@ export function Pagination({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-100 px-5 py-3">
-      <p className="text-xs text-neutral-500">
+      <p className="type-caption type-numeric">
         Showing <span className="font-medium text-neutral-700">{from}</span>–
         <span className="font-medium text-neutral-700">{to}</span> of{" "}
         <span className="font-medium text-neutral-700">{total}</span> {label}

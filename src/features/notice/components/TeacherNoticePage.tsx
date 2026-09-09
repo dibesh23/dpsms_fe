@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -35,12 +35,12 @@ import {
   PlusIcon,
 } from "@/shared/components/ui/icons";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const EMPTY_RESULT: MyNoticesResult = { notices: [], unreadCount: 0 };
 const BODY_PREVIEW_LIMIT = 220;
 
-// ── Create form schema ────────────────────────────────────────────────────────
+// â”€â”€ Create form schema â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const scopeItemSchema = z.object({
   id: z.string(),
@@ -58,7 +58,7 @@ const CreateSchema = z.object({
 });
 type CreateForm = z.output<typeof CreateSchema>;
 
-// ── Expandable body ───────────────────────────────────────────────────────────
+// â”€â”€ Expandable body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function NoticeBody({ body }: { body: string }) {
   const [expanded, setExpanded] = useState(false);
@@ -85,7 +85,7 @@ function NoticeBody({ body }: { body: string }) {
   );
 }
 
-// ── Notice card ───────────────────────────────────────────────────────────────
+// â”€â”€ Notice card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function NoticeCard({
   notice,
@@ -168,7 +168,7 @@ function NoticeCard({
   );
 }
 
-// ── Create dialog ─────────────────────────────────────────────────────────────
+// â”€â”€ Create dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CreateNoticeDialog({
   open,
@@ -226,8 +226,8 @@ function CreateNoticeDialog({
           <textarea
             {...register("body")}
             rows={4}
-            placeholder="Write the notice content…"
-            className="w-full resize-y rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+            placeholder="Write the notice contentâ€¦"
+            className="w-full resize-none rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
           />
         </Field>
         <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
@@ -260,7 +260,7 @@ function CreateNoticeDialog({
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function TeacherNoticePage() {
   const { success, error } = useToast();
@@ -420,7 +420,7 @@ export function TeacherNoticePage() {
           value={table.filter}
           onChange={table.setFilter}
         />
-        <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search notices…" />
+        <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search noticesâ€¦" />
       </div>
 
       <div className="overflow-hidden rounded-lg border border-neutral-200 bg-bg-default">

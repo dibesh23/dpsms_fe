@@ -48,7 +48,9 @@ export function ReportCardPage({ studentId }: { studentId?: string }) {
       setData(result);
     } catch {
       setLoadError(
-        studentId ? "We couldn't load this student's report card." : "No report card available yet.",
+        studentId
+          ? "We couldn't load this student's report card."
+          : "No report card available yet.",
       );
     }
   }, [studentId]);
@@ -81,9 +83,11 @@ export function ReportCardPage({ studentId }: { studentId?: string }) {
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(17);
+      doc.setTextColor(13, 51, 32);
       center(data.schoolName || "Digital Pathshala", 22);
 
       doc.setFontSize(12);
+      doc.setTextColor(23, 23, 23);
       center("Report Card", 29);
 
       doc.setFont("helvetica", "normal");
@@ -148,8 +152,8 @@ export function ReportCardPage({ studentId }: { studentId?: string }) {
             subject.gpaValue != null ? subject.gpaValue.toFixed(2) : "-",
           ];
         }),
-        styles: { fontSize: 9, cellPadding: 2.5 },
-        headStyles: { fillColor: [40, 40, 40], fontSize: 8.5 },
+        styles: { font: "helvetica", fontSize: 10, textColor: [64, 64, 64], cellPadding: 2.5 },
+        headStyles: { fillColor: [23, 23, 23], textColor: [255, 255, 255], fontSize: 9 },
         columnStyles: {
           0: { cellWidth: "auto" },
           1: { cellWidth: 22 },
@@ -160,8 +164,8 @@ export function ReportCardPage({ studentId }: { studentId?: string }) {
         },
       });
 
-      const afterY = (doc as unknown as { lastAutoTable?: { finalY?: number } }).lastAutoTable
-        ?.finalY ?? y + 12;
+      const afterY =
+        (doc as unknown as { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY ?? y + 12;
       const gpa = exam.gpaValue != null ? exam.gpaValue.toFixed(2) : "-";
       const summary = `Overall GPA: ${gpa}     Percentage: ${
         exam.percentage
@@ -233,9 +237,7 @@ if (!data) {
           title={selectedExam.examName}
           description={`${selectedExam.examTypeName}${
             selectedExam.termName ? ` · ${selectedExam.termName}` : ""
-          }${
-            data.academicYearLabel ? ` · Academic Year ${data.academicYearLabel}` : ""
-          }`}
+          }${data.academicYearLabel ? ` · Academic Year ${data.academicYearLabel}` : ""}`}
           actions={
             <Button
               text={printing ? "Preparing PDF…" : "Download PDF"}
@@ -251,17 +253,16 @@ if (!data) {
         <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
           <div className="p-6 sm:p-10">
             <div className="text-center">
-              <p className="text-xl font-bold uppercase tracking-wide text-neutral-900">
+              <p className="type-display text-content-brand">
                 {data.schoolName || "Digital Pathshala"}
               </p>
-              <p className="mt-1 text-sm font-semibold text-neutral-600">Report Card</p>
-              <p className="mt-1 text-xs text-neutral-500">
-                Academic Year {data.academicYearLabel || "—"} · Roll No.{" "}
-                {data.rollNumber || "—"}
+              <p className="type-card-title mt-1 text-neutral-700">Report Card</p>
+              <p className="type-caption type-numeric mt-1">
+                Academic Year {data.academicYearLabel || "—"} · Roll No. {data.rollNumber || "—"}
               </p>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 border-y border-neutral-200 py-4 text-sm">
+            <div className="type-numeric mt-6 grid grid-cols-2 gap-x-6 gap-y-3 border-y border-neutral-200 py-4 text-sm">
               <div>
                 <span className="text-neutral-500">Student</span>
                 <p className="font-semibold text-neutral-900">{data.studentName}</p>
@@ -281,16 +282,16 @@ if (!data) {
             </div>
 
             <div className="mt-6">
-              <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-neutral-700">
+              <h2 className="type-table-header mb-2 uppercase">
                 {selectedExam.examName}
                 <span className="ml-2 font-normal normal-case text-neutral-500">
                   {selectedExam.examTypeName}
                   {selectedExam.termName ? ` · ${selectedExam.termName}` : ""}
                 </span>
               </h2>
-              <table className="w-full border-collapse text-sm">
+              <table className="type-table-cell type-numeric w-full border-collapse">
                 <thead>
-                  <tr className="border-y border-neutral-300 bg-neutral-50 text-xs font-semibold uppercase tracking-wide text-neutral-600">
+                  <tr className="type-table-header border-y border-neutral-300 bg-neutral-50 uppercase">
                     <th className="py-2 pl-3 text-left">Subject</th>
                     <th className="py-2 text-left">Theory</th>
                     <th className="py-2 text-left">Practical</th>
@@ -336,16 +337,14 @@ if (!data) {
                   })}
                 </tbody>
               </table>
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-neutral-200 pt-3 text-sm">
+              <div className="type-numeric mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-neutral-200 pt-3 text-sm">
                 <div>
                   <span className="font-medium text-neutral-500">Overall GPA: </span>
                   <span className="font-semibold text-neutral-900">
                     {selectedExam.gpaValue != null ? selectedExam.gpaValue.toFixed(2) : "-"}
                   </span>
                   <span className="ml-4 font-medium text-neutral-500">Percentage: </span>
-                  <span className="font-semibold text-neutral-900">
-                    {selectedExam.percentage}%
-                  </span>
+                  <span className="font-semibold text-neutral-900">{selectedExam.percentage}%</span>
                 </div>
                 <div>
                   <span className="font-medium text-neutral-500">Result: </span>
@@ -401,10 +400,10 @@ if (!data) {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-neutral-900">
+                      <p className="type-numeric text-sm font-semibold text-neutral-900">
                         {exam.percentage}%
                       </p>
-                      <p className="text-xs text-neutral-500">
+                      <p className="type-caption type-numeric">
                         {RESULT_LABEL[exam.result]} · GPA{" "}
                         {exam.gpaValue != null ? exam.gpaValue.toFixed(2) : "-"}
                       </p>
