@@ -30,15 +30,15 @@ export function BarChart({
               key={datum.label}
               className="group relative flex h-full flex-1 flex-col items-center justify-end"
             >
-              <span className="pointer-events-none absolute -top-8 z-10 hidden whitespace-nowrap rounded-md border border-neutral-200 bg-bg-default px-2 py-1 text-xs font-medium text-neutral-700 shadow-sm group-hover:block">
+              <span className="type-badge type-numeric pointer-events-none absolute -top-8 z-10 hidden whitespace-nowrap rounded-md border border-neutral-200 bg-bg-default px-2 py-1 text-neutral-700 shadow-sm group-hover:block">
                 {datum.valueLabel ?? datum.value}
               </span>
               <div
                 className={cn(
                   "w-full rounded-t-md transition-all",
                   isMax
-                    ? "bg-gradient-to-b from-[#22c55e] to-[#86efac] shadow-[0_8px_24px_rgba(34,197,94,.16)]"
-                    : "bg-[#dce9e0] group-hover:bg-[#c9dfcf]",
+                    ? "bg-[#064E3B] shadow-[0_8px_24px_rgba(6,78,59,.14)]"
+                    : "bg-stone-200 group-hover:bg-stone-300",
                 )}
                 style={{ height: `${(datum.value / max) * 100}%` }}
               />
@@ -48,7 +48,7 @@ export function BarChart({
       </div>
       <div className="mt-2 flex gap-2">
         {data.map((datum) => (
-          <span key={datum.label} className="flex-1 text-center text-xs text-neutral-400">
+          <span key={datum.label} className="type-caption flex-1 text-center">
             {datum.label}
           </span>
         ))}
@@ -113,12 +113,8 @@ export function DonutChart({
         })}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        {centerValue && (
-          <span className="text-2xl font-semibold tracking-tight text-neutral-900">
-            {centerValue}
-          </span>
-        )}
-        {centerLabel && <span className="mt-0.5 text-xs text-neutral-500">{centerLabel}</span>}
+        {centerValue && <span className="type-kpi">{centerValue}</span>}
+        {centerLabel && <span className="type-kpi-label mt-0.5">{centerLabel}</span>}
       </div>
     </div>
   );

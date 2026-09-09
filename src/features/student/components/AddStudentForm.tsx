@@ -203,9 +203,11 @@ export function AddStudentForm({
           label="Section"
           error={errors.section?.message}
           hint={
-            selectedGrade && availableSections.length === 0
-              ? "No sections created for this grade"
-              : undefined
+            !selectedGrade
+              ? "Select a grade to see its sections"
+              : availableSections.length === 0
+                ? "No sections created for this grade"
+                : `${availableSections.length} section${availableSections.length === 1 ? "" : "s"} available`
           }
         >
           <Select disabled={isSubmitting} {...register("section")}>

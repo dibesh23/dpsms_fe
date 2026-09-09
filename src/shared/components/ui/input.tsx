@@ -4,8 +4,7 @@ import { cn } from "@/shared/lib/cn";
 import React, { useCallback, useState } from "react";
 import { AlertCircle, Eye, EyeSlash } from "./icons";
 
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string;
 }
 
@@ -13,10 +12,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, ...props }, ref) => {
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-    const toggleIsPasswordVisible = useCallback(
-      () => setIsPasswordVisible((prev) => !prev),
-      [],
-    );
+    const toggleIsPasswordVisible = useCallback(() => setIsPasswordVisible((prev) => !prev), []);
 
     return (
       <div>
@@ -24,9 +20,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <input
             type={isPasswordVisible ? "text" : type}
             className={cn(
-              "w-full max-w-md rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 placeholder-neutral-400 read-only:bg-neutral-100 read-only:text-neutral-500 focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 sm:text-sm",
-              props.error &&
-                "border-red-500 focus:border-red-500 focus:ring-red-500",
+              "type-input w-full max-w-md rounded-md border border-neutral-300 px-3 py-2 placeholder:text-content-muted read-only:bg-neutral-100 read-only:text-content-subtle focus:border-neutral-500 focus:outline-none focus:ring-neutral-500",
+              props.error && "border-red-500 focus:border-red-500 focus:ring-red-500",
               className,
             )}
             ref={ref}
@@ -40,8 +35,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                   fill="#ef4444"
                   className={cn(
                     "size-5 text-white",
-                    type === "password" &&
-                      "transition-opacity group-hover:opacity-0",
+                    type === "password" && "transition-opacity group-hover:opacity-0",
                   )}
                 />
               </div>
@@ -50,14 +44,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               <button
                 className={cn(
                   "absolute inset-y-0 right-0 flex items-center px-3",
-                  props.error &&
-                    "opacity-0 transition-opacity group-hover:opacity-100",
+                  props.error && "opacity-0 transition-opacity group-hover:opacity-100",
                 )}
                 type="button"
                 onClick={() => toggleIsPasswordVisible()}
-                aria-label={
-                  isPasswordVisible ? "Hide password" : "Show password"
-                }
+                aria-label={isPasswordVisible ? "Hide password" : "Show password"}
               >
                 {isPasswordVisible ? (
                   <Eye
@@ -76,11 +67,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         </div>
 
         {props.error && (
-          <span
-            className="mt-2 block text-sm text-red-500"
-            role="alert"
-            aria-live="assertive"
-          >
+          <span className="type-error mt-2 block" role="alert" aria-live="assertive">
             {props.error}
           </span>
         )}

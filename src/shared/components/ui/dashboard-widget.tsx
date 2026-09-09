@@ -25,8 +25,8 @@ export function DashboardWidget({
     >
       <div className="flex min-h-12 items-center justify-between gap-3 border-b border-neutral-100 px-5 py-3">
         <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-neutral-900">{title}</h2>
-          {description && <p className="mt-0.5 text-xs text-neutral-500">{description}</p>}
+          <h2 className="type-card-title">{title}</h2>
+          {description && <p className="type-caption mt-0.5">{description}</p>}
         </div>
         {action}
       </div>

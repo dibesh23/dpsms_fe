@@ -33,7 +33,9 @@ export function AddClassSubjectForm({
   };
 
   const toggleAll = () => {
-    setSelectedIds((current) => (current.length === subjects.length ? [] : subjects.map((s) => s.id)));
+    setSelectedIds((current) =>
+      current.length === subjects.length ? [] : subjects.map((s) => s.id),
+    );
   };
 
   const onSubmit = async () => {
@@ -47,62 +49,66 @@ export function AddClassSubjectForm({
 
   return (
     <div className="space-y-4">
-      {subjects.length === 0 ? (
-        <p className="text-sm text-neutral-500">Every subject is already mapped to this class.</p>
-      ) : (
-        <>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-neutral-700">Subjects</span>
-            <button
-              type="button"
-              onClick={toggleAll}
-              className="text-xs font-medium text-neutral-600 underline-offset-2 hover:underline"
-            >
-              {allSelected ? "Clear all" : "Select all"}
-            </button>
+      <div className="h-96 overflow-hidden">
+        {subjects.length === 0 ? (
+          <div className="flex h-full items-center justify-center rounded-md border border-dashed border-neutral-200 bg-bg-subtle px-6 text-center text-sm text-neutral-500">
+            Every subject is already mapped to this class.
           </div>
-          <div className="max-h-72 space-y-1 overflow-y-auto rounded-md border border-neutral-200 p-2">
-            {subjects.map((subject) => {
-              const checked = selectedIds.includes(subject.id);
-              return (
-                <label
-                  key={subject.id}
-                  className={`flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-2 transition-colors ${
-                    checked ? "bg-bg-subtle" : "hover:bg-bg-subtle/60"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggle(subject.id)}
-                    className="size-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-500"
-                  />
-                  <span className="min-w-0 flex-1 truncate text-sm text-neutral-800">
-                    {subject.name}
-                  </span>
-                  {subject.code && (
-                    <span className="flex-none text-xs text-neutral-400">{subject.code}</span>
-                  )}
-                </label>
-              );
-            })}
+        ) : (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-neutral-700">Subjects</span>
+              <button
+                type="button"
+                onClick={toggleAll}
+                className="text-xs font-medium text-neutral-600 underline-offset-2 hover:underline"
+              >
+                {allSelected ? "Clear all" : "Select all"}
+              </button>
+            </div>
+            <div className="h-64 space-y-1 overflow-y-auto overscroll-contain rounded-md border border-neutral-200 p-2">
+              {subjects.map((subject) => {
+                const checked = selectedIds.includes(subject.id);
+                return (
+                  <label
+                    key={subject.id}
+                    className={`flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-2 transition-colors ${
+                      checked ? "bg-bg-subtle" : "hover:bg-bg-subtle/60"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggle(subject.id)}
+                      className="size-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-500"
+                    />
+                    <span className="min-w-0 flex-1 truncate text-sm text-neutral-800">
+                      {subject.name}
+                    </span>
+                    {subject.code && (
+                      <span className="flex-none text-xs text-neutral-400">{subject.code}</span>
+                    )}
+                  </label>
+                );
+              })}
+            </div>
+            <p className="text-xs text-neutral-500">
+              {selectedIds.length === 0
+                ? "Select one or more subjects to map."
+                : `${selectedIds.length} subject${selectedIds.length === 1 ? "" : "s"} selected.`}
+            </p>
+            <label className="flex items-center gap-2 text-sm text-neutral-700">
+              <input
+                type="checkbox"
+                checked={isElectiveGroup}
+                onChange={(event) => setIsElectiveGroup(event.target.checked)}
+                className="size-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-500"
+              />
+              Mark selected as elective group
+            </label>
           </div>
-          <p className="text-xs text-neutral-500">
-            {selectedIds.length === 0
-              ? "Select one or more subjects to map."
-              : `${selectedIds.length} subject${selectedIds.length === 1 ? "" : "s"} selected.`}
-          </p>
-          <label className="flex items-center gap-2 text-sm text-neutral-700">
-            <input
-              type="checkbox"
-              checked={isElectiveGroup}
-              onChange={(event) => setIsElectiveGroup(event.target.checked)}
-              className="size-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-500"
-            />
-            Mark selected as elective group
-          </label>
-        </>
-      )}
+        )}
+      </div>
 
       {apiError && (
         <div

@@ -25,8 +25,8 @@ export function EmptyState({
       <div className="flex size-11 items-center justify-center rounded-lg border border-neutral-200 bg-bg-subtle text-neutral-400">
         {icon ?? <InboxIcon className="size-5" />}
       </div>
-      <p className="text-sm font-medium text-neutral-800">{title}</p>
-      {description && <p className="max-w-sm text-sm text-neutral-500">{description}</p>}
+      <p className="type-card-title">{title}</p>
+      {description && <p className="type-body-secondary max-w-sm">{description}</p>}
       {action && <div className="mt-1">{action}</div>}
     </div>
   );

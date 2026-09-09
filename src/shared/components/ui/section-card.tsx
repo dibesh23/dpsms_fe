@@ -20,8 +20,8 @@ export function SectionCard({
     <section className={cn("rounded-lg border border-neutral-200 bg-bg-default", className)}>
       <div className="flex items-center justify-between gap-3 border-b border-neutral-100 px-5 py-4">
         <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-neutral-900">{title}</h2>
-          {description && <p className="mt-0.5 text-xs text-neutral-500">{description}</p>}
+          <h2 className="type-card-title">{title}</h2>
+          {description && <p className="type-caption mt-0.5">{description}</p>}
         </div>
         {action}
       </div>

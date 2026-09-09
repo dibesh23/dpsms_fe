@@ -1,13 +1,6 @@
 "use client";
 
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { cn } from "@/shared/lib/cn";
 import { CheckCircle2Icon, XIcon } from "./icons";
 
@@ -78,13 +71,16 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={toast.id}
             className={cn(
-              "pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg border px-4 py-3 text-sm shadow-lg animate-toast-in",
+              "type-body pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg border px-4 py-3 shadow-lg animate-toast-in",
               TOAST_STYLES[toast.type],
             )}
             role={toast.type === "error" ? "alert" : undefined}
           >
             <span
-              className={cn("flex size-4 flex-none items-center justify-center", TOAST_ICON_COLORS[toast.type])}
+              className={cn(
+                "flex size-4 flex-none items-center justify-center",
+                TOAST_ICON_COLORS[toast.type],
+              )}
             >
               <CheckCircle2Icon className="size-4" />
             </span>

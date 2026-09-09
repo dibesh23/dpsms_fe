@@ -135,9 +135,13 @@ export function TransferStudentForm({
           label="Target section"
           error={errors.sectionId?.message}
           hint={
-            selectedClassId && !sectionsLoading && sections.length === 0
-              ? "No sections created for this class"
-              : undefined
+            !selectedClassId
+              ? "Select a class to see its sections"
+              : sectionsLoading
+                ? "Loading sections…"
+                : sections.length === 0
+                  ? "No sections created for this class"
+                  : `${sections.length} section${sections.length === 1 ? "" : "s"} available`
           }
           required
         >

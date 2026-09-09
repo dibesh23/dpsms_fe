@@ -96,7 +96,9 @@ export function AddExamForm({
         passMarks: Number(row.passMarks === "" ? 0 : row.passMarks),
       }));
 
-    if (validRows.some((row) => !Number.isFinite(row.fullMarksTheory) || row.fullMarksTheory <= 0)) {
+    if (
+      validRows.some((row) => !Number.isFinite(row.fullMarksTheory) || row.fullMarksTheory <= 0)
+    ) {
       setApiError("Full theory marks must be a positive number.");
       return;
     }
@@ -156,82 +158,94 @@ export function AddExamForm({
           />
         </div>
 
-        {rows.length === 0 ? (
-          <p className="rounded-md border border-dashed border-neutral-200 bg-bg-subtle px-3 py-3 text-sm text-neutral-400">
-            No subjects attached yet. You can add them later while the exam is a draft.
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {rows.map((row, index) => (
-              <div key={index} className="rounded-md border border-neutral-200 p-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-xs font-medium text-neutral-500">Subject {index + 1}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeRow(index)}
-                    aria-label="Remove subject"
-                    className="flex h-7 w-7 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                  >
-                    <TrashIcon className="size-4" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Subject">
-                    <Select
-                      value={row.subjectId}
-                      onChange={(e) => updateRow(index, { subjectId: e.target.value })}
+        <div className="h-[22rem] overflow-y-auto overscroll-contain pr-1">
+          {rows.length === 0 ? (
+            <div className="flex h-full items-center justify-center rounded-md border border-dashed border-neutral-200 bg-bg-subtle px-6 text-center text-sm text-neutral-400">
+              No subjects attached yet. You can add them later while the exam is a draft.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {rows.map((row, index) => (
+                <div key={index} className="rounded-md border border-neutral-200 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-xs font-medium text-neutral-500">
+                      Subject {index + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeRow(index)}
+                      aria-label="Remove subject"
+                      className="flex h-7 w-7 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-600"
                     >
-                      <option value="">Select a subject…</option>
-                      {subjects.map((subject) => (
-                        <option key={subject.id} value={subject.id}>
-                          {subject.name}
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
-                  <Field label="Full theory marks">
-                    <Input
-                      type="number"
-                      min={1}
-                      placeholder="75"
-                      value={row.fullMarksTheory}
-                      onChange={(e) => updateRow(index, { fullMarksTheory: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="Full practical marks">
-                    <Input
-                      type="number"
-                      min={0}
-                      placeholder="25"
-                      value={row.fullMarksPractical}
-                      onChange={(e) => updateRow(index, { fullMarksPractical: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="Pass marks" hint="Of the full marks">
-                    <Input
-                      type="number"
-                      min={0}
-                      placeholder="32"
-                      value={row.passMarks}
-                      onChange={(e) => updateRow(index, { passMarks: e.target.value })}
-                    />
-                  </Field>
+                      <TrashIcon className="size-4" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Subject">
+                      <Select
+                        value={row.subjectId}
+                        onChange={(e) => updateRow(index, { subjectId: e.target.value })}
+                      >
+                        <option value="">Select a subject…</option>
+                        {subjects.map((subject) => (
+                          <option key={subject.id} value={subject.id}>
+                            {subject.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    <Field label="Full theory marks">
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder="75"
+                        value={row.fullMarksTheory}
+                        onChange={(e) => updateRow(index, { fullMarksTheory: e.target.value })}
+                      />
+                    </Field>
+                    <Field label="Full practical marks">
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder="25"
+                        value={row.fullMarksPractical}
+                        onChange={(e) => updateRow(index, { fullMarksPractical: e.target.value })}
+                      />
+                    </Field>
+                    <Field label="Pass marks" hint="Of the full marks">
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder="32"
+                        value={row.passMarks}
+                        onChange={(e) => updateRow(index, { passMarks: e.target.value })}
+                      />
+                    </Field>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {apiError && (
-        <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div
+          role="alert"
+          className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
           {apiError}
         </div>
       )}
 
       <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
         <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" />
-        <Button text={isSubmitting ? "Creating…" : "Create Exam"} loading={isSubmitting} disabled={isSubmitting} className="w-auto" />
+        <Button
+          text={isSubmitting ? "Creating…" : "Create Exam"}
+          loading={isSubmitting}
+          disabled={isSubmitting}
+          className="w-auto"
+        />
       </div>
     </form>
   );

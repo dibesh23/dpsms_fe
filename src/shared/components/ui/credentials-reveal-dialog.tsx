@@ -120,10 +120,7 @@ export function CredentialsRevealDialog({
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:items-center">
-        <div
-          className="fixed inset-0 bg-neutral-900/40 animate-overlay-in"
-          aria-hidden="true"
-        />
+        <div className="fixed inset-0 bg-neutral-900/40 animate-overlay-in" aria-hidden="true" />
         <div
           role="dialog"
           aria-modal="true"
@@ -135,10 +132,8 @@ export function CredentialsRevealDialog({
               <AlertTriangleIcon className="size-5" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-base font-semibold tracking-tight text-neutral-900">
-                {personType} credentials created
-              </h2>
-              <p className="mt-0.5 text-sm text-neutral-500">
+              <h2 className="type-modal-title">{personType} credentials created</h2>
+              <p className="type-body-secondary mt-0.5">
                 Copy these now — the password won&apos;t be shown again.
               </p>
             </div>
@@ -150,8 +145,8 @@ export function CredentialsRevealDialog({
             </div>
 
             <div className="space-y-1.5">
-              <p className="text-xs font-medium text-neutral-500">{personType}</p>
-              <p className="text-sm text-neutral-900">
+              <p className="type-label text-xs text-neutral-500">{personType}</p>
+              <p className="type-body text-neutral-900">
                 {personName}
                 {identifierLabel && identifierValue && (
                   <>
@@ -167,7 +162,7 @@ export function CredentialsRevealDialog({
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-neutral-500">Email</p>
+                <p className="type-label text-xs text-neutral-500">Email</p>
                 <CopyButton value={credentials.email} label="email" />
               </div>
               <div className="select-all rounded-md border border-neutral-200 bg-bg-subtle px-3 py-2 font-mono text-sm text-neutral-900">
@@ -177,7 +172,7 @@ export function CredentialsRevealDialog({
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-neutral-500">Password</p>
+                <p className="type-label text-xs text-neutral-500">Password</p>
                 <CopyButton value={credentials.password} label="password" />
               </div>
               <div className="select-all rounded-md border border-neutral-200 bg-bg-subtle px-3 py-2 font-mono text-sm text-neutral-900">

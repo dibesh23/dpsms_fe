@@ -54,36 +54,34 @@ const ATTENDANCE_LABEL: Record<DayAttendanceStatus, string> = {
 const MIN_ATTENDANCE_PERCENT = 75;
 const NEAR_MIN_ATTENDANCE_BAND = 5;
 
-const TODAY_HERO_STYLES: Record<
-  DayAttendanceStatus,
-  { box: string; icon: string; label: string }
-> = {
-  PRESENT: {
-    box: "border-emerald-200 bg-emerald-50",
-    icon: "bg-bg-default text-emerald-600",
-    label: "text-emerald-800",
-  },
-  ABSENT: {
-    box: "border-red-200 bg-red-50",
-    icon: "bg-bg-default text-red-600",
-    label: "text-red-800",
-  },
-  LATE: {
-    box: "border-amber-200 bg-amber-50",
-    icon: "bg-bg-default text-amber-600",
-    label: "text-amber-800",
-  },
-  EXCUSED: {
-    box: "border-blue-200 bg-blue-50",
-    icon: "bg-bg-default text-blue-600",
-    label: "text-blue-800",
-  },
-  NOT_MARKED: {
-    box: "border-neutral-200 bg-bg-subtle",
-    icon: "bg-bg-default text-neutral-500",
-    label: "text-neutral-700",
-  },
-};
+const TODAY_HERO_STYLES: Record<DayAttendanceStatus, { box: string; icon: string; label: string }> =
+  {
+    PRESENT: {
+      box: "border-emerald-200 bg-emerald-50",
+      icon: "bg-bg-default text-emerald-600",
+      label: "text-emerald-800",
+    },
+    ABSENT: {
+      box: "border-red-200 bg-red-50",
+      icon: "bg-bg-default text-red-600",
+      label: "text-red-800",
+    },
+    LATE: {
+      box: "border-amber-200 bg-amber-50",
+      icon: "bg-bg-default text-amber-600",
+      label: "text-amber-800",
+    },
+    EXCUSED: {
+      box: "border-blue-200 bg-blue-50",
+      icon: "bg-bg-default text-blue-600",
+      label: "text-blue-800",
+    },
+    NOT_MARKED: {
+      box: "border-neutral-200 bg-bg-subtle",
+      icon: "bg-bg-default text-neutral-500",
+      label: "text-neutral-700",
+    },
+  };
 
 const TODAY_ICON: Record<DayAttendanceStatus, React.ReactNode> = {
   PRESENT: <CheckCircle2Icon className="size-5" />,
@@ -276,8 +274,7 @@ function DayStrip({ days }: { days: DayAttendancePoint[] }) {
       >
         {days.map((day) => {
           const weekday = new Date(`${day.date}T12:00:00Z`).getUTCDay();
-          const unmarkedWeekend =
-            day.status === "NOT_MARKED" && (weekday === 0 || weekday === 6);
+          const unmarkedWeekend = day.status === "NOT_MARKED" && (weekday === 0 || weekday === 6);
           return (
             <span
               key={day.date}
@@ -298,13 +295,13 @@ function DayStrip({ days }: { days: DayAttendancePoint[] }) {
         {(["PRESENT", "ABSENT", "LATE", "EXCUSED"] as const).map((status) => (
           <span
             key={status}
-            className="inline-flex items-center gap-1 text-[10px] font-medium text-neutral-400"
+            className="type-micro-label inline-flex items-center gap-1 normal-case"
           >
             <span className={cn("size-2 rounded-sm", DAY_STRIP_COLORS[status])} />
             {ATTENDANCE_LABEL[status]}
           </span>
         ))}
-        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-neutral-400">
+        <span className="type-micro-label inline-flex items-center gap-1 normal-case">
           <span className="size-2 rounded-sm border border-neutral-200 bg-neutral-100" />
           No school
         </span>
@@ -387,28 +384,24 @@ export default function StudentDashboardPage() {
       <header className="flex flex-wrap items-center justify-between gap-4 rounded-[18px] border border-neutral-200 bg-white px-5 py-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold tracking-tight text-neutral-950">
-              Welcome back, {firstName}
-            </h1>
-            <StatusBadge status="Student" variant="success" />
+            <h1 className="type-page-title">Welcome back, {firstName}</h1>
+            <StatusBadge status="Student" variant="neutral" />
             {profile.status !== "ACTIVE" && (
               <StatusBadge status={profile.status.replace(/_/g, " ")} variant="warning" />
             )}
           </div>
-          <p className="mt-1 text-sm text-neutral-500">
-            Here is your academic summary for today.
-          </p>
+          <p className="mt-1 text-sm text-neutral-500">Here is your academic summary for today.</p>
         </div>
         <div className="flex items-center gap-2">
           {profile.academicYearLabel && (
-            <span className="rounded-full border border-[#c9dfcf] bg-[#eff7f1] px-3 py-1 text-xs font-medium text-[#156d39]">
+            <span className="rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-xs font-medium text-[#064E3B]">
               Academic Year {profile.academicYearLabel}
             </span>
           )}
           <button
             type="button"
             aria-label="Notifications"
-            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-[#156d39] transition-colors hover:bg-[#eff7f1]"
+            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-[#064E3B] transition-colors hover:bg-stone-100"
           >
             <BellIcon className="size-4" />
             {summary.notifications.some((n) => !n.isRead) && (
@@ -506,7 +499,7 @@ export default function StudentDashboardPage() {
             action={
               <Link
                 href="/attendance-history"
-                className="inline-flex flex-none items-center gap-1 text-xs font-medium text-[#156d39] transition-colors hover:text-[#0d3320]"
+                className="inline-flex flex-none items-center gap-1 text-xs font-medium text-[#064E3B] transition-colors hover:text-neutral-900"
               >
                 View full history
                 <ArrowUpRightIcon className="size-3.5" />
@@ -537,7 +530,7 @@ export default function StudentDashboardPage() {
                   <div className="min-w-0">
                     <p
                       className={cn(
-                        "text-lg font-semibold leading-tight",
+                        "type-section-title",
                         TODAY_HERO_STYLES[attendance.todayStatus].label,
                       )}
                     >
@@ -594,25 +587,25 @@ export default function StudentDashboardPage() {
                     <div className="grid grid-cols-2 gap-3 border-t border-neutral-100 pt-4 sm:grid-cols-4">
                       <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
                         <p className="text-xs font-medium text-emerald-700">Present</p>
-                        <p className="mt-1 text-xl font-semibold text-emerald-800">
+                        <p className="type-kpi-sm mt-1 text-emerald-800">
                           {attendance.presentDaysThisMonth}
                         </p>
                       </div>
                       <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
                         <p className="text-xs font-medium text-blue-700">Excused</p>
-                        <p className="mt-1 text-xl font-semibold text-blue-800">
+                        <p className="type-kpi-sm mt-1 text-blue-800">
                           {attendance.excusedDaysThisMonth}
                         </p>
                       </div>
                       <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
                         <p className="text-xs font-medium text-amber-700">Late</p>
-                        <p className="mt-1 text-xl font-semibold text-amber-800">
+                        <p className="type-kpi-sm mt-1 text-amber-800">
                           {attendance.lateDaysThisMonth}
                         </p>
                       </div>
                       <div className="rounded-lg border border-red-200 bg-red-50 p-3">
                         <p className="text-xs font-medium text-red-700">Absent</p>
-                        <p className="mt-1 text-xl font-semibold text-red-800">
+                        <p className="type-kpi-sm mt-1 text-red-800">
                           {attendance.absentDaysThisMonth}
                         </p>
                       </div>
@@ -658,9 +651,7 @@ export default function StudentDashboardPage() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-neutral-900">
-                          {exam.percentage}%
-                        </p>
+                        <p className="text-sm font-semibold text-neutral-900">{exam.percentage}%</p>
                         <p className="text-xs text-neutral-400">
                           {exam.totalObtained}/{exam.totalFullMarks}
                         </p>
@@ -685,7 +676,7 @@ export default function StudentDashboardPage() {
               action={
                 <Link
                   href="/fees"
-                  className="inline-flex flex-none items-center gap-1 text-xs font-medium text-[#156d39] transition-colors hover:text-[#0d3320]"
+                  className="inline-flex flex-none items-center gap-1 text-xs font-medium text-[#064E3B] transition-colors hover:text-neutral-900"
                 >
                   View full details
                   <ArrowUpRightIcon className="size-3.5" />
@@ -713,7 +704,7 @@ export default function StudentDashboardPage() {
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#156d39] to-[#4ade80]"
+                    className="h-full rounded-full bg-[#064E3B]"
                     style={{
                       width: `${
                         fee.totalAnnualFee > 0
@@ -733,7 +724,8 @@ export default function StudentDashboardPage() {
                       >
                         <span>{discount.label}</span>
                         <span className="font-medium text-neutral-700">
-                          {discount.kind === "SCHOLARSHIP" && discount.scholarshipType === "PERCENTAGE"
+                          {discount.kind === "SCHOLARSHIP" &&
+                          discount.scholarshipType === "PERCENTAGE"
                             ? `${discount.percentageOrAmount}% off`
                             : formatCurrency(discount.amount ?? discount.percentageOrAmount ?? 0)}
                         </span>
@@ -804,10 +796,10 @@ export default function StudentDashboardPage() {
                     return (
                       <li key={event.id} className="flex items-center gap-3">
                         <div className="flex size-11 flex-none flex-col items-center justify-center rounded-lg border border-neutral-200 bg-bg-subtle">
-                          <span className="text-sm font-semibold leading-none text-neutral-900">
+                          <span className="type-numeric text-sm font-semibold leading-4 text-neutral-900">
                             {day}
                           </span>
-                          <span className="mt-0.5 text-[10px] leading-none text-neutral-500">
+                          <span className="type-micro-label mt-0.5 normal-case text-neutral-500">
                             {month}
                           </span>
                         </div>

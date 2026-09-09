@@ -22,11 +22,7 @@ import { formatDate } from "@/shared/lib/format";
 import { cn } from "@/shared/lib/cn";
 import { academicApi, type ClassRecord } from "@/features/academic/api/academicApi";
 import { promotionApi } from "../api/promotionApi";
-import {
-  ArrowUpRightIcon,
-  ClipboardCheckIcon,
-  PencilIcon,
-} from "@/shared/components/ui/icons";
+import { ArrowUpRightIcon, ClipboardCheckIcon, PencilIcon } from "@/shared/components/ui/icons";
 import type { PromotionRecordRow, ReviewDecision } from "../types";
 
 type ReviewFilter = "all" | "pending" | "reviewed";
@@ -148,7 +144,12 @@ export function ReviewFailedPage() {
       key: "outcome",
       header: "Record",
       sortValue: (r) => r.outcome,
-      render: (r) => <StatusBadge status={r.outcome === "FAILED" ? "Failed" : r.outcome} variant={outcomeVariant(r.outcome)} />,
+      render: (r) => (
+        <StatusBadge
+          status={r.outcome === "FAILED" ? "Failed" : r.outcome}
+          variant={outcomeVariant(r.outcome)}
+        />
+      ),
     },
     {
       key: "reviewed",
@@ -184,7 +185,11 @@ export function ReviewFailedPage() {
 
   const handleReviewed = (record: PromotionRecordRow) => {
     setRecords((current) =>
-      current.map((r) => (r.promotionRecordId === record.promotionRecordId ? { ...r, reviewed: true, reviewedAt: new Date().toISOString() } : r)),
+      current.map((r) =>
+        r.promotionRecordId === record.promotionRecordId
+          ? { ...r, reviewed: true, reviewedAt: new Date().toISOString() }
+          : r,
+      ),
     );
     setReviewTarget(null);
     setRefreshKey((k) => k + 1);
@@ -217,7 +222,11 @@ export function ReviewFailedPage() {
           value={table.filter}
           onChange={table.setFilter}
         />
-        <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search failed students…" />
+        <SearchBar
+          value={table.query}
+          onChange={table.setQuery}
+          placeholder="Search failed students…"
+        />
       </div>
 
       {loading ? (
@@ -324,7 +333,9 @@ function ReviewDialog({
         reviewReason: reason.trim() ? reason.trim() : undefined,
         ...(decision === "PROMOTE_OVERRIDE" ? { newClassId } : {}),
       });
-      toast.success(`${record.studentName} was marked as ${DECISION_OPTIONS.find((d) => d.value === decision)?.label}.`);
+      toast.success(
+        `${record.studentName} was marked as ${DECISION_OPTIONS.find((d) => d.value === decision)?.label}.`,
+      );
       onReviewed(record);
     } catch (err) {
       setError(getApiErrorMessage(err, "Could not submit the review. Please try again."));
@@ -343,8 +354,8 @@ function ReviewDialog({
     >
       <div className="space-y-4">
         <div className="rounded-md border border-neutral-200 bg-bg-subtle px-3 py-2 text-sm text-neutral-600">
-          <span className="font-medium text-neutral-800">{record.studentName}</span> ({record.admissionNumber})
-          {" "}did not meet the promotion criteria and needs a decision.
+          <span className="font-medium text-neutral-800">{record.studentName}</span> (
+          {record.admissionNumber}) did not meet the promotion criteria and needs a decision.
         </div>
 
         <Field label="Decision" required>
@@ -376,18 +387,20 @@ function ReviewDialog({
           </div>
         </Field>
 
-        {decision === "PROMOTE_OVERRIDE" && (
-          <Field label="Target class" required>
-            <Select value={newClassId} onChange={(e) => setNewClassId(e.target.value)}>
-              <option value="">Select class…</option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        )}
+        <div className="min-h-[4.5rem]">
+          {decision === "PROMOTE_OVERRIDE" && (
+            <Field label="Target class" required>
+              <Select value={newClassId} onChange={(e) => setNewClassId(e.target.value)}>
+                <option value="">Select class…</option>
+                {classes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
+        </div>
 
         <Field label="Review note" hint="Optional. Stored with the audit log for this decision.">
           <Input
@@ -400,13 +413,22 @@ function ReviewDialog({
         </Field>
 
         {error && (
-          <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div
+            role="alert"
+            className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          >
             {error}
           </div>
         )}
 
         <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
-          <Button variant="secondary" text="Cancel" className="w-auto" onClick={onClose} disabled={submitting} />
+          <Button
+            variant="secondary"
+            text="Cancel"
+            className="w-auto"
+            onClick={onClose}
+            disabled={submitting}
+          />
           <Button
             text={submitting ? "Submitting…" : "Submit Decision"}
             loading={submitting}

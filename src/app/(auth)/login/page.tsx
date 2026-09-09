@@ -5,7 +5,7 @@ import { LoginWithSchoolContext } from "../../../features/auth/components/LoginW
 export default function LoginPage() {
   return (
     <div className="w-full max-w-sm">
-      <h3 className="text-center text-xl font-semibold">Log in to your account</h3>
+      <h1 className="type-page-title text-center">Log in to your account</h1>
 
       <div className="mt-8">
         <Suspense fallback={null}>
@@ -13,7 +13,7 @@ export default function LoginPage() {
         </Suspense>
       </div>
 
-      <p className="mt-6 text-center text-sm font-medium text-neutral-500">
+      <p className="type-body-secondary mt-6 text-center font-medium">
         Don&apos;t have a school account?{" "}
         <Link
           href="/register"

@@ -5,10 +5,8 @@ export function ComingSoon({ feature }: { feature: string }) {
     <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
       <ClockIcon className="size-10 text-neutral-300" />
       <div>
-        <h2 className="text-lg font-semibold text-neutral-800">{feature}</h2>
-        <p className="mt-1 text-sm text-neutral-500">
-          This feature is coming soon.
-        </p>
+        <h2 className="type-section-title">{feature}</h2>
+        <p className="type-body-secondary mt-1">This feature is coming soon.</p>
       </div>
     </div>
   );

@@ -75,12 +75,12 @@ const APPROVAL_LABEL: Record<NoticeApprovalStatus, string> = {
 };
 
 const FILTER_OPTIONS = [
-  { value: "pending",   label: "Pending Approval" },
+  { value: "pending", label: "Pending Approval" },
   { value: "published", label: "Published" },
   { value: "scheduled", label: "Scheduled" },
-  { value: "draft",     label: "Draft" },
-  { value: "rejected",  label: "Rejected" },
-  { value: "urgent",    label: "Urgent" },
+  { value: "draft", label: "Draft" },
+  { value: "rejected", label: "Rejected" },
+  { value: "urgent", label: "Urgent" },
 ];
 
 const ACCEPTED_FILE_TYPES = ".pdf,.jpg,.jpeg,.png,.webp";
@@ -169,7 +169,13 @@ function EditNoticeDialog({
   const [replaceFileRef] = useState(() => ({ current: null as HTMLInputElement | null }));
   const [saving, setSaving] = useState(false);
 
-  const isPublished = !!notice?.publishedAt;  const { register, handleSubmit, reset, formState: { errors } } = useForm<EditForm>({
+  const isPublished = !!notice?.publishedAt;
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<EditForm>({
     resolver: zodResolver(EditSchema),
     defaultValues: {
       title: notice?.title ?? "",
@@ -224,9 +230,7 @@ function EditNoticeDialog({
         title: values.title,
         body: values.body,
         isUrgent: values.isUrgent,
-        scheduledAt: values.scheduledAt
-          ? new Date(values.scheduledAt).toISOString()
-          : null,
+        scheduledAt: values.scheduledAt ? new Date(values.scheduledAt).toISOString() : null,
       });
 
       // 2. Process replacements (delete old → upload new)
@@ -244,10 +248,7 @@ function EditNoticeDialog({
           // Remove old from updated attachments if replacing
           updated = {
             ...updated,
-            attachments: [
-              ...updated.attachments.filter((a) => a.id !== replaces),
-              attachment,
-            ],
+            attachments: [...updated.attachments.filter((a) => a.id !== replaces), attachment],
           };
         } catch {
           error(`Failed to upload ${file.name}`);
@@ -264,7 +265,8 @@ function EditNoticeDialog({
     }
   };
 
-  const totalAttachments = notice.attachments.length +
+  const totalAttachments =
+    notice.attachments.length +
     newFiles.filter((f) => !(f as File & { _replaces?: string })._replaces).length;
 
   return (
@@ -279,12 +281,16 @@ function EditNoticeDialog({
             {...register("body")}
             rows={4}
             placeholder="Write the notice content here…"
-            className="w-full resize-y rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+            className="w-full resize-none rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
           />
         </Field>
 
         <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
-          <input type="checkbox" {...register("isUrgent")} className="size-4 rounded border-neutral-300 accent-red-600" />
+          <input
+            type="checkbox"
+            {...register("isUrgent")}
+            className="size-4 rounded border-neutral-300 accent-red-600"
+          />
           Mark as Urgent
         </label>
 
@@ -298,12 +304,18 @@ function EditNoticeDialog({
             <p className="mb-2 text-sm font-medium text-neutral-700">Attachments</p>
             <div className="space-y-1.5">
               {notice.attachments.map((a) => {
-                const pendingReplacement = (newFiles as (File & { _replaces?: string })[])
-                  .find((f) => f._replaces === a.id);
+                const pendingReplacement = (newFiles as (File & { _replaces?: string })[]).find(
+                  (f) => f._replaces === a.id,
+                );
                 return (
-                  <div key={a.id} className="flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs">
+                  <div
+                    key={a.id}
+                    className="flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs"
+                  >
                     <FileTextIcon className="size-3.5 flex-none text-neutral-400" />
-                    <span className={`max-w-[140px] truncate font-medium ${pendingReplacement ? "line-through text-neutral-400" : "text-neutral-700"}`}>
+                    <span
+                      className={`max-w-[140px] truncate font-medium ${pendingReplacement ? "line-through text-neutral-400" : "text-neutral-700"}`}
+                    >
                       {a.label}
                     </span>
                     <span className="text-neutral-400">{formatBytes(a.sizeBytes)}</span>
@@ -352,9 +364,14 @@ function EditNoticeDialog({
                 {(newFiles as (File & { _replaces?: string })[])
                   .filter((f) => !f._replaces)
                   .map((file, i) => (
-                    <div key={i} className="flex items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs">
+                    <div
+                      key={i}
+                      className="flex items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs"
+                    >
                       <FileTextIcon className="size-3.5 flex-none text-neutral-400" />
-                      <span className="max-w-[120px] truncate font-medium text-neutral-700">{file.name}</span>
+                      <span className="max-w-[120px] truncate font-medium text-neutral-700">
+                        {file.name}
+                      </span>
                       <span className="text-neutral-400">{formatBytes(file.size)}</span>
                       <button
                         type="button"
@@ -387,7 +404,14 @@ function EditNoticeDialog({
         )}
 
         <div className="flex justify-end gap-3 border-t border-neutral-100 pt-3">
-          <Button type="button" variant="secondary" text="Cancel" onClick={onClose} className="w-auto" disabled={saving} />
+          <Button
+            type="button"
+            variant="secondary"
+            text="Cancel"
+            onClick={onClose}
+            className="w-auto"
+            disabled={saving}
+          />
           <Button type="submit" text="Save Changes" loading={saving} className="w-auto" />
         </div>
       </form>
@@ -426,7 +450,10 @@ function ReviewDialog({
   const [rejectNote, setRejectNote] = useState("");
 
   useEffect(() => {
-    if (!notice) { setShowRejectForm(false); setRejectNote(""); }
+    if (!notice) {
+      setShowRejectForm(false);
+      setRejectNote("");
+    }
   }, [notice]);
 
   if (!notice) return null;
@@ -457,8 +484,19 @@ function ReviewDialog({
       <div className="mt-5 space-y-3 border-t border-neutral-100 pt-4">
         {!showRejectForm ? (
           <div className="flex gap-3">
-            <Button text="Approve & Publish" onClick={() => onApprove(notice.id)} loading={approving} className="flex-1" />
-            <Button text="Reject" variant="danger" onClick={() => setShowRejectForm(true)} disabled={approving} className="w-auto" />
+            <Button
+              text="Approve & Publish"
+              onClick={() => onApprove(notice.id)}
+              loading={approving}
+              className="flex-1"
+            />
+            <Button
+              text="Reject"
+              variant="danger"
+              onClick={() => setShowRejectForm(true)}
+              disabled={approving}
+              className="w-auto"
+            />
           </div>
         ) : (
           <div className="space-y-3">
@@ -470,23 +508,37 @@ function ReviewDialog({
               onChange={(e) => setRejectNote(e.target.value)}
               rows={3}
               placeholder="e.g. Please revise the wording in the second paragraph…"
-              className="w-full resize-y rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+              className="w-full resize-none rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
               autoFocus
             />
             <div className="flex gap-3">
               <Button
                 text="Send Rejection"
                 variant="danger"
-                onClick={() => { if (rejectNote.trim()) onReject(notice.id, rejectNote.trim()); }}
+                onClick={() => {
+                  if (rejectNote.trim()) onReject(notice.id, rejectNote.trim());
+                }}
                 loading={rejecting}
                 disabled={!rejectNote.trim()}
                 className="flex-1"
               />
-              <Button text="Back" variant="secondary" onClick={() => setShowRejectForm(false)} disabled={rejecting} className="w-auto" />
+              <Button
+                text="Back"
+                variant="secondary"
+                onClick={() => setShowRejectForm(false)}
+                disabled={rejecting}
+                className="w-auto"
+              />
             </div>
           </div>
         )}
-        <Button text="Close" variant="secondary" onClick={onClose} disabled={approving || rejecting} className="w-full" />
+        <Button
+          text="Close"
+          variant="secondary"
+          onClick={onClose}
+          disabled={approving || rejecting}
+          className="w-full"
+        />
       </div>
     </Dialog>
   );
@@ -506,21 +558,34 @@ function RejectDialog({
   loading: boolean;
 }) {
   const [note, setNote] = useState("");
-  useEffect(() => { if (open) setNote(""); }, [open]);
+  useEffect(() => {
+    if (open) setNote("");
+  }, [open]);
 
   return (
     <Dialog open={open} onClose={onClose} title="Reject Notice">
-      <p className="mb-3 text-sm text-neutral-600">Provide a reason so the teacher knows what to fix.</p>
+      <p className="mb-3 text-sm text-neutral-600">
+        Provide a reason so the teacher knows what to fix.
+      </p>
       <textarea
         value={note}
         onChange={(e) => setNote(e.target.value)}
         rows={3}
         placeholder="e.g. Please revise the wording in the second paragraph…"
-        className="w-full resize-y rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+        className="w-full resize-none rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
       />
       <div className="mt-4 flex justify-end gap-3">
         <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" />
-        <Button variant="danger" text="Reject" onClick={() => { if (note.trim()) onConfirm(note.trim()); }} loading={loading} disabled={!note.trim()} className="w-auto" />
+        <Button
+          variant="danger"
+          text="Reject"
+          onClick={() => {
+            if (note.trim()) onConfirm(note.trim());
+          }}
+          loading={loading}
+          disabled={!note.trim()}
+          className="w-auto"
+        />
       </div>
     </Dialog>
   );
@@ -567,16 +632,23 @@ function NoticeRow({
           <span className="truncate text-sm font-semibold text-neutral-900">{notice.title}</span>
           {notice.isUrgent && <StatusBadge status="Urgent" variant="danger" />}
           {(isPending || isRejected) && (
-            <StatusBadge status={APPROVAL_LABEL[notice.approvalStatus]} variant={APPROVAL_VARIANT[notice.approvalStatus]} />
+            <StatusBadge
+              status={APPROVAL_LABEL[notice.approvalStatus]}
+              variant={APPROVAL_VARIANT[notice.approvalStatus]}
+            />
           )}
           {!isPending && (
             <StatusBadge status={PUBLISH_LABEL[pubStatus]} variant={PUBLISH_VARIANT[pubStatus]} />
           )}
           {pubStatus === "scheduled" && notice.scheduledAt && (
             <span className="text-xs font-medium text-amber-600">
-              → {new Date(notice.scheduledAt).toLocaleString("en-GB", {
-                day: "numeric", month: "short", year: "numeric",
-                hour: "2-digit", minute: "2-digit",
+              →{" "}
+              {new Date(notice.scheduledAt).toLocaleString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
               })}
             </span>
           )}
@@ -618,9 +690,23 @@ function NoticeRow({
         {/* Approval buttons for pending notices */}
         {isPending && (
           <div className="mt-2 flex flex-wrap gap-2">
-            <Button text="Review & Approve" onClick={() => onReview(notice)} className="w-auto text-xs" />
-            <Button text="Quick Approve" variant="secondary" onClick={() => onApprove(notice.id)} className="w-auto text-xs" />
-            <Button text="Reject" variant="danger" onClick={() => onReject(notice.id)} className="w-auto text-xs" />
+            <Button
+              text="Review & Approve"
+              onClick={() => onReview(notice)}
+              className="w-auto text-xs"
+            />
+            <Button
+              text="Quick Approve"
+              variant="secondary"
+              onClick={() => onApprove(notice.id)}
+              className="w-auto text-xs"
+            />
+            <Button
+              text="Reject"
+              variant="danger"
+              onClick={() => onReject(notice.id)}
+              className="w-auto text-xs"
+            />
           </div>
         )}
       </div>
@@ -647,11 +733,16 @@ function CreateNoticeDialog({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadingFiles, setUploadingFiles] = useState(false);
 
-  const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } =
-    useForm<CreateForm>({
-      resolver: zodResolver(CreateSchema),
-      defaultValues: { isUrgent: false },
-    });
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<CreateForm>({
+    resolver: zodResolver(CreateSchema),
+    defaultValues: { isUrgent: false },
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -729,12 +820,16 @@ function CreateNoticeDialog({
             {...register("body")}
             rows={5}
             placeholder="Write the notice content here…"
-            className="w-full resize-y rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+            className="w-full resize-none rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
           />
         </Field>
 
         <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
-          <input type="checkbox" {...register("isUrgent")} className="size-4 rounded border-neutral-300 accent-red-600" />
+          <input
+            type="checkbox"
+            {...register("isUrgent")}
+            className="size-4 rounded border-neutral-300 accent-red-600"
+          />
           Mark as Urgent
           <span className="text-xs text-neutral-400">(requires acknowledgement)</span>
         </label>
@@ -744,17 +839,25 @@ function CreateNoticeDialog({
         </Field>
 
         {/* Attachments */}
-        <div>
+        <div className="h-28 overflow-y-auto overscroll-contain pr-1">
           <p className="mb-2 text-sm font-medium text-neutral-700">
-            Attachments <span className="text-xs font-normal text-neutral-400">(PDF, image — max 5MB each, up to 5 files)</span>
+            Attachments{" "}
+            <span className="text-xs font-normal text-neutral-400">
+              (PDF, image — max 5MB each, up to 5 files)
+            </span>
           </p>
 
           {selectedFiles.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-1.5">
               {selectedFiles.map((file, i) => (
-                <div key={i} className="flex items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs">
+                <div
+                  key={i}
+                  className="flex items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs"
+                >
                   <FileTextIcon className="size-3.5 flex-none text-neutral-400" />
-                  <span className="max-w-[140px] truncate font-medium text-neutral-700">{file.name}</span>
+                  <span className="max-w-[140px] truncate font-medium text-neutral-700">
+                    {file.name}
+                  </span>
                   <span className="text-neutral-400">{formatBytes(file.size)}</span>
                   <button
                     type="button"
@@ -790,7 +893,14 @@ function CreateNoticeDialog({
         </div>
 
         <div className="flex justify-end gap-3 border-t border-neutral-100 pt-3">
-          <Button type="button" variant="secondary" text="Cancel" onClick={handleClose} className="w-auto" disabled={busy} />
+          <Button
+            type="button"
+            variant="secondary"
+            text="Cancel"
+            onClick={handleClose}
+            className="w-auto"
+            disabled={busy}
+          />
           <Button
             type="submit"
             text={uploadingFiles ? "Uploading…" : watch("scheduledAt") ? "Schedule" : "Publish"}
@@ -805,15 +915,29 @@ function CreateNoticeDialog({
 
 // ── Delete confirm ────────────────────────────────────────────────────────────
 
-function DeleteConfirmDialog({ open, onClose, onConfirm, loading }: {
-  open: boolean; onClose: () => void; onConfirm: () => void; loading: boolean;
+function DeleteConfirmDialog({
+  open,
+  onClose,
+  onConfirm,
+  loading,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  loading: boolean;
 }) {
   return (
     <Dialog open={open} onClose={onClose} title="Delete Notice">
       <p className="text-sm text-neutral-600">This will permanently remove the notice.</p>
       <div className="mt-5 flex justify-end gap-3">
         <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" />
-        <Button variant="danger" text="Delete" onClick={onConfirm} loading={loading} className="w-auto" />
+        <Button
+          variant="danger"
+          text="Delete"
+          onClick={onConfirm}
+          loading={loading}
+          className="w-auto"
+        />
       </div>
     </Dialog>
   );
@@ -846,15 +970,17 @@ export function AdminNoticePage() {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const table = useTable<AdminNotice>({
     data: notices,
     pageSize: 8,
     getSearchText: (n) => `${n.title} ${n.body} ${n.publishedByName}`,
     filterMatch: (n, value) => {
-      if (value === "urgent")   return n.isUrgent;
-      if (value === "pending")  return n.approvalStatus === "PENDING_APPROVAL";
+      if (value === "urgent") return n.isUrgent;
+      if (value === "pending") return n.approvalStatus === "PENDING_APPROVAL";
       if (value === "rejected") return n.approvalStatus === "REJECTED";
       return publishStatus(n) === value;
     },
@@ -863,9 +989,12 @@ export function AdminNoticePage() {
     defaultSortDir: "desc",
   });
 
-  const pendingCount   = useMemo(() => notices.filter((n) => n.approvalStatus === "PENDING_APPROVAL").length, [notices]);
+  const pendingCount = useMemo(
+    () => notices.filter((n) => n.approvalStatus === "PENDING_APPROVAL").length,
+    [notices],
+  );
   const publishedCount = useMemo(() => notices.filter((n) => n.publishedAt).length, [notices]);
-  const urgentCount    = useMemo(() => notices.filter((n) => n.isUrgent).length, [notices]);
+  const urgentCount = useMemo(() => notices.filter((n) => n.isUrgent).length, [notices]);
 
   const upsert = (updated: AdminNotice) =>
     setNotices((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
@@ -967,29 +1096,55 @@ export function AdminNoticePage() {
         title="Notices & Announcements"
         description="Create notices and review teacher submissions"
         actions={
-          <Button text="New Notice" icon={<PlusIcon className="size-4" />} onClick={() => setCreateOpen(true)} className="w-auto" />
+          <Button
+            text="New Notice"
+            icon={<PlusIcon className="size-4" />}
+            onClick={() => setCreateOpen(true)}
+            className="w-auto"
+          />
         }
       />
 
       <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <StatsCard label="Pending Approval" value={loading ? "-" : String(pendingCount)} icon={<CheckCircle2Icon className="size-4" />} />
-        <StatsCard label="Published"        value={loading ? "-" : String(publishedCount)} icon={<BellIcon className="size-4" />} />
-        <StatsCard label="Urgent"           value={loading ? "-" : String(urgentCount)} icon={<AlertTriangleIcon className="size-4" />} />
-        <StatsCard label="Total"            value={loading ? "-" : String(notices.length)} icon={<UsersIcon className="size-4" />} />
+        <StatsCard
+          label="Pending Approval"
+          value={loading ? "-" : String(pendingCount)}
+          icon={<CheckCircle2Icon className="size-4" />}
+        />
+        <StatsCard
+          label="Published"
+          value={loading ? "-" : String(publishedCount)}
+          icon={<BellIcon className="size-4" />}
+        />
+        <StatsCard
+          label="Urgent"
+          value={loading ? "-" : String(urgentCount)}
+          icon={<AlertTriangleIcon className="size-4" />}
+        />
+        <StatsCard
+          label="Total"
+          value={loading ? "-" : String(notices.length)}
+          icon={<UsersIcon className="size-4" />}
+        />
       </section>
 
       {pendingCount > 0 && (
         <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
           <CheckCircle2Icon className="size-4 flex-none text-amber-500" />
           <p className="text-sm text-amber-700">
-            <strong>{pendingCount}</strong> teacher {pendingCount === 1 ? "notice" : "notices"} waiting for your approval.
-            Filter by <strong>Pending Approval</strong> to review.
+            <strong>{pendingCount}</strong> teacher {pendingCount === 1 ? "notice" : "notices"}{" "}
+            waiting for your approval. Filter by <strong>Pending Approval</strong> to review.
           </p>
         </div>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <FilterDropdown label="Filter" options={FILTER_OPTIONS} value={table.filter} onChange={table.setFilter} />
+        <FilterDropdown
+          label="Filter"
+          options={FILTER_OPTIONS}
+          value={table.filter}
+          onChange={table.setFilter}
+        />
         <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search notices…" />
       </div>
 
@@ -998,7 +1153,11 @@ export function AdminNoticePage() {
           <EmptyState
             icon={<BellIcon className="size-5" />}
             title="No notices found"
-            description={table.query || table.filter ? "Try adjusting your search or filter." : "Create your first notice using the button above."}
+            description={
+              table.query || table.filter
+                ? "Try adjusting your search or filter."
+                : "Create your first notice using the button above."
+            }
           />
         ) : (
           <ul className="divide-y divide-neutral-100">
@@ -1017,13 +1176,21 @@ export function AdminNoticePage() {
             ))}
           </ul>
         )}
-        <Pagination page={table.page} pageSize={table.pageSize} total={table.total} onPageChange={table.setPage} label="notices" />
+        <Pagination
+          page={table.page}
+          pageSize={table.pageSize}
+          total={table.total}
+          onPageChange={table.setPage}
+          label="notices"
+        />
       </div>
 
       <EditNoticeDialog
         notice={editNotice}
         onClose={() => setEditNotice(null)}
-        onUpdated={(n) => { upsert(n); }}
+        onUpdated={(n) => {
+          upsert(n);
+        }}
       />
       <ReviewDialog
         notice={reviewNotice}
@@ -1033,7 +1200,11 @@ export function AdminNoticePage() {
         approving={reviewApproving}
         rejecting={reviewRejecting}
       />
-      <CreateNoticeDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={handleCreated} />
+      <CreateNoticeDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={handleCreated}
+      />
       <RejectDialog
         open={rejectTarget !== null}
         onClose={() => setRejectTarget(null)}

@@ -137,7 +137,7 @@ export function AddAssignmentForm({
           rows={2}
           placeholder="Brief description (optional)"
           disabled={isSubmitting}
-          className="w-full resize-y rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-500 focus:outline-none focus:ring-neutral-500"
+          className="w-full resize-none rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-500 focus:outline-none focus:ring-neutral-500"
         />
       </Field>
 
@@ -147,7 +147,7 @@ export function AddAssignmentForm({
           rows={4}
           placeholder="Full instructions students will see…"
           disabled={isSubmitting}
-          className="w-full resize-y rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-500 focus:outline-none focus:ring-neutral-500"
+          className="w-full resize-none rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-500 focus:outline-none focus:ring-neutral-500"
         />
       </Field>
 

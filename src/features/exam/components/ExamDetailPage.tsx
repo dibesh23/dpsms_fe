@@ -17,7 +17,12 @@ import { PERMISSIONS } from "@/shared/permissions";
 import { examApi, type ExamDetail, type ExamDetailSubject } from "../api/examApi";
 import { academicApi, type SubjectRecord } from "../../academic/api/academicApi";
 import { MarksRegisterPanel } from "./MarksRegisterPanel";
-import { EXAM_STATUS_LABEL, EXAM_STATUS_VARIANT, SUBJECT_STATUS_LABEL, SUBJECT_STATUS_VARIANT } from "./labels";
+import {
+  EXAM_STATUS_LABEL,
+  EXAM_STATUS_VARIANT,
+  SUBJECT_STATUS_LABEL,
+  SUBJECT_STATUS_VARIANT,
+} from "./labels";
 import {
   ArrowLeftIcon,
   BanIcon,
@@ -44,7 +49,12 @@ function AddSubjectDialog({
 }: {
   open: boolean;
   onClose: () => void;
-  onAdd: (payload: { subjectId: string; fullMarksTheory: number; fullMarksPractical: number; passMarks: number }) => Promise<string | null>;
+  onAdd: (payload: {
+    subjectId: string;
+    fullMarksTheory: number;
+    fullMarksPractical: number;
+    passMarks: number;
+  }) => Promise<string | null>;
 }) {
   const [subjects, setSubjects] = useState<SubjectRecord[]>([]);
   const [subjectId, setSubjectId] = useState("");
@@ -91,7 +101,12 @@ function AddSubjectDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="Attach Subject" description="Attach a subject with its marking scheme.">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title="Attach Subject"
+      description="Attach a subject with its marking scheme."
+    >
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <Field label="Subject" required>
           <Select value={subjectId} onChange={(e) => setSubjectId(e.target.value)} disabled={busy}>
@@ -105,23 +120,52 @@ function AddSubjectDialog({
         </Field>
         <div className="grid grid-cols-3 gap-3">
           <Field label="Full theory" required>
-            <Input type="number" min={1} placeholder="75" value={fullMarksTheory} onChange={(e) => setFullMarksTheory(e.target.value)} disabled={busy} />
+            <Input
+              type="number"
+              min={1}
+              placeholder="75"
+              value={fullMarksTheory}
+              onChange={(e) => setFullMarksTheory(e.target.value)}
+              disabled={busy}
+            />
           </Field>
           <Field label="Full practical">
-            <Input type="number" min={0} placeholder="25" value={fullMarksPractical} onChange={(e) => setFullMarksPractical(e.target.value)} disabled={busy} />
+            <Input
+              type="number"
+              min={0}
+              placeholder="25"
+              value={fullMarksPractical}
+              onChange={(e) => setFullMarksPractical(e.target.value)}
+              disabled={busy}
+            />
           </Field>
           <Field label="Pass marks">
-            <Input type="number" min={0} placeholder="32" value={passMarks} onChange={(e) => setPassMarks(e.target.value)} disabled={busy} />
+            <Input
+              type="number"
+              min={0}
+              placeholder="32"
+              value={passMarks}
+              onChange={(e) => setPassMarks(e.target.value)}
+              disabled={busy}
+            />
           </Field>
         </div>
         {error && (
-          <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div
+            role="alert"
+            className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          >
             {error}
           </div>
         )}
         <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
           <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" />
-          <Button text={busy ? "Attaching…" : "Attach subject"} loading={busy} disabled={busy} className="w-auto" />
+          <Button
+            text={busy ? "Attaching…" : "Attach subject"}
+            loading={busy}
+            disabled={busy}
+            className="w-auto"
+          />
         </div>
       </form>
     </Dialog>
@@ -146,22 +190,45 @@ function SubjectWorkflowActions({
   if (canEnterMarks && exam.status === "MARKS_ENTRY" && subject.status === "ENTERED") {
     return (
       <div className="flex items-center gap-2">
-        <Button variant="secondary" text="Submit" icon={<CheckIcon className="size-3.5" />} className="h-8 w-auto px-2.5 text-xs" onClick={() => onAction("submit")} />
+        <Button
+          variant="secondary"
+          text="Submit"
+          icon={<CheckIcon className="size-3.5" />}
+          className="h-8 w-auto px-2.5 text-xs"
+          onClick={() => onAction("submit")}
+        />
       </div>
     );
   }
   if (canApprove && exam.status === "SUBMITTED" && subject.status === "SUBMITTED") {
     return (
       <div className="flex items-center gap-2">
-        <Button variant="success" text="Approve" icon={<CheckIcon className="size-3.5" />} className="h-8 w-auto px-2.5 text-xs" onClick={() => onAction("approve")} />
-        <Button variant="danger-outline" text="Reject" className="h-8 w-auto px-2.5 text-xs" onClick={() => onAction("reject")} />
+        <Button
+          variant="success"
+          text="Approve"
+          icon={<CheckIcon className="size-3.5" />}
+          className="h-8 w-auto px-2.5 text-xs"
+          onClick={() => onAction("approve")}
+        />
+        <Button
+          variant="danger-outline"
+          text="Reject"
+          className="h-8 w-auto px-2.5 text-xs"
+          onClick={() => onAction("reject")}
+        />
       </div>
     );
   }
   if (canUpdate && exam.status === "DRAFT") {
     return (
       <div className="flex items-center gap-2">
-        <Button variant="danger-outline" text="Remove" icon={<TrashIcon className="size-3.5" />} className="h-8 w-auto px-2.5 text-xs" onClick={() => onAction("remove")} />
+        <Button
+          variant="danger-outline"
+          text="Remove"
+          icon={<TrashIcon className="size-3.5" />}
+          className="h-8 w-auto px-2.5 text-xs"
+          onClick={() => onAction("remove")}
+        />
       </div>
     );
   }
@@ -211,7 +278,10 @@ export function ExamDetailPage() {
         title="Exam not found"
         description="It may have been deleted or you don't have access."
         action={
-          <Link href="/exams" className="rounded-lg bg-neutral-900 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-neutral-700">
+          <Link
+            href="/exams"
+            className="rounded-lg bg-neutral-900 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-neutral-700"
+          >
             Back to exams
           </Link>
         }
@@ -232,7 +302,10 @@ export function ExamDetailPage() {
     }
   };
 
-  const handleSubjectAction = (type: "submit" | "approve" | "remove", subject: ExamDetailSubject) => {
+  const handleSubjectAction = (
+    type: "submit" | "approve" | "remove",
+    subject: ExamDetailSubject,
+  ) => {
     void runAction(`subject-${type}`, async () => {
       if (type === "submit") await examApi.submitSubject(exam.id, subject.subjectId);
       if (type === "approve") await examApi.approveSubject(exam.id, subject.subjectId);
@@ -254,20 +327,62 @@ export function ExamDetailPage() {
     switch (exam.status) {
       case "DRAFT":
         return [
-          { key: "start", label: "Start Exam", icon: <CheckIcon className="size-4" />, variant: "primary" as const, show: canUpdate, onClick: () => runAction("start", () => examApi.startExam(exam.id)), confirm: false },
-          { key: "delete", label: "Delete", icon: <TrashIcon className="size-4" />, variant: "danger-outline" as const, show: canDelete, onClick: () => setDeleteOpen(true), confirm: false },
+          {
+            key: "start",
+            label: "Start Exam",
+            icon: <CheckIcon className="size-4" />,
+            variant: "primary" as const,
+            show: canUpdate,
+            onClick: () => runAction("start", () => examApi.startExam(exam.id)),
+            confirm: false,
+          },
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <TrashIcon className="size-4" />,
+            variant: "danger-outline" as const,
+            show: canDelete,
+            onClick: () => setDeleteOpen(true),
+            confirm: false,
+          },
         ];
       case "MARKS_ENTRY":
       case "SUBMITTED":
         return [
-          { key: "cancel", label: "Cancel Exam", icon: <XIcon className="size-4" />, variant: "danger-outline" as const, show: canUpdate, onClick: () => runAction("cancel", () => examApi.cancelExam(exam.id)), confirm: false },
+          {
+            key: "cancel",
+            label: "Cancel Exam",
+            icon: <XIcon className="size-4" />,
+            variant: "danger-outline" as const,
+            show: canUpdate,
+            onClick: () => runAction("cancel", () => examApi.cancelExam(exam.id)),
+            confirm: false,
+          },
           ...(exam.status === "SUBMITTED" && canApprove
-            ? [{ key: "publish", label: "Publish Results", icon: <CheckIcon className="size-4" />, variant: "success" as const, show: true, onClick: () => runAction("publish", () => examApi.publishExam(exam.id)), confirm: false }]
+            ? [
+                {
+                  key: "publish",
+                  label: "Publish Results",
+                  icon: <CheckIcon className="size-4" />,
+                  variant: "success" as const,
+                  show: true,
+                  onClick: () => runAction("publish", () => examApi.publishExam(exam.id)),
+                  confirm: false,
+                },
+              ]
             : []),
         ];
       case "PUBLISHED":
         return [
-          { key: "reopen", label: "Reopen", icon: <PencilIcon className="size-4" />, variant: "secondary" as const, show: canApprove, onClick: () => runAction("reopen", () => examApi.reopenExam(exam.id)), confirm: false },
+          {
+            key: "reopen",
+            label: "Reopen",
+            icon: <PencilIcon className="size-4" />,
+            variant: "secondary" as const,
+            show: canApprove,
+            onClick: () => runAction("reopen", () => examApi.reopenExam(exam.id)),
+            confirm: false,
+          },
         ];
       default:
         return [];
@@ -276,15 +391,21 @@ export function ExamDetailPage() {
 
   return (
     <div className="space-y-4">
-      <Link href="/exams" className="inline-flex items-center gap-1.5 text-sm text-neutral-500 transition-colors hover:text-neutral-900">
+      <Link
+        href="/exams"
+        className="inline-flex items-center gap-1.5 text-sm text-neutral-500 transition-colors hover:text-neutral-900"
+      >
         <ArrowLeftIcon className="size-4" /> Back to exams
       </Link>
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">{exam.name}</h1>
-            <StatusBadge status={EXAM_STATUS_LABEL[exam.status]} variant={EXAM_STATUS_VARIANT[exam.status]} />
+            <h1 className="type-page-title">{exam.name}</h1>
+            <StatusBadge
+              status={EXAM_STATUS_LABEL[exam.status]}
+              variant={EXAM_STATUS_VARIANT[exam.status]}
+            />
           </div>
           <p className="mt-1 text-sm text-neutral-500">
             {exam.examTypeName} · {exam.className} · {exam.academicYearLabel}
@@ -341,7 +462,13 @@ export function ExamDetailPage() {
         description="Attach subjects in DRAFT, then teachers enter and submit marks for review"
         action={
           canUpdate && exam.status === "DRAFT" ? (
-            <Button variant="secondary" text="Attach subject" icon={<PlusIcon className="size-3.5" />} className="h-8 w-auto px-2.5 text-xs" onClick={() => setAddSubjectOpen(true)} />
+            <Button
+              variant="secondary"
+              text="Attach subject"
+              icon={<PlusIcon className="size-3.5" />}
+              className="h-8 w-auto px-2.5 text-xs"
+              onClick={() => setAddSubjectOpen(true)}
+            />
           ) : undefined
         }
         bodyClassName="p-0"
@@ -374,13 +501,24 @@ export function ExamDetailPage() {
                     </td>
                     <td className="py-2.5 pr-3 text-neutral-600">
                       {subject.fullMarksTheory + subject.fullMarksPractical}
-                      {subject.fullMarksTheory > 0 && <span className="text-xs text-neutral-400"> (theory {subject.fullMarksTheory})</span>}
+                      {subject.fullMarksTheory > 0 && (
+                        <span className="text-xs text-neutral-400">
+                          {" "}
+                          (theory {subject.fullMarksTheory})
+                        </span>
+                      )}
                     </td>
                     <td className="py-2.5 pr-3 text-neutral-600">{subject.passMarks}</td>
                     <td className="py-2.5 pr-3">
-                      <StatusBadge status={SUBJECT_STATUS_LABEL[subject.status]} variant={SUBJECT_STATUS_VARIANT[subject.status]} />
+                      <StatusBadge
+                        status={SUBJECT_STATUS_LABEL[subject.status]}
+                        variant={SUBJECT_STATUS_VARIANT[subject.status]}
+                      />
                       {subject.rejectedReason && (
-                        <p className="mt-1 max-w-[220px] truncate text-xs text-red-600" title={subject.rejectedReason}>
+                        <p
+                          className="mt-1 max-w-[220px] truncate text-xs text-red-600"
+                          title={subject.rejectedReason}
+                        >
                           {subject.rejectedReason}
                         </p>
                       )}
@@ -410,9 +548,9 @@ export function ExamDetailPage() {
         )}
       </SectionCard>
 
-      {canEnterMarks && ["MARKS_ENTRY", "SUBMITTED"].includes(exam.status) && exam.subjects.length > 0 && (
-        <MarksRegisterPanel exam={exam} onChanged={load} />
-      )}
+      {canEnterMarks &&
+        ["MARKS_ENTRY", "SUBMITTED"].includes(exam.status) &&
+        exam.subjects.length > 0 && <MarksRegisterPanel exam={exam} onChanged={load} />}
 
       <AddSubjectDialog
         open={addSubjectOpen}
@@ -431,7 +569,12 @@ export function ExamDetailPage() {
       />
 
       {rejectTarget && (
-        <Dialog open onClose={() => setRejectTarget(null)} title="Reject marks" description={`Reject "${rejectTarget.subjectName}"?`}>
+        <Dialog
+          open
+          onClose={() => setRejectTarget(null)}
+          title="Reject marks"
+          description={`Reject "${rejectTarget.subjectName}"?`}
+        >
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -450,18 +593,41 @@ export function ExamDetailPage() {
               />
             </Field>
             <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
-              <Button variant="secondary" text="Cancel" onClick={() => setRejectTarget(null)} className="w-auto" />
-              <Button variant="danger" text={rejectBusy ? "Rejecting…" : "Reject marks"} loading={rejectBusy} disabled={rejectBusy || !rejectReason.trim()} className="w-auto" />
+              <Button
+                variant="secondary"
+                text="Cancel"
+                onClick={() => setRejectTarget(null)}
+                className="w-auto"
+              />
+              <Button
+                variant="danger"
+                text={rejectBusy ? "Rejecting…" : "Reject marks"}
+                loading={rejectBusy}
+                disabled={rejectBusy || !rejectReason.trim()}
+                className="w-auto"
+              />
             </div>
           </form>
         </Dialog>
       )}
 
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} title="Delete Exam" description={`Delete "${exam.name}"?`}>
+      <Dialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        title="Delete Exam"
+        description={`Delete "${exam.name}"?`}
+      >
         <div className="space-y-4">
-          <p className="text-sm text-neutral-600">Only draft exams can be deleted. Cancel a started exam instead.</p>
+          <p className="text-sm text-neutral-600">
+            Only draft exams can be deleted. Cancel a started exam instead.
+          </p>
           <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
-            <Button variant="secondary" text="Cancel" onClick={() => setDeleteOpen(false)} className="w-auto" />
+            <Button
+              variant="secondary"
+              text="Cancel"
+              onClick={() => setDeleteOpen(false)}
+              className="w-auto"
+            />
             <Button
               variant="danger"
               text={busy === "delete" ? "Deleting…" : "Delete Exam"}

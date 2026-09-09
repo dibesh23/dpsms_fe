@@ -475,7 +475,7 @@ export function StudentDetailPage() {
                         <p className="truncate text-sm font-medium text-neutral-800">
                           {guardian.fullName}
                           {guardian.isPrimary && (
-                            <span className="ml-2 rounded-full border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-600">
+                            <span className="type-micro-label ml-2 rounded-full border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-blue-700">
                               Primary
                             </span>
                           )}

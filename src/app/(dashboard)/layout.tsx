@@ -27,14 +27,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-[100dvh] bg-[#dcebe0] text-content-default">
+    <div className="min-h-[100dvh] bg-stone-200 text-content-default">
       <Sidebar onDesktopExpandedChange={setSidebarExpanded} />
       <div
         className={`transition-[padding-left] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] lg:py-3 lg:pr-3 ${
-          sidebarExpanded ? "lg:pl-[252px]" : "lg:pl-[92px]"
+          sidebarExpanded ? "lg:pl-[268px]" : "lg:pl-[92px]"
         }`}
       >
-        <main className="mx-auto min-h-[calc(100dvh-1.5rem)] w-full max-w-8xl border-neutral-200 bg-[#fbfaf7] px-4 py-6 shadow-[0_1px_4px_rgba(0,0,0,0.04)] sm:px-6 lg:rounded-[24px] lg:border lg:px-8 lg:py-7">
+        <main className="dashboard-main mx-auto min-h-[calc(100dvh-1.5rem)] w-full max-w-8xl border-neutral-200 bg-[#fbfaf7] px-4 py-6 shadow-[0_1px_4px_rgba(0,0,0,0.04)] sm:px-6 lg:rounded-[24px] lg:border lg:px-8 lg:py-7">
           {children}
         </main>
       </div>

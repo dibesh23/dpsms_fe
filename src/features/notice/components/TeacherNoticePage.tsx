@@ -103,7 +103,11 @@ function NoticeBody({ body }: { body: string }) {
           className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline"
         >
           {expanded ? "Show less" : "Read more"}
-          {expanded ? <ChevronUpIcon className="size-3.5" /> : <ChevronDownIcon className="size-3.5" />}
+          {expanded ? (
+            <ChevronUpIcon className="size-3.5" />
+          ) : (
+            <ChevronDownIcon className="size-3.5" />
+          )}
         </button>
       )}
     </div>
@@ -155,7 +159,10 @@ function NoticeCard({
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           {!notice.isRead && (
-            <span className="mt-0.5 size-2 flex-none rounded-full bg-blue-500" aria-label="Unread" />
+            <span
+              className="mt-0.5 size-2 flex-none rounded-full bg-blue-500"
+              aria-label="Unread"
+            />
           )}
           <h3 className="text-sm font-semibold text-neutral-900">{notice.title}</h3>
           {notice.isUrgent && <StatusBadge status="Urgent" variant="danger" />}
@@ -219,9 +226,7 @@ function CreateNoticeDialog({
         title: values.title,
         body: values.body,
         isUrgent: values.isUrgent,
-        ...(values.scheduledAt
-          ? { scheduledAt: new Date(values.scheduledAt).toISOString() }
-          : {}),
+        ...(values.scheduledAt ? { scheduledAt: new Date(values.scheduledAt).toISOString() } : {}),
       });
       // Teacher notices go to PENDING_APPROVAL — never publish directly
       success("Notice submitted for principal approval");
@@ -244,7 +249,7 @@ function CreateNoticeDialog({
             {...register("body")}
             rows={4}
             placeholder="Write the notice content…"
-            className="w-full resize-y rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+            className="w-full resize-none rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
           />
         </Field>
         <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
@@ -259,7 +264,13 @@ function CreateNoticeDialog({
           <Input type="datetime-local" {...register("scheduledAt")} />
         </Field>
         <div className="flex justify-end gap-3 border-t border-neutral-100 pt-3">
-          <Button type="button" variant="secondary" text="Cancel" onClick={onClose} className="w-auto" />
+          <Button
+            type="button"
+            variant="secondary"
+            text="Cancel"
+            onClick={onClose}
+            className="w-auto"
+          />
           <Button
             type="submit"
             text="Submit for Approval"
@@ -308,7 +319,9 @@ export function TeacherNoticePage() {
   }, [result.notices, seed]);
 
   // Load submissions on mount
-  useEffect(() => { void loadSubmissions(); }, [loadSubmissions]);
+  useEffect(() => {
+    void loadSubmissions();
+  }, [loadSubmissions]);
 
   const handleRead = useCallback((id: string) => {
     setResult((prev) => {
@@ -333,9 +346,7 @@ export function TeacherNoticePage() {
       } catch {
         setResult((prev) => ({
           ...prev,
-          notices: prev.notices.map((n) =>
-            n.id === id ? { ...n, isAcknowledged: false } : n,
-          ),
+          notices: prev.notices.map((n) => (n.id === id ? { ...n, isAcknowledged: false } : n)),
         }));
         error("Failed to acknowledge notice");
       }
@@ -357,7 +368,10 @@ export function TeacherNoticePage() {
     defaultSortDir: "desc",
   });
 
-  const urgentCount = useMemo(() => result.notices.filter((n) => n.isUrgent).length, [result.notices]);
+  const urgentCount = useMemo(
+    () => result.notices.filter((n) => n.isUrgent).length,
+    [result.notices],
+  );
   const pendingAckCount = useMemo(
     () => result.notices.filter((n) => n.isUrgent && !n.isAcknowledged).length,
     [result.notices],
@@ -384,10 +398,26 @@ export function TeacherNoticePage() {
       />
 
       <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <StatsCard label="Total" value={loading ? "-" : String(result.notices.length)} icon={<BellIcon className="size-4" />} />
-        <StatsCard label="Unread" value={loading ? "-" : String(result.unreadCount)} icon={<BellIcon className="size-4" />} />
-        <StatsCard label="Urgent" value={loading ? "-" : String(urgentCount)} icon={<AlertTriangleIcon className="size-4" />} />
-        <StatsCard label="Pending Ack." value={loading ? "-" : String(pendingAckCount)} icon={<CheckCircle2Icon className="size-4" />} />
+        <StatsCard
+          label="Total"
+          value={loading ? "-" : String(result.notices.length)}
+          icon={<BellIcon className="size-4" />}
+        />
+        <StatsCard
+          label="Unread"
+          value={loading ? "-" : String(result.unreadCount)}
+          icon={<BellIcon className="size-4" />}
+        />
+        <StatsCard
+          label="Urgent"
+          value={loading ? "-" : String(urgentCount)}
+          icon={<AlertTriangleIcon className="size-4" />}
+        />
+        <StatsCard
+          label="Pending Ack."
+          value={loading ? "-" : String(pendingAckCount)}
+          icon={<CheckCircle2Icon className="size-4" />}
+        />
       </section>
 
       {newBanner > 0 && (
@@ -395,7 +425,9 @@ export function TeacherNoticePage() {
           <div className="flex items-center gap-2">
             <BellIcon className="size-4 flex-none text-blue-500" />
             <p className="text-sm text-blue-700">
-              <strong>{newBanner} new {newBanner === 1 ? "notice" : "notices"}</strong>{" "}
+              <strong>
+                {newBanner} new {newBanner === 1 ? "notice" : "notices"}
+              </strong>{" "}
               {newBanner === 1 ? "has" : "have"} been posted.
             </p>
           </div>
@@ -420,7 +452,12 @@ export function TeacherNoticePage() {
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <FilterDropdown label="Filter" options={filterOptions} value={table.filter} onChange={table.setFilter} />
+        <FilterDropdown
+          label="Filter"
+          options={filterOptions}
+          value={table.filter}
+          onChange={table.setFilter}
+        />
         <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search notices…" />
       </div>
 
@@ -429,7 +466,11 @@ export function TeacherNoticePage() {
           <EmptyState
             icon={<BellIcon className="size-5" />}
             title="No notices found"
-            description={table.query || table.filter ? "Try adjusting your search or filter." : "No notices yet."}
+            description={
+              table.query || table.filter
+                ? "Try adjusting your search or filter."
+                : "No notices yet."
+            }
           />
         ) : (
           <ul className="divide-y divide-neutral-100">

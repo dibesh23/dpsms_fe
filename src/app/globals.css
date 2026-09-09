@@ -1,17 +1,10 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: "Cal Sans";
-  src: url("https://cdn.jsdelivr.net/gh/calcom/font@main/fonts/CalSans-SemiBold.woff2") format("woff2");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
 @theme {
-  --font-sans:
-    "Cal Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
-    sans-serif;
+  --font-sans: "Satoshi", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
 
   /* Dub-style semantic design tokens (light mode) */
   --color-bg-emphasis: #e5e5e5;
@@ -26,10 +19,12 @@
   --color-border-subtle: #e5e5e5;
 
   --color-content-inverted: #ffffff;
-  --color-content-muted: #a3a3a3;
-  --color-content-subtle: #737373;
+  --color-content-muted: #737373;
+  --color-content-subtle: #525252;
   --color-content-default: #404040;
-  --color-content-emphasis: #171717;
+  --color-content-emphasis: #16191c;
+  --color-content-brand: #064e3b;
+  --color-content-link: #1d4ed8;
 
   --color-content-success: #16a34a;
   --color-content-error: #dc2626;
@@ -151,9 +146,362 @@ select {
   font-family: var(--font-sans);
 }
 
+body {
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+  font-weight: 400;
+}
+
+/* Semantic typography roles. Color is paired with hierarchy here so every shared
+   surface has a predictable, accessible foreground without page-level guesswork. */
+@layer components {
+  .type-brand {
+    font-family: var(--font-sans);
+    font-size: 1.125rem;
+    line-height: 1.375rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: var(--color-content-brand);
+  }
+
+  .type-display {
+    font-family: var(--font-sans);
+    font-size: 1.5rem;
+    line-height: 1.875rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--color-content-brand);
+  }
+
+  .type-page-title {
+    font-family: var(--font-sans);
+    font-size: 1.375rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    color: var(--color-content-brand);
+  }
+
+  .type-section-title,
+  .type-card-title,
+  .type-modal-title {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    color: var(--color-content-emphasis);
+  }
+
+  .type-section-title {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    color: var(--color-content-brand);
+  }
+
+  .type-operational-title {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+    color: var(--color-content-emphasis);
+  }
+
+  .type-card-title {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .type-modal-title {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .type-body,
+  .type-body-secondary,
+  .type-body-reading {
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 400;
+  }
+
+  .type-body {
+    line-height: 1.375rem;
+    color: var(--color-content-default);
+  }
+
+  .type-body-secondary {
+    line-height: 1.25rem;
+    color: var(--color-content-subtle);
+  }
+
+  .type-body-reading {
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+    color: var(--color-content-default);
+  }
+
+  .type-label,
+  .type-input,
+  .type-button,
+  .type-navigation,
+  .type-table-header,
+  .type-table-cell,
+  .type-kpi,
+  .type-kpi-sm,
+  .type-kpi-label,
+  .type-badge,
+  .type-caption,
+  .type-helper,
+  .type-error {
+    font-family: var(--font-sans);
+  }
+
+  .type-sidebar-navigation {
+    font-family: var(--font-sans);
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    font-weight: 400;
+    letter-spacing: normal;
+    color: var(--color-content-emphasis);
+  }
+
+  .type-label,
+  .type-input,
+  .type-button,
+  .type-navigation,
+  .type-table-cell {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .type-label,
+  .type-button,
+  .type-navigation {
+    font-weight: 500;
+  }
+
+  .type-label,
+  .type-table-cell {
+    color: var(--color-content-default);
+  }
+
+  .type-input {
+    font-weight: 400;
+    color: var(--color-content-emphasis);
+  }
+
+  .type-table-header {
+    font-size: 0.75rem;
+    line-height: 1.125rem;
+    font-weight: 600;
+    letter-spacing: 0.035em;
+    color: var(--color-content-subtle);
+  }
+
+  .type-table-cell {
+    font-weight: 400;
+  }
+
+  .type-kpi,
+  .type-kpi-sm {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-content-emphasis);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .type-kpi {
+    font-size: 1.5rem;
+    line-height: 1.875rem;
+  }
+
+  .type-kpi-sm {
+    font-size: 1.25rem;
+    line-height: 1.625rem;
+  }
+
+  .type-kpi-label {
+    font-size: 0.75rem;
+    line-height: 1.125rem;
+    font-weight: 500;
+    color: var(--color-content-subtle);
+  }
+
+  .type-badge,
+  .type-caption,
+  .type-helper,
+  .type-error {
+    font-size: 0.75rem;
+    line-height: 1.125rem;
+  }
+
+  .type-badge {
+    font-weight: 500;
+  }
+
+  .type-caption,
+  .type-helper {
+    font-weight: 400;
+    color: var(--color-content-subtle);
+  }
+
+  .type-error {
+    font-weight: 500;
+    color: var(--color-content-error);
+  }
+
+  .type-micro-label {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+    color: var(--color-content-subtle);
+  }
+
+  .type-numeric {
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (min-width: 640px) {
+    .type-page-title {
+      font-size: 1.5rem;
+      line-height: 2rem;
+    }
+
+    .type-display {
+      font-size: 1.75rem;
+      line-height: 2.125rem;
+    }
+  }
+}
+
+.dashboard-main :where(h1, h2, h3, h4, h5, h6) {
+  color: var(--color-content-brand);
+}
+
+/* Dashboard content follows the same 14px -> 18px scale ratio as the approved
+   sidebar reference (9/7, or approximately 1.286x). This boundary intentionally
+   excludes the sidebar, authentication screens, and print-only documents. */
+.dashboard-main {
+  font-size: 1.125rem;
+  line-height: 1.767857rem;
+}
+
+.dashboard-main :where(.text-xs) {
+  font-size: 0.964286rem;
+  line-height: 1.285714rem;
+}
+
+.dashboard-main :where(.text-sm) {
+  font-size: 1.125rem;
+  line-height: 1.607143rem;
+}
+
+.dashboard-main :where(.text-base) {
+  font-size: 1.285714rem;
+  line-height: 1.928571rem;
+}
+
+.dashboard-main :where(.text-\[28px\]) {
+  font-size: 2.25rem;
+  line-height: 2.571429rem;
+}
+
+.dashboard-main :where(.type-brand) {
+  font-size: 1.446429rem;
+  line-height: 1.767857rem;
+}
+
+.dashboard-main :where(.type-display) {
+  font-size: 1.928571rem;
+  line-height: 2.410714rem;
+}
+
+.dashboard-main :where(.type-page-title) {
+  font-size: 1.767857rem;
+  line-height: 2.25rem;
+}
+
+.dashboard-main :where(.type-section-title) {
+  font-size: 1.446429rem;
+  line-height: 2.25rem;
+}
+
+.dashboard-main :where(.type-operational-title, .type-modal-title) {
+  font-size: 1.285714rem;
+  line-height: 1.928571rem;
+}
+
+.dashboard-main :where(.type-card-title) {
+  font-size: 1.125rem;
+  line-height: 1.607143rem;
+}
+
+.dashboard-main :where(.type-body) {
+  font-size: 1.125rem;
+  line-height: 1.767857rem;
+}
+
+.dashboard-main :where(.type-body-secondary) {
+  font-size: 1.125rem;
+  line-height: 1.607143rem;
+}
+
+.dashboard-main :where(.type-body-reading) {
+  font-size: 1.205357rem;
+  line-height: 1.928571rem;
+}
+
+.dashboard-main :where(.type-label, .type-input, .type-button, .type-navigation, .type-table-cell) {
+  font-size: 1.125rem;
+  line-height: 1.607143rem;
+}
+
+.dashboard-main :where(.type-table-header, .type-kpi-label) {
+  font-size: 0.964286rem;
+  line-height: 1.446429rem;
+}
+
+.dashboard-main :where(.type-kpi) {
+  font-size: 1.928571rem;
+  line-height: 2.410714rem;
+}
+
+.dashboard-main :where(.type-kpi-sm) {
+  font-size: 1.607143rem;
+  line-height: 2.089286rem;
+}
+
+.dashboard-main :where(.type-badge, .type-caption, .type-helper, .type-error) {
+  font-size: 0.964286rem;
+  line-height: 1.446429rem;
+}
+
+.dashboard-main :where(.type-micro-label) {
+  font-size: 0.883929rem;
+  line-height: 1.285714rem;
+}
+
+@media (min-width: 640px) {
+  .dashboard-main :where(.type-page-title) {
+    font-size: 1.928571rem;
+    line-height: 2.571429rem;
+  }
+
+  .dashboard-main :where(.type-display) {
+    font-size: 2.25rem;
+    line-height: 2.732143rem;
+  }
+
+  .dashboard-main :where(.sm\:text-\[28px\]) {
+    font-size: 2.25rem;
+    line-height: 2.571429rem;
+  }
+}
+
 /* Compact, transparent-track scrollbar for the green dashboard navigation. */
 .sidebar-scrollbar {
-  scrollbar-color: #8fb99b transparent;
+  scrollbar-color: #064e3b transparent;
   scrollbar-width: thin;
 }
 
@@ -166,12 +514,12 @@ select {
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #8fb99b;
+  background-color: #064e3b;
   border-radius: 999px;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: #6f9f7c;
+  background-color: #043f31;
 }
 
 /* Print credential slip styles */
@@ -199,10 +547,11 @@ select {
     border: 1px solid #d4d4d4;
     border-radius: 8px;
     padding: 1.5rem;
-    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans);
   }
 
   .print-credential-slip__title {
+    color: #171717;
     font-size: 1rem;
     font-weight: 600;
     text-align: center;
@@ -226,7 +575,7 @@ select {
 
   .print-credential-slip__label {
     font-size: 0.75rem;
-    color: #737373;
+    color: #525252;
     flex-shrink: 0;
   }
 
@@ -235,10 +584,11 @@ select {
     font-weight: 500;
     text-align: right;
     word-break: break-all;
+    color: #171717;
   }
 
   .print-credential-slip__value--password {
-    font-family: ui-monospace, monospace;
+    font-family: var(--font-mono);
     letter-spacing: 0.05em;
   }
 
@@ -246,8 +596,9 @@ select {
     margin-top: 1rem;
     padding-top: 0.75rem;
     border-top: 1px solid #e5e5e5;
-    font-size: 0.7rem;
-    color: #a3a3a3;
+    font-size: 0.75rem;
+    line-height: 1.125rem;
+    color: #737373;
     text-align: center;
   }
 }

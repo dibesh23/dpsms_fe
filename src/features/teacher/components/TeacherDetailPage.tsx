@@ -251,7 +251,7 @@ export function TeacherDetailPage() {
                       {subject.code && (
                         <span className="text-xs text-neutral-400">{subject.code}</span>
                       )}
-                      <span className="rounded-full border border-neutral-200 bg-bg-default px-2 py-0.5 text-[11px] font-medium text-neutral-600">
+                      <span className="type-badge rounded-full border border-neutral-200 bg-bg-default px-2 py-0.5 text-neutral-600">
                         {subject.academicYearLabel}
                       </span>
                     </span>

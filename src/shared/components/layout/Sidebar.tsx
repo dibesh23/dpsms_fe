@@ -370,7 +370,7 @@ function NavList({ onNavigate, expanded = true }: { onNavigate?: () => void; exp
         if (visibleItems.length === 0) return null;
         return (
           <div key={section.label}>
-            <p className="h-9 overflow-hidden px-3 pb-2 pt-5 text-xs font-medium tracking-wider whitespace-nowrap text-[#52705b] uppercase">
+            <p className="type-micro-label h-9 overflow-hidden px-3 pb-2 pt-5 font-medium whitespace-nowrap text-[#064E3B]">
               <span className={cn(!expanded && "invisible group-hover/sidebar:visible")}>
                 {section.label}
               </span>
@@ -385,16 +385,16 @@ function NavList({ onNavigate, expanded = true }: { onNavigate?: () => void; exp
                       href={item.href}
                       onClick={onNavigate}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+                        "type-sidebar-navigation flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
                         active
-                          ? "bg-[#125d31] font-medium text-white shadow-sm"
-                          : "font-medium text-[#294d35] hover:bg-white/55 hover:text-[#0d3320]",
+                          ? "bg-[#064E3B] font-medium text-white shadow-sm"
+                          : "text-[#064E3B] hover:bg-stone-100",
                       )}
                     >
                       <Icon
                         className={cn(
                           "size-5 flex-none",
-                          active ? "text-[#bbf7d0]" : "text-[#52705b]",
+                          active ? "text-emerald-100" : "text-[#064E3B]",
                         )}
                       />
                       <span
@@ -429,7 +429,7 @@ function SidebarContent({
   const { user, logout } = useAuth();
   return (
     <div className="flex h-full flex-col">
-      <div className="relative flex h-16 flex-none items-center border-b border-[#b8d4c0] px-5">
+      <div className="relative flex h-16 flex-none items-center border-b border-stone-200 px-5">
         <Link href="/dashboard" onClick={onNavigate} aria-label="Digital Pathshala dashboard">
           <Wordmark textClassName={cn(!expanded && "invisible group-hover/sidebar:visible")} />
         </Link>
@@ -438,7 +438,7 @@ function SidebarContent({
             type="button"
             onClick={onToggle}
             aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
-            className="absolute right-0 flex h-8 w-8 translate-x-1/2 items-center justify-center rounded-full border border-emerald-800 bg-white text-[#125d31] shadow-sm transition hover:bg-emerald-50"
+            className="absolute right-0 flex h-8 w-8 translate-x-1/2 items-center justify-center rounded-full border border-[#064E3B] bg-[#FBFAF7] text-[#064E3B] shadow-sm transition hover:bg-stone-100"
           >
             <MenuIcon className="size-4" />
           </button>
@@ -447,20 +447,22 @@ function SidebarContent({
 
       <NavList onNavigate={onNavigate} expanded={expanded} />
 
-      <div className="flex-none border-t border-[#b8d4c0] p-3">
+      <div className="flex-none border-t border-stone-200 p-3">
         <div className="flex items-center gap-3 overflow-hidden rounded-lg px-2 py-2">
           <Link
             href="/profile"
             onClick={onNavigate}
-            className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition-colors hover:bg-white/55"
+            className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition-colors hover:bg-stone-100"
             aria-label="Open profile"
           >
             <Avatar name={user?.fullName ?? "User"} size="sm" />
             <div
               className={cn("min-w-0 flex-1", !expanded && "invisible group-hover/sidebar:visible")}
             >
-              <p className="truncate text-sm font-medium text-[#173d24]">{user?.fullName}</p>
-              <p className="truncate text-xs text-[#52705b]">{roleLabel(user?.role)}</p>
+              <p className="type-navigation truncate font-normal text-[#064E3B]">
+                {user?.fullName}
+              </p>
+              <p className="type-caption truncate text-[#064E3B]">{roleLabel(user?.role)}</p>
             </div>
           </Link>
           <button
@@ -468,7 +470,7 @@ function SidebarContent({
             onClick={() => void logout()}
             aria-label="Log out"
             className={cn(
-              "flex h-8 w-8 flex-none items-center justify-center rounded-md text-[#52705b] transition-colors hover:bg-white/55 hover:text-[#0d3320]",
+              "flex h-8 w-8 flex-none items-center justify-center rounded-md text-[#064E3B] transition-colors hover:bg-stone-100",
               !expanded && "invisible group-hover/sidebar:visible",
             )}
           >
@@ -505,8 +507,8 @@ export function Sidebar({
     <>
       <aside
         className={cn(
-          "group/sidebar fixed inset-y-0 left-0 z-30 hidden bg-[#cfe4d6] transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] lg:block",
-          desktopExpanded ? "w-60" : "w-20",
+          "group/sidebar fixed inset-y-0 left-0 z-30 hidden bg-[#FBFAF7] transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] lg:block",
+          desktopExpanded ? "w-64" : "w-20",
         )}
         onMouseEnter={() => setDesktopHover(true)}
         onMouseLeave={() => setDesktopHover(false)}
@@ -514,7 +516,7 @@ export function Sidebar({
         <SidebarContent expanded={desktopExpanded} onToggle={toggleDesktopSidebar} />
       </aside>
 
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-[#b8d4c0] bg-[#cfe4d6]/95 px-4 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-stone-200 bg-[#FBFAF7]/95 px-4 backdrop-blur lg:hidden">
         <Link href="/dashboard" aria-label="Digital Pathshala dashboard">
           <Wordmark />
         </Link>
@@ -522,7 +524,7 @@ export function Sidebar({
           type="button"
           onClick={() => setDrawerOpen(true)}
           aria-label="Open navigation menu"
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#a8cab2] text-[#173d24] transition-colors hover:bg-white/55"
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#064E3B] text-[#064E3B] transition-colors hover:bg-stone-100"
         >
           <MenuIcon className="size-4" />
         </button>
@@ -535,13 +537,13 @@ export function Sidebar({
             onClick={() => setDrawerOpen(false)}
             aria-hidden="true"
           />
-          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-[#cfe4d6] shadow-xl animate-drawer-in">
-            <div className="flex h-14 flex-none items-center justify-end border-b border-[#b8d4c0] pr-4">
+          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-[#FBFAF7] shadow-xl animate-drawer-in">
+            <div className="flex h-14 flex-none items-center justify-end border-b border-stone-200 pr-4">
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
                 aria-label="Close navigation menu"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-[#52705b] transition-colors hover:bg-white/55 hover:text-[#0d3320]"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-[#064E3B] transition-colors hover:bg-stone-100"
               >
                 <XIcon className="size-4" />
               </button>

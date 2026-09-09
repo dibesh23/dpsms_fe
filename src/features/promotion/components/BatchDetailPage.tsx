@@ -14,11 +14,7 @@ import { cn } from "@/shared/lib/cn";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { promotionApi } from "../api/promotionApi";
-import {
-  ArrowLeftIcon,
-  ArrowUpRightIcon,
-  GraduationCapIcon,
-} from "@/shared/components/ui/icons";
+import { ArrowLeftIcon, ArrowUpRightIcon, GraduationCapIcon } from "@/shared/components/ui/icons";
 import type { BatchDetail, BatchFailedStudent } from "../types";
 
 function getApiErrorMessage(err: unknown, fallback: string): string {
@@ -198,19 +194,24 @@ export function BatchDetailPage() {
         <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-neutral-100 pt-5 sm:grid-cols-4">
           <div>
             <dt className="text-xs text-neutral-400">Total students</dt>
-            <dd className="mt-0.5 text-xl font-semibold text-neutral-900">{batch.totalStudents}</dd>
+            <dd className="type-kpi-sm mt-0.5">{batch.totalStudents}</dd>
           </div>
           <div>
             <dt className="text-xs text-neutral-400">Promoted</dt>
-            <dd className="mt-0.5 text-xl font-semibold text-emerald-600">{batch.totalPromoted}</dd>
+            <dd className="type-kpi-sm mt-0.5 text-emerald-600">{batch.totalPromoted}</dd>
           </div>
           <div>
             <dt className="text-xs text-neutral-400">Failed</dt>
-            <dd className="mt-0.5 text-xl font-semibold text-red-600">{batch.summary.failed}</dd>
+            <dd className="type-kpi-sm mt-0.5 text-red-600">{batch.summary.failed}</dd>
           </div>
           <div>
             <dt className="text-xs text-neutral-400">Pending review</dt>
-            <dd className={cn("mt-0.5 text-xl font-semibold", batch.summary.pendingReview > 0 ? "text-amber-600" : "text-neutral-900")}>
+            <dd
+              className={cn(
+                "type-kpi-sm mt-0.5",
+                batch.summary.pendingReview > 0 ? "text-amber-600" : "text-neutral-900",
+              )}
+            >
               {batch.summary.pendingReview}
             </dd>
           </div>

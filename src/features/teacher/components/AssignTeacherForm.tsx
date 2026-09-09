@@ -110,9 +110,7 @@ export function AssignTeacherForm({
     name: "teacherId" | "classId" | "sectionId" | "subjectId" | "academicYearId",
   ): string | undefined => {
     const fieldError = errors[name as keyof typeof errors];
-    return fieldError && typeof fieldError.message === "string"
-      ? fieldError.message
-      : undefined;
+    return fieldError && typeof fieldError.message === "string" ? fieldError.message : undefined;
   };
 
   return (
@@ -161,79 +159,81 @@ export function AssignTeacherForm({
         </Select>
       </Field>
 
-      {mode === "section" ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Class" error={errorMessage("classId")} className="sm:col-span-2" required>
-            <Select
-              disabled={isSubmitting}
-              {...register("classId", {
-                onChange: () => setValue("sectionId", ""),
-              })}
-            >
-              <option value="">Select class</option>
-              {classes.map((cls) => (
-                <option key={cls.id} value={cls.id}>
-                  {cls.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
+      <div className="min-h-[11.5rem]">
+        {mode === "section" ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Class" error={errorMessage("classId")} className="sm:col-span-2" required>
+              <Select
+                disabled={isSubmitting}
+                {...register("classId", {
+                  onChange: () => setValue("sectionId", ""),
+                })}
+              >
+                <option value="">Select class</option>
+                {classes.map((cls) => (
+                  <option key={cls.id} value={cls.id}>
+                    {cls.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
 
+            <Field
+              label="Section"
+              error={errorMessage("sectionId")}
+              className="sm:col-span-2"
+              hint={
+                selectedClassId && !sectionsLoading && sections.length === 0
+                  ? "No sections created for this class"
+                  : undefined
+              }
+              required
+            >
+              <Select
+                disabled={isSubmitting || !selectedClassId || sectionsLoading}
+                {...register("sectionId")}
+              >
+                <option value="">
+                  {!selectedClassId
+                    ? "Select a class first"
+                    : sectionsLoading
+                      ? "Loading sections…"
+                      : sections.length === 0
+                        ? "No sections available"
+                        : "Select section"}
+                </option>
+                {sections.map((section) => (
+                  <option key={section.id} value={section.id}>
+                    {section.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+        ) : (
           <Field
-            label="Section"
-            error={errorMessage("sectionId")}
-            className="sm:col-span-2"
+            label="Subject"
+            error={errorMessage("subjectId")}
             hint={
-              selectedClassId && !sectionsLoading && sections.length === 0
-                ? "No sections created for this class"
-                : undefined
+              subjects.length === 0
+                ? "No subjects exist yet. Create subjects under Academics first."
+                : "A subject applies to the whole academic year."
             }
             required
           >
-            <Select
-              disabled={isSubmitting || !selectedClassId || sectionsLoading}
-              {...register("sectionId")}
-            >
+            <Select disabled={isSubmitting || subjects.length === 0} {...register("subjectId")}>
               <option value="">
-                {!selectedClassId
-                  ? "Select a class first"
-                  : sectionsLoading
-                    ? "Loading sections…"
-                    : sections.length === 0
-                      ? "No sections available"
-                      : "Select section"}
+                {subjects.length === 0 ? "No subjects available" : "Select subject"}
               </option>
-              {sections.map((section) => (
-                <option key={section.id} value={section.id}>
-                  {section.name}
+              {subjects.map((subject) => (
+                <option key={subject.id} value={subject.id}>
+                  {subject.code ? `${subject.name} (${subject.code})` : subject.name}
                 </option>
               ))}
             </Select>
           </Field>
-        </div>
-      ) : (
-        <Field
-          label="Subject"
-          error={errorMessage("subjectId")}
-          hint={
-            subjects.length === 0
-              ? "No subjects exist yet. Create subjects under Academics first."
-              : "A subject applies to the whole academic year."
-          }
-          required
-        >
-          <Select disabled={isSubmitting || subjects.length === 0} {...register("subjectId")}>
-            <option value="">
-              {subjects.length === 0 ? "No subjects available" : "Select subject"}
-            </option>
-            {subjects.map((subject) => (
-              <option key={subject.id} value={subject.id}>
-                {subject.code ? `${subject.name} (${subject.code})` : subject.name}
-              </option>
-            ))}
-          </Select>
-        </Field>
-      )}
+        )}
+      </div>
 
       <Field
         label="Academic Year"
@@ -262,7 +262,13 @@ export function AssignTeacherForm({
       <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
         <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" />
         <Button
-          text={isSubmitting ? "Assigning…" : mode === "section" ? "Assign to Section" : "Assign Subject"}
+          text={
+            isSubmitting
+              ? "Assigning…"
+              : mode === "section"
+                ? "Assign to Section"
+                : "Assign Subject"
+          }
           loading={isSubmitting}
           disabled={isSubmitting}
           className="w-auto"
