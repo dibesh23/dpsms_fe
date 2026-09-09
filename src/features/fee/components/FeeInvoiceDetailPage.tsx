@@ -29,7 +29,6 @@ import {
 import { formatCurrency, formatDate } from "@/shared/lib/format";
 import {
   AlertTriangleIcon,
-  ArrowLeftIcon,
   CreditCardIcon,
   FileTextIcon,
 } from "@/shared/components/ui/icons";
@@ -366,7 +365,8 @@ export function FeeInvoiceDetailPage() {
   }, [invoiceId]);
 
   useEffect(() => {
-    void load();
+    const id = setTimeout(() => void load(), 0);
+    return () => clearTimeout(id);
   }, [load]);
 
   // Fetch the student's full cross-year fee picture so an admin looking up
@@ -374,20 +374,23 @@ export function FeeInvoiceDetailPage() {
   useEffect(() => {
     if (!invoice?.enrollment?.studentId) return;
     let cancelled = false;
-    setStudentFeesLoading(true);
-    feeApi
-      .getStudentFeeSummary(invoice.enrollment.studentId)
-      .then((data) => {
-        if (!cancelled) setStudentFees(data);
-      })
-      .catch(() => {
-        if (!cancelled) setStudentFees(null);
-      })
-      .finally(() => {
-        if (!cancelled) setStudentFeesLoading(false);
-      });
+    const id = setTimeout(() => {
+      setStudentFeesLoading(true);
+      feeApi
+        .getStudentFeeSummary(invoice.enrollment.studentId)
+        .then((data) => {
+          if (!cancelled) setStudentFees(data);
+        })
+        .catch(() => {
+          if (!cancelled) setStudentFees(null);
+        })
+        .finally(() => {
+          if (!cancelled) setStudentFeesLoading(false);
+        });
+    }, 0);
     return () => {
       cancelled = true;
+      clearTimeout(id);
     };
   }, [invoice?.enrollment?.studentId]);
 

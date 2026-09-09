@@ -10,7 +10,6 @@ import { EmptyState } from "@/shared/components/ui/empty-state";
 import { Dialog } from "@/shared/components/ui/dialog";
 import { Field } from "@/shared/components/ui/form-field";
 import { Input } from "@/shared/components/ui/input";
-import { StatusBadge } from "@/shared/components/ui/status-badge";
 import { Breadcrumbs } from "@/shared/components/ui/breadcrumbs";
 import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -20,7 +19,6 @@ import { academicApi } from "@/features/academic/api/academicApi";
 import { formatCurrency, formatDate } from "@/shared/lib/format";
 import {
   AlertTriangleIcon,
-  CreditCardIcon,
   FileTextIcon,
   PlusIcon,
   CheckCircle2Icon,

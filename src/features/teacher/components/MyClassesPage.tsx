@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/shared/components/ui/page-header";
-import { Button } from "@/shared/components/ui/button";
 import { SearchBar } from "@/shared/components/ui/search-bar";
 import { DataTable, type Column } from "@/shared/components/ui/data-table";
 import { Pagination } from "@/shared/components/ui/pagination";

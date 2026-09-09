@@ -8,7 +8,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Field, Select } from "@/shared/components/ui/form-field";
 import { academicApi } from "@/features/academic/api/academicApi";
-import { assignmentApi, type AssignmentCreatePayload } from "../api/assignmentApi";
+import { type AssignmentCreatePayload } from "../api/assignmentApi";
 
 const AssignmentFormSchema = z.object({
   sectionId: z.string().min(1, "Choose a section"),

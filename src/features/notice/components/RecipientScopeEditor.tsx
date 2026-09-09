@@ -26,20 +26,24 @@ export function RecipientScopeEditor({
 
   useEffect(() => {
     let cancelled = false;
-    setLoadingClasses(true);
-    academicApi.listClasses().then((items) => {
-      if (!cancelled) { setClasses(items); setLoadingClasses(false); }
-    }).catch(() => { if (!cancelled) setLoadingClasses(false); });
-    return () => { cancelled = true; };
+    const id = setTimeout(() => {
+      setLoadingClasses(true);
+      academicApi.listClasses().then((items) => {
+        if (!cancelled) { setClasses(items); setLoadingClasses(false); }
+      }).catch(() => { if (!cancelled) setLoadingClasses(false); });
+    }, 0);
+    return () => { cancelled = true; clearTimeout(id); };
   }, []);
 
   useEffect(() => {
-    if (!selectedClassId) { setSections([]); return; }
     let cancelled = false;
-    academicApi.listSections(selectedClassId).then((items) => {
-      if (!cancelled) setSections(items);
-    }).catch(() => { if (!cancelled) setSections([]); });
-    return () => { cancelled = true; };
+    const id = setTimeout(() => {
+      if (!selectedClassId) { setSections([]); return; }
+      academicApi.listSections(selectedClassId).then((items) => {
+        if (!cancelled) setSections(items);
+      }).catch(() => { if (!cancelled) setSections([]); });
+    }, 0);
+    return () => { cancelled = true; clearTimeout(id); };
   }, [selectedClassId]);
 
   const updateRole = (role: string, checked: boolean) => {

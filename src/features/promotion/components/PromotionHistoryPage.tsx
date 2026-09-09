@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/shared/components/ui/page-header";
-import { Button } from "@/shared/components/ui/button";
 import { DataTable, type Column } from "@/shared/components/ui/data-table";
 import { Pagination } from "@/shared/components/ui/pagination";
 import { StatusBadge } from "@/shared/components/ui/status-badge";

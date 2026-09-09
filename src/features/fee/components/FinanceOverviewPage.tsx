@@ -6,7 +6,6 @@ import { PageHeader } from "@/shared/components/ui/page-header";
 import { StatsCard } from "@/shared/components/ui/stats-card";
 import { SearchBar } from "@/shared/components/ui/search-bar";
 import { EmptyState } from "@/shared/components/ui/empty-state";
-import { DashboardWidget } from "@/shared/components/ui/dashboard-widget";
 import { StatusBadge, type StatusVariant } from "@/shared/components/ui/status-badge";
 import { cn } from "@/shared/lib/cn";
 import { financeApi, type FinanceClassRow, type FinanceSummary } from "../api/financeApi";
@@ -45,11 +44,7 @@ export function FinanceOverviewPage() {
   // Debounce the search input so the aggregate query runs at most once per pause.
   useEffect(() => {
     const trimmed = searchInput.trim();
-    if (trimmed.length < 2) {
-      setSearch("");
-      return;
-    }
-    const id = setTimeout(() => setSearch(trimmed), 300);
+    const id = setTimeout(() => setSearch(trimmed.length < 2 ? "" : trimmed), trimmed.length < 2 ? 0 : 300);
     return () => clearTimeout(id);
   }, [searchInput]);
 
@@ -66,7 +61,8 @@ export function FinanceOverviewPage() {
   }, [search]);
 
   useEffect(() => {
-    void load();
+    const id = setTimeout(() => void load(), 0);
+    return () => clearTimeout(id);
   }, [load]);
 
   const searching = search.length >= 2;

@@ -5,7 +5,7 @@ import { PageHeader } from "@/shared/components/ui/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { formatDate } from "@/shared/lib/format";
 import { admissionLetterApi, type AdmissionLetterData } from "../api/admissionLetterApi";
-import { FileTextIcon, DownloadIcon } from "@/shared/components/ui/icons";
+import { DownloadIcon } from "@/shared/components/ui/icons";
 
 function genderLabel(g: string | null): string {
   if (g === "MALE") return "Male";

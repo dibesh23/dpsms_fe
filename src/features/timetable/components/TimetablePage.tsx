@@ -15,7 +15,6 @@ import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { timetableApi, type TimetableRecord } from "../api/timetableApi";
-import { academicApi, type ClassRecord, type SessionRecord } from "@/features/academic/api/academicApi";
 import { AddTimetableForm } from "./AddTimetableForm";
 import { TrashIcon, PencilIcon } from "@/shared/components/ui/icons";
 
@@ -56,7 +55,8 @@ export function TimetablePage() {
   }, []);
 
   useEffect(() => {
-    void load();
+    const id = setTimeout(() => void load(), 0);
+    return () => clearTimeout(id);
   }, [load]);
 
   const handleCreate = async (values: { classId: string; academicYearId: string; name: string }): Promise<boolean> => {

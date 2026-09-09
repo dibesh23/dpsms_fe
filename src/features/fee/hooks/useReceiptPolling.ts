@@ -50,9 +50,12 @@ export function useReceiptPolling({ onReceiptReady }: Options) {
   useEffect(() => {
     if (!pollingPaymentId) return;
     attemptsRef.current = 0;
-    void poll();
+    const initialId = setTimeout(() => void poll(), 0);
     const id = setInterval(() => void poll(), POLL_INTERVAL_MS);
-    return () => clearInterval(id);
+    return () => {
+      clearTimeout(initialId);
+      clearInterval(id);
+    };
     // poll() restarts whenever the target changes; deliberate.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pollingPaymentId]);

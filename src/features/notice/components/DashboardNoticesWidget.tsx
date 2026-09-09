@@ -6,7 +6,7 @@ import { DashboardWidget } from "@/shared/components/ui/dashboard-widget";
 import { StatusBadge } from "@/shared/components/ui/status-badge";
 import { EmptyState } from "@/shared/components/ui/empty-state";
 import { formatDate } from "@/shared/lib/format";
-import { studentNoticeApi, type NoticeSummary } from "../api/studentNoticeApi";
+import { type NoticeSummary } from "../api/studentNoticeApi";
 import {
   noticeApi,
   type AdminNotice,

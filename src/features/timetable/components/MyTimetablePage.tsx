@@ -57,7 +57,8 @@ export function MyTimetablePage() {
   }, [isStudent, toast]);
 
   useEffect(() => {
-    void load();
+    const id = setTimeout(() => void load(), 0);
+    return () => clearTimeout(id);
   }, [load]);
 
   if (loading) return <LoadingState label="Loading your timetable..." />;
