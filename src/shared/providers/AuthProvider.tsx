@@ -12,6 +12,7 @@ import React, {
 import { useRouter } from "next/navigation";
 import { authApi } from "../../features/auth/api/authApi";
 import { setAccessTokenRef, setRefreshTokenRef } from "../lib/apiClient";
+import { getTabRefreshToken } from "../lib/tabSession";
 import type {
   AuthUser,
   LoginPayload,
@@ -116,6 +117,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (mountedRef.current) return;
     mountedRef.current = true;
+
+    if (!getTabRefreshToken()) {
+      queueMicrotask(() => setIsLoading(false));
+      return;
+    }
 
     void refreshToken().finally(() => setIsLoading(false));
   }, [refreshToken]);

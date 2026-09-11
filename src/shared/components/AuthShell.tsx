@@ -3,13 +3,7 @@ import { Grid } from "./ui/grid";
 import { Wordmark } from "./ui/wordmark";
 import Link from "next/link";
 
-export function AuthShell({
-  children,
-  showTerms = true,
-}: {
-  children: React.ReactNode;
-  showTerms?: boolean;
-}) {
+export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative min-h-[100dvh]">
       <div className="absolute inset-0 isolate overflow-hidden bg-white">
@@ -64,26 +58,7 @@ export function AuthShell({
             {children}
           </div>
 
-          <div className="flex grow basis-0 flex-col justify-end">
-            {showTerms && (
-              <p className="type-caption max-w-md px-5 py-6 text-center font-medium sm:px-8 sm:py-8 md:px-0">
-                By continuing, you agree to our{" "}
-                <Link
-                  href="/terms"
-                  className="font-semibold text-neutral-600 hover:text-neutral-800"
-                >
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link
-                  href="/privacy"
-                  className="font-semibold text-neutral-600 hover:text-neutral-800"
-                >
-                  Privacy Policy
-                </Link>
-              </p>
-            )}
-          </div>
+          <div className="grow basis-0" />
         </div>
       </div>
     </div>

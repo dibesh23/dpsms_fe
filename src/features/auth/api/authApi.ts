@@ -68,13 +68,18 @@ export const authApi = {
 
   async refresh(): Promise<RefreshResponse> {
     const tabToken = getTabRefreshToken();
-    const { data } = await apiClient.post<RefreshResponse>(
-      "/auth/refresh",
-      {},
-      tabToken ? { headers: { "X-Refresh-Token": tabToken } } : undefined,
-    );
-    if (data.refreshToken) setTabRefreshToken(data.refreshToken);
-    return data;
+    try {
+      const { data } = await apiClient.post<RefreshResponse>(
+        "/auth/refresh",
+        {},
+        tabToken ? { headers: { "X-Refresh-Token": tabToken } } : undefined,
+      );
+      if (data.refreshToken) setTabRefreshToken(data.refreshToken);
+      return data;
+    } catch (error) {
+      clearTabRefreshToken();
+      throw error;
+    }
   },
 
   async forgotPassword(email: string, tenantId?: string): Promise<void> {

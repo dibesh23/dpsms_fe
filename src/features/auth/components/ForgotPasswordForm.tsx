@@ -34,11 +34,15 @@ export function ForgotPasswordForm({ defaultTenantId = "" }: { defaultTenantId?:
       setSubmitted(true);
     } catch (error: unknown) {
       const status = (error as { response?: { status?: number } })?.response?.status;
-      setApiError(
-        status === 429
-          ? "Too many reset requests. Please wait a few minutes and try again."
-          : "We couldn't send the request. Check your connection and try again.",
-      );
+      if (status === 429) {
+        setApiError("Too many reset requests. Please wait a few minutes and try again.");
+      } else if (status && status >= 500) {
+        setApiError(
+          "The reset email service is temporarily unavailable. Please try again shortly.",
+        );
+      } else {
+        setApiError("We couldn't reach the server. Check your connection and try again.");
+      }
     }
   };
 

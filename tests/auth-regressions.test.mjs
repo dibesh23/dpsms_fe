@@ -27,6 +27,28 @@ test("each browser tab keeps and rotates its own refresh token", async () => {
   assert.match(api, /refreshToken: token/);
 });
 
+test("a fresh tab does not make an unauthorized refresh request", async () => {
+  const [provider, api] = await Promise.all([
+    read("src/shared/providers/AuthProvider.tsx"),
+    read("src/features/auth/api/authApi.ts"),
+  ]);
+
+  assert.match(provider, /if \(!getTabRefreshToken\(\)\)/);
+  assert.match(api, /catch \(error\)[\s\S]*clearTabRefreshToken\(\)/);
+});
+
+test("authentication pages do not link to unavailable legal routes", async () => {
+  const shell = await read("src/shared/components/AuthShell.tsx");
+  assert.doesNotMatch(shell, /href=["']\/(?:privacy|terms)["']/);
+});
+
+test("forgot password distinguishes server and connection failures", async () => {
+  const form = await read("src/features/auth/components/ForgotPasswordForm.tsx");
+  assert.match(form, /status && status >= 500/);
+  assert.match(form, /reset email service is temporarily unavailable/i);
+  assert.match(form, /couldn't reach the server/i);
+});
+
 test("plain login does not reuse a cached or environment tenant", async () => {
   const [context, page] = await Promise.all([
     read("src/features/auth/components/LoginWithSchoolContext.tsx"),
