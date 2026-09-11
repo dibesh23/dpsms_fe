@@ -34,7 +34,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           sidebarExpanded ? "lg:pl-[268px]" : "lg:pl-[92px]"
         }`}
       >
-        <main className="dashboard-main mx-auto min-h-[calc(100dvh-1.5rem)] w-full max-w-8xl border-neutral-200 bg-[#fbfaf7] px-4 py-6 shadow-[0_1px_4px_rgba(0,0,0,0.04)] sm:px-6 lg:rounded-[24px] lg:border lg:px-8 lg:py-7">
+        <main className="dashboard-main mx-auto min-h-[calc(100dvh-1.5rem)] min-w-0 w-full max-w-8xl overflow-x-clip border-neutral-200 bg-[#fbfaf7] px-3 py-4 shadow-[0_1px_4px_rgba(0,0,0,0.04)] sm:px-6 sm:py-6 lg:rounded-[24px] lg:border lg:px-8 lg:py-7">
           {children}
         </main>
       </div>

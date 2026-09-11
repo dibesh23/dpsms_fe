@@ -39,7 +39,12 @@ export function DataTable<T>({
 }) {
   return (
     <div className="overflow-hidden rounded-lg border border-neutral-200 bg-bg-default">
-      <div className="overflow-x-auto">
+      <div
+        className="max-w-full overflow-x-auto overscroll-x-contain [scrollbar-gutter:stable]"
+        role="region"
+        aria-label="Scrollable data table"
+        tabIndex={0}
+      >
         {data.length === 0 ? (
           <EmptyState
             title={empty?.title ?? "Nothing here yet"}
@@ -56,7 +61,7 @@ export function DataTable<T>({
                     <th
                       key={column.key}
                       className={cn(
-                        "type-table-header px-5 py-3 uppercase",
+                        "type-table-header whitespace-nowrap px-3 py-3 uppercase sm:px-5",
                         column.align === "right" && "text-right",
                         column.headerClassName,
                       )}
@@ -93,7 +98,7 @@ export function DataTable<T>({
                     <td
                       key={column.key}
                       className={cn(
-                        "type-table-cell px-5 py-3.5",
+                        "type-table-cell px-3 py-3 sm:px-5 sm:py-3.5",
                         column.align === "right" && "text-right",
                         column.className,
                       )}

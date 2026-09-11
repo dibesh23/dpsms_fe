@@ -54,19 +54,19 @@ export function AuthShell({
           <Wordmark className="h-8" />
         </Link>
 
-        <div className="flex min-h-[100dvh] w-full flex-col items-center justify-between">
+        <div className="flex min-h-[100dvh] w-full flex-col items-center justify-between overflow-x-hidden">
           {}
           <div className="grow basis-0">
-            <div className="h-24" />
+            <div className="h-20 sm:h-24" />
           </div>
 
-          <div className="relative flex w-full flex-col items-center justify-center px-4">
+          <div className="relative flex w-full min-w-0 flex-col items-center justify-center px-3 sm:px-4">
             {children}
           </div>
 
           <div className="flex grow basis-0 flex-col justify-end">
             {showTerms && (
-              <p className="type-caption px-20 py-8 text-center font-medium md:px-0">
+              <p className="type-caption max-w-md px-5 py-6 text-center font-medium sm:px-8 sm:py-8 md:px-0">
                 By continuing, you agree to our{" "}
                 <Link
                   href="/terms"

@@ -86,7 +86,12 @@ function SubjectMarksTable({ subjects }: { subjects: ExamSubjectDetail[] }) {
     );
   }
   return (
-    <div className="overflow-x-auto">
+    <div
+      className="overflow-x-auto overscroll-x-contain"
+      role="region"
+      aria-label="Exam results"
+      tabIndex={0}
+    >
       <table className="w-full min-w-[560px] text-left text-sm">
         <thead>
           <tr className="border-b border-neutral-100 text-xs font-medium text-neutral-400">

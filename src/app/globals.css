@@ -774,6 +774,107 @@ body {
   }
 }
 
+@media (max-width: 639px) {
+  .dashboard-main {
+    font-size: 1rem;
+    line-height: 1.55rem;
+  }
+
+  .dashboard-main :where(p, li, dd, dt, span, a, button, label) {
+    overflow-wrap: anywhere;
+  }
+
+  .dashboard-main :where(.text-xs) {
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+  }
+
+  .dashboard-main :where(.text-sm) {
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
+  }
+
+  .dashboard-main :where(.text-base) {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .dashboard-main :where(.text-\[28px\]) {
+    font-size: 1.75rem;
+    line-height: 2.125rem;
+  }
+
+  .dashboard-main :where(.type-brand) {
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+  }
+
+  .dashboard-main :where(.type-display) {
+    font-size: 1.75rem;
+    line-height: 2.125rem;
+  }
+
+  .dashboard-main :where(.type-page-title) {
+    font-size: 1.5rem;
+    line-height: 1.875rem;
+  }
+
+  .dashboard-main :where(.type-section-title) {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+
+  .dashboard-main :where(.type-operational-title, .type-modal-title) {
+    font-size: 1.125rem;
+    line-height: 1.625rem;
+  }
+
+  .dashboard-main :where(.type-card-title, .type-body, .type-body-secondary, .type-body-reading) {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .dashboard-main
+    :where(.type-label, .type-input, .type-button, .type-navigation, .type-table-cell) {
+    font-size: 1rem;
+    line-height: 1.375rem;
+  }
+
+  .dashboard-main
+    :where(
+      .type-table-header,
+      .type-kpi-label,
+      .type-badge,
+      .type-caption,
+      .type-helper,
+      .type-error
+    ) {
+    font-size: 0.8125rem;
+    line-height: 1.1875rem;
+  }
+
+  .dashboard-main :where(.type-kpi) {
+    font-size: 1.625rem;
+    line-height: 2rem;
+  }
+
+  .dashboard-main :where(.type-kpi-sm) {
+    font-size: 1.375rem;
+    line-height: 1.75rem;
+  }
+
+  .dashboard-main :where(.type-micro-label) {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
 .sidebar-scrollbar {
   scrollbar-color: #064e3b transparent;
   scrollbar-width: thin;

@@ -184,7 +184,7 @@ function RequestForm({
     <div className="space-y-6">
       <div>
         <p className="type-micro-label mb-2">Report type</p>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           {reportTypes.map((t) => {
             const Icon = TYPE_ICONS[t];
             const active = type === t;
@@ -211,7 +211,7 @@ function RequestForm({
 
       <div>
         <p className="type-micro-label mb-2">Format</p>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {(Object.keys(REPORT_FORMAT_LABELS) as ReportFormat[]).map((f) => {
             const active = format === f;
             return (
@@ -239,7 +239,7 @@ function RequestForm({
             Scope <span className="font-normal normal-case">(optional)</span>
           </p>
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {type === "FEE" && (
                 <Field label="Academic year">
                   <Select
@@ -291,7 +291,7 @@ function RequestForm({
               )}
             </div>
             {type === "ATTENDANCE" && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Field label="From date">
                   <Input
                     type="date"

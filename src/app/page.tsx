@@ -246,9 +246,9 @@ export default function HomePage() {
       </a>
 
       <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-[#fbfaf7]/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 sm:px-8">
+        <div className="mx-auto flex min-h-18 max-w-7xl items-center justify-between gap-2 px-3 py-2 sm:px-8 sm:py-0">
           <Link href="/" aria-label="Digital Pathshala home">
-            <Wordmark textClassName="text-[15px]" />
+            <Wordmark textClassName="hidden text-[15px] min-[420px]:inline" />
           </Link>
           <nav aria-label="Main navigation" className="hidden items-center gap-8 md:flex">
             <a href="#platform" className="landing-nav-link">
@@ -275,13 +275,15 @@ export default function HomePage() {
               href="/register"
               className="landing-action inline-flex items-center gap-1.5 rounded-lg bg-brand-default px-4 py-2.5 font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-md"
             >
-              Create your school <ArrowUpRightIcon className="size-4" />
+              <span className="min-[420px]:hidden">Get started</span>
+              <span className="hidden min-[420px]:inline">Create your school</span>
+              <ArrowUpRightIcon className="size-4 flex-none" />
             </Link>
           </div>
         </div>
       </header>
 
-      <section id="main-content" className="relative px-5 pb-24 pt-18 sm:px-8 sm:pb-32 sm:pt-24">
+      <section id="main-content" className="relative px-4 pb-20 pt-14 sm:px-8 sm:pb-32 sm:pt-24">
         <div className="landing-hero-glow absolute inset-x-0 top-0 -z-0 mx-auto h-[700px] max-w-6xl" />
         <div className="relative z-10 mx-auto max-w-7xl">
           <div className="mx-auto max-w-4xl text-center">
@@ -292,7 +294,7 @@ export default function HomePage() {
               </span>
               Built for the rhythm of modern schools
             </div>
-            <h1 className="landing-display landing-rise landing-delay-1 mt-7 text-balance text-[3.25rem] font-semibold leading-[0.98] tracking-[-0.055em] text-brand-default sm:text-[4.75rem] lg:text-[6rem]">
+            <h1 className="landing-display landing-rise landing-delay-1 mt-7 text-balance text-[clamp(2.65rem,14vw,3.25rem)] font-semibold leading-[1.02] tracking-[-0.05em] text-brand-default sm:text-[4.75rem] sm:leading-[0.98] lg:text-[6rem]">
               Your whole school,
               <span className="landing-editorial mt-2 block font-normal text-emerald-700">
                 moving as one.
@@ -322,7 +324,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="landing-rise landing-delay-4 relative mt-18 px-1 sm:mt-24 sm:px-8">
+          <div className="landing-rise landing-delay-4 relative mt-14 px-0 sm:mt-24 sm:px-8">
             <ProductPreview />
           </div>
         </div>
@@ -346,7 +348,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="platform" className="px-5 py-24 sm:px-8 sm:py-32">
+      <section id="platform" className="px-4 py-20 sm:px-8 sm:py-32">
         <div className="mx-auto max-w-7xl">
           <div className="grid items-end gap-8 lg:grid-cols-[1fr_.8fr]">
             <div>
@@ -361,7 +363,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="mt-14 grid overflow-hidden rounded-[28px] border border-stone-200 bg-white shadow-sm lg:grid-cols-4">
+          <div className="mt-10 grid overflow-hidden rounded-[24px] border border-stone-200 bg-white shadow-sm sm:mt-14 sm:rounded-[28px] lg:grid-cols-4">
             {[
               [UserPlusIcon, "Admit", "Create a complete student record"],
               [CalendarDaysIcon, "Organize", "Connect years, classes, and sections"],
@@ -405,13 +407,13 @@ export default function HomePage() {
               return (
                 <article
                   key={feature.title}
-                  className={`${feature.className} group min-h-[300px] overflow-hidden rounded-[26px] border border-stone-200 bg-white p-7 transition duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-9`}
+                  className={`${feature.className} group min-h-[250px] overflow-hidden rounded-[24px] border border-stone-200 bg-white p-6 transition duration-300 hover:-translate-y-1 hover:shadow-xl sm:min-h-[300px] sm:rounded-[26px] sm:p-9`}
                 >
                   <div className="flex h-full flex-col">
                     <span className="flex size-11 items-center justify-center rounded-xl bg-brand-default text-white shadow-sm">
                       <Icon className="size-5" />
                     </span>
-                    <div className="mt-auto pt-16">
+                    <div className="mt-auto pt-10 sm:pt-16">
                       <p className="landing-eyebrow">{feature.eyebrow}</p>
                       <h3 className="mt-3 max-w-lg text-2xl font-semibold tracking-[-0.025em] text-stone-900 sm:text-3xl">
                         {feature.title}
@@ -516,7 +518,7 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-          <div className="relative min-h-[360px] border-t border-white/10 bg-brand-default p-8 lg:border-l lg:border-t-0 lg:p-12">
+          <div className="relative min-h-[300px] border-t border-white/10 bg-brand-default p-6 sm:min-h-[360px] sm:p-8 lg:border-l lg:border-t-0 lg:p-12">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(74,222,128,.2),transparent_35%)]" />
             <div className="relative flex h-full flex-col justify-between">
               <ShieldIcon className="size-16 text-emerald-300" />

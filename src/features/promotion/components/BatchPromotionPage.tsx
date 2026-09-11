@@ -549,7 +549,7 @@ export function BatchPromotionPage() {
                 </p>
               </div>
             </div>
-            <dl className="mt-4 grid grid-cols-3 gap-4 border-t border-emerald-200 pt-4">
+            <dl className="mt-4 grid grid-cols-1 gap-4 border-t border-emerald-200 pt-4 min-[420px]:grid-cols-3">
               <div>
                 <dt className="text-xs text-emerald-600">Total</dt>
                 <dd className="type-kpi mt-0.5 text-emerald-900">{result.summary.total}</dd>

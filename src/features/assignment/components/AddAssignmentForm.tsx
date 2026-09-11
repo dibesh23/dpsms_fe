@@ -94,7 +94,7 @@ export function AddAssignmentForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Section" error={errors.sectionId?.message} required>
           <Select disabled={isSubmitting || sections.length === 0} {...register("sectionId")}>
             <option value="">Select a section…</option>

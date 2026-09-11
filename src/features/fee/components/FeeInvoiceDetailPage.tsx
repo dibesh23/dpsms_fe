@@ -579,7 +579,7 @@ export function FeeInvoiceDetailPage() {
           <EmptyState title="No fee data" description="This student has no fee records." />
         ) : (
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-3">
               <div className="rounded-lg border border-neutral-200 bg-bg-subtle p-3">
                 <p className="text-xs text-neutral-400">Total billed (all years)</p>
                 <p className="mt-1 font-semibold text-neutral-900">

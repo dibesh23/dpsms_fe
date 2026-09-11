@@ -182,7 +182,7 @@ export function SlotForm({
         />
       </Field>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Start time" error={errors.startTime?.message}>
           <Input
             type="time"

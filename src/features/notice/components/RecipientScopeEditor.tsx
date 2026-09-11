@@ -136,12 +136,12 @@ export function RecipientScopeEditor({
 
       {hasStudent && !hasAll && (
         <div className="flex flex-wrap gap-3">
-          <div className="min-w-[160px]">
+          <div className="min-w-0 sm:min-w-[160px]">
             <label className="mb-1 block text-xs text-neutral-500">Class (optional)</label>
             <select
               value={selectedClassId}
               onChange={(e) => updateClass(e.target.value)}
-              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+              className="min-h-11 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900/10 sm:min-h-9 sm:py-1.5"
             >
               <option value="">{loadingClasses ? "Loading…" : "All classes"}</option>
               {classes.map((c) => (
@@ -152,12 +152,12 @@ export function RecipientScopeEditor({
             </select>
           </div>
           {selectedClassId && sections.length > 0 && (
-            <div className="min-w-[160px]">
+            <div className="min-w-0 sm:min-w-[160px]">
               <label className="mb-1 block text-xs text-neutral-500">Section (optional)</label>
               <select
                 value={selectedSectionId}
                 onChange={(e) => updateSection(e.target.value)}
-                className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+                className="min-h-11 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900/10 sm:min-h-9 sm:py-1.5"
               >
                 <option value="">All sections</option>
                 {sections.map((s) => (

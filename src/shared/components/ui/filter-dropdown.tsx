@@ -26,7 +26,7 @@ export function FilterDropdown({
           type="button"
           onClick={toggle}
           className={cn(
-            "type-button flex h-9 items-center gap-2 rounded-lg border px-3 transition-colors",
+            "type-button flex h-11 w-full items-center justify-between gap-2 rounded-lg border px-3 transition-colors sm:h-9 sm:w-auto sm:justify-start",
             open
               ? "border-neutral-400 bg-bg-default text-neutral-900 ring-2 ring-neutral-100"
               : "border-neutral-200 bg-bg-default text-neutral-700 hover:bg-bg-muted",

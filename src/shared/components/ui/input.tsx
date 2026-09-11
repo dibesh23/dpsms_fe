@@ -20,7 +20,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <input
             type={isPasswordVisible ? "text" : type}
             className={cn(
-              "type-input w-full max-w-md rounded-md border border-neutral-300 px-3 py-2 placeholder:text-content-muted read-only:bg-neutral-100 read-only:text-content-subtle focus:border-neutral-500 focus:outline-none focus:ring-neutral-500",
+              "type-input min-h-11 w-full max-w-md rounded-md border border-neutral-300 px-3 py-2 placeholder:text-content-muted read-only:bg-neutral-100 read-only:text-content-subtle focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-100 sm:min-h-10",
               type === "password" && "pr-11",
               props.error && "border-red-500 focus:border-red-500 focus:ring-red-500",
               className,
@@ -44,7 +44,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {type === "password" && (
               <button
                 className={cn(
-                  "absolute inset-y-0 right-0 flex items-center px-3",
+                  "absolute inset-y-0 right-0 flex min-w-11 items-center justify-center px-3",
                   props.error && "opacity-0 transition-opacity group-hover:opacity-100",
                 )}
                 type="button"

@@ -290,7 +290,12 @@ export function AuditLogsPage() {
             description="Try changing the filters or date range."
           />
         ) : (
-          <div className="overflow-x-auto">
+          <div
+            className="overflow-x-auto overscroll-x-contain"
+            role="region"
+            aria-label="School activity logs"
+            tabIndex={0}
+          >
             <table className="w-full min-w-[900px] text-left text-sm">
               <thead className="border-b border-neutral-100 text-xs font-medium tracking-wide text-neutral-400">
                 <tr>

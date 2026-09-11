@@ -211,7 +211,12 @@ export function TimetableDetailPage() {
           )}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+        <div
+          className="overflow-x-auto overscroll-x-contain rounded-lg border border-neutral-200 bg-white"
+          role="region"
+          aria-label="Timetable details"
+          tabIndex={0}
+        >
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-neutral-200 bg-neutral-50">

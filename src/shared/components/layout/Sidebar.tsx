@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/shared/lib/cn";
@@ -496,6 +496,23 @@ export function Sidebar({
   const [hovered, setHovered] = useState(false);
   const desktopExpanded = hovered;
 
+  useEffect(() => {
+    if (!drawerOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDrawerOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [drawerOpen]);
+
   const setDesktopHover = (value: boolean) => {
     setHovered(value);
     onDesktopExpandedChange?.(value);
@@ -515,7 +532,7 @@ export function Sidebar({
         <SidebarContent expanded={desktopExpanded} />
       </aside>
 
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-stone-200 bg-[#FBFAF7]/95 px-4 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between border-b border-stone-200 bg-[#FBFAF7]/95 px-3 backdrop-blur lg:hidden">
         <Link href="/dashboard" aria-label="Digital Pathshala dashboard">
           <Wordmark />
         </Link>
@@ -523,7 +540,7 @@ export function Sidebar({
           type="button"
           onClick={() => setDrawerOpen(true)}
           aria-label="Open navigation menu"
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#064E3B] text-[#064E3B] transition-colors hover:bg-stone-100"
+          className="flex h-11 w-11 items-center justify-center rounded-xl border border-[#064E3B] text-[#064E3B] transition-colors hover:bg-stone-100"
         >
           <MenuIcon className="size-4" />
         </button>
@@ -536,13 +553,18 @@ export function Sidebar({
             onClick={() => setDrawerOpen(false)}
             aria-hidden="true"
           />
-          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-[#FBFAF7] shadow-xl animate-drawer-in">
-            <div className="flex h-14 flex-none items-center justify-end border-b border-stone-200 pr-4">
+          <div
+            className="absolute inset-y-0 left-0 flex w-[min(20rem,90vw)] flex-col bg-[#FBFAF7] shadow-xl animate-drawer-in"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
+          >
+            <div className="flex min-h-16 flex-none items-center justify-end border-b border-stone-200 px-3">
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
                 aria-label="Close navigation menu"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-[#064E3B] transition-colors hover:bg-stone-100"
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-[#064E3B] transition-colors hover:bg-stone-100"
               >
                 <XIcon className="size-4" />
               </button>

@@ -268,7 +268,7 @@ function SetupSteps({ row }: { row: FinanceClassRow }) {
     },
   ];
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-3">
       {steps.map((step) => (
         <Link
           key={step.label}

@@ -41,7 +41,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({ className, ...props
   <select
     ref={ref}
     className={cn(
-      "type-input w-full rounded-md border border-neutral-300 bg-bg-default px-3 py-2 focus:border-neutral-500 focus:outline-none focus:ring-neutral-500",
+      "type-input min-h-11 w-full rounded-md border border-neutral-300 bg-bg-default px-3 py-2 focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-100 sm:min-h-10",
       className,
     )}
     {...props}

@@ -28,12 +28,14 @@ function PageButton({
   children,
   active,
   ariaLabel,
+  className,
 }: {
   onClick: () => void;
   disabled?: boolean;
   children: ReactNode;
   active?: boolean;
   ariaLabel?: string;
+  className?: string;
 }) {
   return (
     <button
@@ -48,6 +50,7 @@ function PageButton({
           : "text-content-subtle hover:bg-brand-subtle hover:text-brand-default",
         disabled &&
           "cursor-not-allowed text-neutral-300 hover:bg-transparent hover:text-neutral-300",
+        className,
       )}
     >
       {children}
@@ -73,14 +76,19 @@ export function Pagination({
   const to = Math.min(page * pageSize, total);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-100 px-5 py-3">
-      <p className="type-caption type-numeric">
+    <div className="flex flex-col items-center justify-between gap-3 border-t border-neutral-100 px-3 py-3 sm:flex-row sm:px-5">
+      <p className="type-caption type-numeric text-center sm:text-left">
         Showing <span className="font-medium text-brand-default">{from}</span>–
         <span className="font-medium text-brand-default">{to}</span> of{" "}
         <span className="font-medium text-brand-default">{total}</span> {label}
       </p>
-      <div className="flex items-center gap-1">
-        <PageButton onClick={() => onPageChange(1)} disabled={page <= 1} ariaLabel="First page">
+      <div className="flex max-w-full items-center justify-center gap-1">
+        <PageButton
+          onClick={() => onPageChange(1)}
+          disabled={page <= 1}
+          ariaLabel="First page"
+          className="hidden sm:flex"
+        >
           <ChevronsLeftIcon className="size-4" />
         </PageButton>
         <PageButton
@@ -92,7 +100,10 @@ export function Pagination({
         </PageButton>
         {getPageWindow(page, pageCount).map((value, index) =>
           value === "…" ? (
-            <span key={`ellipsis-${index}`} className="px-1 text-sm text-neutral-400">
+            <span
+              key={`ellipsis-${index}`}
+              className="hidden px-1 text-sm text-neutral-400 sm:inline"
+            >
               …
             </span>
           ) : (
@@ -101,6 +112,7 @@ export function Pagination({
               onClick={() => onPageChange(value)}
               active={value === page}
               ariaLabel={`Page ${value}`}
+              className={value === page ? undefined : "hidden sm:flex"}
             >
               {value}
             </PageButton>
@@ -117,6 +129,7 @@ export function Pagination({
           onClick={() => onPageChange(pageCount)}
           disabled={page >= pageCount}
           ariaLabel="Last page"
+          className="hidden sm:flex"
         >
           <ChevronsRightIcon className="size-4" />
         </PageButton>

@@ -47,7 +47,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
         type={props.onClick ? "button" : "submit"}
         className={cn(
-          "type-button group flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-3 transition-all",
+          "type-button group flex min-h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-3 py-2 transition-all sm:min-h-10 sm:py-0",
           props.disabled || loading
             ? "cursor-not-allowed border-border-subtle bg-bg-subtle text-content-subtle outline-none"
             : buttonVariants[variant],

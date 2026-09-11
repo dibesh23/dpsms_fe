@@ -42,13 +42,14 @@ export function Dropdown({
   }, [open, close]);
 
   return (
-    <div ref={ref} className="relative inline-block">
+    <div ref={ref} className="relative inline-block max-w-full">
       {trigger({ open, toggle })}
       {open && (
         <div
           className={cn(
             "absolute z-50 mt-1.5 origin-top rounded-lg border border-neutral-200 bg-bg-default p-1 shadow-lg animate-scale-in",
             align === "end" ? "right-0" : "left-0",
+            "max-w-[calc(100vw-1.5rem)]",
             width,
             className,
           )}
@@ -75,7 +76,7 @@ export function DropdownMenuItem({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-neutral-700 transition-colors hover:bg-bg-subtle",
+        "flex min-h-11 w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-neutral-700 transition-colors hover:bg-bg-subtle sm:min-h-0 sm:px-2 sm:py-1.5",
         className,
       )}
     >

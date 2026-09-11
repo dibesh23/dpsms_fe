@@ -152,9 +152,9 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-[1500px] space-y-4 pb-6">
-      <header className="flex flex-wrap items-center justify-between gap-4 rounded-[18px] border border-neutral-200 bg-white px-5 py-4">
-        <div>
-          <div className="flex items-center gap-2.5">
+      <header className="flex flex-col items-stretch gap-4 rounded-[18px] border border-neutral-200 bg-white px-4 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-5">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2.5">
             <h1 className="type-page-title">Good morning, {firstName}</h1>
             <span className="type-badge rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-[#064E3B]">
               {roleLabel}
@@ -164,8 +164,8 @@ export default function DashboardPage() {
             Here is what is happening at Digital Pathshala today.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex h-10 items-center gap-2 rounded-xl border border-neutral-200 px-3 text-sm font-medium text-neutral-700">
+        <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
+          <div className="flex min-h-10 min-w-0 items-center gap-2 rounded-xl border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-700">
             <CalendarDaysIcon className="size-4" />
             Academic Year {summary.academicYear || "—"}
           </div>
@@ -215,7 +215,7 @@ export default function DashboardPage() {
             </Link>
           }
         >
-          <div className="px-5 pb-5 pt-6">
+          <div className="px-3 pb-5 pt-6 sm:px-5">
             <BarChart
               data={summary.weeklyAttendance}
               height={256}
@@ -291,7 +291,12 @@ export default function DashboardPage() {
           </span>
         }
       >
-        <div className="overflow-x-auto">
+        <div
+          className="overflow-x-auto overscroll-x-contain"
+          role="region"
+          aria-label="Recent activities"
+          tabIndex={0}
+        >
           <table className="type-table-cell w-full min-w-[680px] text-left">
             <thead className="type-table-header">
               <tr>
