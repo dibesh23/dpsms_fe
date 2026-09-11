@@ -1,6 +1,5 @@
 import { apiClient } from "@/shared/lib/apiClient";
 
-// Mirrors backend AssignmentStatus / SubmissionStatus enums
 export type AssignmentStatus = "DRAFT" | "PUBLISHED" | "CLOSED";
 export type SubmissionStatus = "NOT_STARTED" | "SUBMITTED" | "GRADED";
 
@@ -140,7 +139,6 @@ export const assignmentApi = {
     await apiClient.delete(`/assignments/${id}`);
   },
 
-  // ── Submissions (teacher) ───────────────────────────────────────────────────
   async listSubmissions(id: string): Promise<ListResult<SubmissionRowItem>> {
     const { data } = await apiClient.get<{ data: ListResult<SubmissionRowItem> }>(
       `/assignments/${id}/submissions`,
@@ -163,7 +161,6 @@ export const assignmentApi = {
     await apiClient.post(`/assignments/${id}/submissions/${submissionId}/grade`, payload);
   },
 
-  // ── Assignment attachments ──────────────────────────────────────────────────
   async uploadAttachment(id: string, file: File): Promise<AttachmentItem> {
     const form = new FormData();
     form.append("file", file);
@@ -198,7 +195,6 @@ export const assignmentApi = {
     setTimeout(() => URL.revokeObjectURL(url), 10_000);
   },
 
-  // Submission attachments live under /submissions/:submissionId/attachments
   async openSubmissionAttachment(
     id: string,
     submissionId: string,

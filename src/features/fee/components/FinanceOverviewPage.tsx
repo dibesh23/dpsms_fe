@@ -41,10 +41,12 @@ export function FinanceOverviewPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
 
-  // Debounce the search input so the aggregate query runs at most once per pause.
   useEffect(() => {
     const trimmed = searchInput.trim();
-    const id = setTimeout(() => setSearch(trimmed.length < 2 ? "" : trimmed), trimmed.length < 2 ? 0 : 300);
+    const id = setTimeout(
+      () => setSearch(trimmed.length < 2 ? "" : trimmed),
+      trimmed.length < 2 ? 0 : 300,
+    );
     return () => clearTimeout(id);
   }, [searchInput]);
 
@@ -151,7 +153,8 @@ export function FinanceOverviewPage() {
                         <p className="font-medium text-neutral-900">{hit.fullName}</p>
                         <p className="mt-0.5 text-xs text-neutral-400">
                           Adm {hit.admissionNumber} · Roll {hit.rollNumber || "—"} ·{" "}
-                          {[hit.className, hit.sectionName].filter(Boolean).join(" / ") || "Not enrolled"}
+                          {[hit.className, hit.sectionName].filter(Boolean).join(" / ") ||
+                            "Not enrolled"}
                         </p>
                       </div>
                       <span className="text-xs text-neutral-500">
@@ -206,9 +209,7 @@ export function FinanceOverviewPage() {
             <ul className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               {summary.classes.map((row) => {
                 const complete =
-                  row.structureCount > 0 &&
-                  row.installmentCount > 0 &&
-                  row.invoiceCount > 0;
+                  row.structureCount > 0 && row.installmentCount > 0 && row.invoiceCount > 0;
                 return (
                   <li
                     key={row.classId}
@@ -245,9 +246,7 @@ export function FinanceOverviewPage() {
 
 function SetupSteps({ row }: { row: FinanceClassRow }) {
   const primaryHref =
-    row.structures[0]?.id != null
-      ? `/fees/structures/${row.structures[0].id}`
-      : "/fees/structures";
+    row.structures[0]?.id != null ? `/fees/structures/${row.structures[0].id}` : "/fees/structures";
   const steps = [
     {
       label: "Fee Structure",
@@ -289,9 +288,7 @@ function SetupSteps({ row }: { row: FinanceClassRow }) {
             <span className="size-4 rounded-full border-[1.5px] border-neutral-300" />
           )}
           <span className="text-xs font-medium text-neutral-900">{step.label}</span>
-          <span
-            className={cn("text-[11px]", step.done ? "text-emerald-600" : "text-blue-600")}
-          >
+          <span className={cn("text-[11px]", step.done ? "text-emerald-600" : "text-blue-600")}>
             {step.done ? `${step.count} set up` : "Set up"}
           </span>
         </Link>

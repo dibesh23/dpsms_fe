@@ -88,8 +88,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAccessTokenRef(() => accessTokenRef.current);
   }, []);
 
-  // Single-flight: concurrent callers (mount restore + apiClient 401 retry)
-  // share one rotation so we never race the refresh token against itself.
   const refreshInFlightRef = useRef<Promise<boolean> | null>(null);
 
   const refreshToken = useCallback(async (): Promise<boolean> => {

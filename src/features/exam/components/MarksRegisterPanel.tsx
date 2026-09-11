@@ -17,7 +17,13 @@ import { BanIcon, ClipboardCheckIcon } from "@/shared/components/ui/icons";
 type MarksRow = { theory: string; practical: string; absent: boolean };
 type MarksMap = Record<string, MarksRow>;
 
-export function MarksRegisterPanel({ exam, onChanged }: { exam: ExamDetail; onChanged: () => Promise<void> }) {
+export function MarksRegisterPanel({
+  exam,
+  onChanged,
+}: {
+  exam: ExamDetail;
+  onChanged: () => Promise<void>;
+}) {
   const { hasRole } = useAuth();
   const canEditMarks = hasRole("TEACHER");
   const toast = useToast();
@@ -52,7 +58,10 @@ export function MarksRegisterPanel({ exam, onChanged }: { exam: ExamDetail; onCh
       setLoading(true);
       setError(null);
       try {
-        const data = await examApi.getMarksRegister(exam.id, { sectionId: section, subjectId: subject });
+        const data = await examApi.getMarksRegister(exam.id, {
+          sectionId: section,
+          subjectId: subject,
+        });
         setRegister(data);
         const next: MarksMap = {};
         for (const student of data.students) {
@@ -76,7 +85,8 @@ export function MarksRegisterPanel({ exam, onChanged }: { exam: ExamDetail; onCh
   useEffect(() => {
     if (sections.length > 0 && visibleSubjects.length > 0) {
       if (!sectionId || !sections.some((s) => s.id === sectionId)) setSectionId(sections[0]!.id);
-      if (!subjectId || !visibleSubjects.some((s) => s.subjectId === subjectId)) setSubjectId(visibleSubjects[0]!.subjectId);
+      if (!subjectId || !visibleSubjects.some((s) => s.subjectId === subjectId))
+        setSubjectId(visibleSubjects[0]!.subjectId);
     }
   }, [sections, visibleSubjects, sectionId, subjectId]);
 
@@ -110,8 +120,8 @@ export function MarksRegisterPanel({ exam, onChanged }: { exam: ExamDetail; onCh
           const row = marks[student.enrollmentId] ?? { theory: "", practical: "", absent: false };
           return {
             enrollmentId: student.enrollmentId,
-            theoryMarks: row.absent ? null : (row.theory === "" ? null : Number(row.theory)),
-            practicalMarks: row.absent ? null : (row.practical === "" ? null : Number(row.practical)),
+            theoryMarks: row.absent ? null : row.theory === "" ? null : Number(row.theory),
+            practicalMarks: row.absent ? null : row.practical === "" ? null : Number(row.practical),
             isAbsent: row.absent,
           };
         }),
@@ -122,7 +132,8 @@ export function MarksRegisterPanel({ exam, onChanged }: { exam: ExamDetail; onCh
     } catch (err) {
       const message =
         err instanceof Error && "response" in err
-          ? (err as { response?: { data?: { error?: { message?: string } } } }).response?.data?.error?.message
+          ? (err as { response?: { data?: { error?: { message?: string } } } }).response?.data
+              ?.error?.message
           : undefined;
       setError(message ?? (err instanceof Error ? err.message : "Could not save marks."));
     } finally {
@@ -157,7 +168,11 @@ export function MarksRegisterPanel({ exam, onChanged }: { exam: ExamDetail; onCh
       <div className="flex flex-wrap items-end gap-3 border-b border-neutral-100 px-5 py-4">
         <div className="w-48">
           <label className="mb-1.5 block text-sm font-medium text-neutral-800">Section</label>
-          <Select value={sectionId} onChange={(e) => setSectionId(e.target.value)} disabled={loading || saving}>
+          <Select
+            value={sectionId}
+            onChange={(e) => setSectionId(e.target.value)}
+            disabled={loading || saving}
+          >
             {sections.map((section) => (
               <option key={section.id} value={section.id}>
                 {section.name}
@@ -167,7 +182,11 @@ export function MarksRegisterPanel({ exam, onChanged }: { exam: ExamDetail; onCh
         </div>
         <div className="w-52">
           <label className="mb-1.5 block text-sm font-medium text-neutral-800">Subject</label>
-          <Select value={subjectId} onChange={(e) => setSubjectId(e.target.value)} disabled={loading || saving}>
+          <Select
+            value={subjectId}
+            onChange={(e) => setSubjectId(e.target.value)}
+            disabled={loading || saving}
+          >
             {visibleSubjects.map((subject) => (
               <option key={subject.subjectId} value={subject.subjectId}>
                 {subject.subjectName}
@@ -184,14 +203,19 @@ export function MarksRegisterPanel({ exam, onChanged }: { exam: ExamDetail; onCh
               dot={false}
             />
             {register.fullMarksTheory > 0 && <span>Theory {register.fullMarksTheory}</span>}
-            {register.fullMarksPractical > 0 && <span>Practical {register.fullMarksPractical}</span>}
+            {register.fullMarksPractical > 0 && (
+              <span>Practical {register.fullMarksPractical}</span>
+            )}
             {register.passMarks > 0 && <span>Pass {register.passMarks}</span>}
           </div>
         )}
       </div>
 
       {error && (
-        <div role="alert" className="mx-5 mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div
+          role="alert"
+          className="mx-5 mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
           {error}
         </div>
       )}
@@ -230,7 +254,11 @@ export function MarksRegisterPanel({ exam, onChanged }: { exam: ExamDetail; onCh
             </thead>
             <tbody className="divide-y divide-neutral-100">
               {register.students.map((student) => {
-                const row = marks[student.enrollmentId] ?? { theory: "", practical: "", absent: false };
+                const row = marks[student.enrollmentId] ?? {
+                  theory: "",
+                  practical: "",
+                  absent: false,
+                };
                 const absent = row.absent;
                 return (
                   <tr key={student.enrollmentId} className={absent ? "bg-bg-subtle/50" : undefined}>
@@ -247,7 +275,9 @@ export function MarksRegisterPanel({ exam, onChanged }: { exam: ExamDetail; onCh
                         value={absent ? "" : row.theory}
                         readOnly={!canEditMarks}
                         disabled={absent}
-                        onChange={(e) => setMarksFor(student.enrollmentId, { theory: e.target.value })}
+                        onChange={(e) =>
+                          setMarksFor(student.enrollmentId, { theory: e.target.value })
+                        }
                         className="w-full rounded-md border border-neutral-300 bg-bg-default px-2 py-1.5 text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none disabled:opacity-60"
                         aria-label={`${student.studentName} theory marks`}
                       />
@@ -260,7 +290,9 @@ export function MarksRegisterPanel({ exam, onChanged }: { exam: ExamDetail; onCh
                         value={absent ? "" : row.practical}
                         readOnly={!canEditMarks}
                         disabled={absent}
-                        onChange={(e) => setMarksFor(student.enrollmentId, { practical: e.target.value })}
+                        onChange={(e) =>
+                          setMarksFor(student.enrollmentId, { practical: e.target.value })
+                        }
                         className="w-full rounded-md border border-neutral-300 bg-bg-default px-2 py-1.5 text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none disabled:opacity-60"
                         aria-label={`${student.studentName} practical marks`}
                       />
@@ -315,7 +347,9 @@ export function MarksRegisterPanel({ exam, onChanged }: { exam: ExamDetail; onCh
                 />
               </>
             ) : (
-              <p className="text-xs text-neutral-400">Review mode — marks are read-only for this account.</p>
+              <p className="text-xs text-neutral-400">
+                Review mode — marks are read-only for this account.
+              </p>
             )}
           </div>
         </div>

@@ -59,7 +59,11 @@ export function TimetablePage() {
     return () => clearTimeout(id);
   }, [load]);
 
-  const handleCreate = async (values: { classId: string; academicYearId: string; name: string }): Promise<boolean> => {
+  const handleCreate = async (values: {
+    classId: string;
+    academicYearId: string;
+    name: string;
+  }): Promise<boolean> => {
     try {
       const created = await timetableApi.createTimetable(values);
       toast.success("Timetable created");
@@ -128,11 +132,16 @@ export function TimetablePage() {
 
   const sortValueOf = (row: TimetableRecord, key: string): string | number => {
     switch (key) {
-      case "name": return row.name;
-      case "className": return row.className;
-      case "academicYearLabel": return row.academicYearLabel;
-      case "slotCount": return row.slotCount;
-      default: return "";
+      case "name":
+        return row.name;
+      case "className":
+        return row.className;
+      case "academicYearLabel":
+        return row.academicYearLabel;
+      case "slotCount":
+        return row.slotCount;
+      default:
+        return "";
     }
   };
 
@@ -158,36 +167,41 @@ export function TimetablePage() {
         }
       />
 
-      <SearchBar
-        value={table.query}
-        onChange={table.setQuery}
-        placeholder="Search timetables..."
-      />
+      <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search timetables..." />
 
       <DataTable
-        columns={canManage ? [...columns, {
-          key: "actions",
-          header: "",
-          render: (row) => (
-            <RowActions
-              actions={[
+        columns={
+          canManage
+            ? [
+                ...columns,
                 {
-                  label: "Edit",
-                  icon: <PencilIcon className="h-4 w-4" />,
-                  onClick: () => router.push(`/timetable/${row.id}`),
+                  key: "actions",
+                  header: "",
+                  render: (row) => (
+                    <RowActions
+                      actions={[
+                        {
+                          label: "Edit",
+                          icon: <PencilIcon className="h-4 w-4" />,
+                          onClick: () => router.push(`/timetable/${row.id}`),
+                        },
+                        ...(canManage
+                          ? [
+                              {
+                                label: "Delete",
+                                icon: <TrashIcon className="h-4 w-4" />,
+                                danger: true,
+                                onClick: () => setDeleteTarget(row),
+                              },
+                            ]
+                          : []),
+                      ]}
+                    />
+                  ),
                 },
-                ...(canManage
-                  ? [{
-                      label: "Delete",
-                      icon: <TrashIcon className="h-4 w-4" />,
-                      danger: true,
-                      onClick: () => setDeleteTarget(row),
-                    }]
-                  : []),
-              ]}
-            />
-          ),
-        }] : columns}
+              ]
+            : columns
+        }
         data={table.pageRows}
         keyExtractor={(row) => row.id}
         sortKey={table.sortKey}
@@ -217,16 +231,18 @@ export function TimetablePage() {
         </Dialog>
       )}
 
-      <Dialog
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        title="Delete Timetable"
-      >
+      <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Timetable">
         <p className="text-sm text-neutral-600">
-          Are you sure you want to delete <strong>{deleteTarget?.name}</strong>? All period slots will also be removed.
+          Are you sure you want to delete <strong>{deleteTarget?.name}</strong>? All period slots
+          will also be removed.
         </p>
         <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4 mt-4">
-          <Button variant="secondary" text="Cancel" onClick={() => setDeleteTarget(null)} className="w-auto" />
+          <Button
+            variant="secondary"
+            text="Cancel"
+            onClick={() => setDeleteTarget(null)}
+            className="w-auto"
+          />
           <Button
             variant="danger"
             text={deleteBusy ? "Deleting..." : "Delete"}

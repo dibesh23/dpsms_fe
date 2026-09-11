@@ -33,8 +33,6 @@ export const INVOICE_STATUSES: { value: InvoiceStatus; label: string }[] = [
   { value: "PAID", label: "Paid" },
 ];
 
-// ── Records ────────────────────────────────────────
-
 export interface FeeTypeRecord {
   id: string;
   name: string;
@@ -89,7 +87,13 @@ export interface InvoiceDetailRecord extends InvoiceRecord {
     className: string;
     sectionName: string;
   };
-  installment?: { id: string; dueDate: string; amount: number; billingPeriod: string | null; feeStructureId: string } | null;
+  installment?: {
+    id: string;
+    dueDate: string;
+    amount: number;
+    billingPeriod: string | null;
+    feeStructureId: string;
+  } | null;
   payments?: { id: string; amountPaid: number; paymentMethod: PaymentMethod; paidAt: string }[];
 }
 
@@ -152,7 +156,13 @@ export interface StudentFeeSummaryRecord {
 }
 
 export interface PaymentRecordResult {
-  payment: { id: string; invoiceId: string; amountPaid: number; paymentMethod: PaymentMethod; paidAt: string };
+  payment: {
+    id: string;
+    invoiceId: string;
+    amountPaid: number;
+    paymentMethod: PaymentMethod;
+    paidAt: string;
+  };
   paidToDate: number;
   due: number;
   status: InvoiceStatus;
@@ -182,41 +192,54 @@ export interface ReceiptRecord {
   payment: { id: string; amountPaid: number; paymentMethod: PaymentMethod; paidAt: string };
 }
 
-// ── API functions ──────────────────────────────────
-
 export const feeApi = {
-  // Fee Types
-  async listFeeTypes(params?: { category?: FeeCategory; page?: number; pageSize?: number }): Promise<FeeTypeListResult> {
+  async listFeeTypes(params?: {
+    category?: FeeCategory;
+    page?: number;
+    pageSize?: number;
+  }): Promise<FeeTypeListResult> {
     const query = new URLSearchParams();
     if (params?.category) query.set("category", params.category);
     if (params?.page) query.set("page", String(params.page));
     if (params?.pageSize) query.set("pageSize", String(params.pageSize));
     const qs = query.toString();
-    const { data } = await apiClient.get<{ data: FeeTypeListResult }>(`/fees/types${qs ? `?${qs}` : ""}`);
+    const { data } = await apiClient.get<{ data: FeeTypeListResult }>(
+      `/fees/types${qs ? `?${qs}` : ""}`,
+    );
     return data.data;
   },
 
-  async createFeeType(input: { name: string; category: FeeCategory; isRecurringAnnually?: boolean }): Promise<FeeTypeRecord> {
+  async createFeeType(input: {
+    name: string;
+    category: FeeCategory;
+    isRecurringAnnually?: boolean;
+  }): Promise<FeeTypeRecord> {
     const { data } = await apiClient.post<{ data: FeeTypeRecord }>("/fees/types", input);
     return data.data;
   },
 
-  // Fee Structures
-  async createStructure(input: { feeTypeId: string; classId: string; academicYearId: string; amount: number }): Promise<FeeStructureRecord> {
+  async createStructure(input: {
+    feeTypeId: string;
+    classId: string;
+    academicYearId: string;
+    amount: number;
+  }): Promise<FeeStructureRecord> {
     const { data } = await apiClient.post<{ data: FeeStructureRecord }>("/fees/structures", input);
     return data.data;
   },
 
-  async listStructures(params?: { classId?: string; academicYearId?: string }): Promise<FeeStructureRecord[]> {
+  async listStructures(params?: {
+    classId?: string;
+    academicYearId?: string;
+  }): Promise<FeeStructureRecord[]> {
     const query = new URLSearchParams();
     if (params?.classId) query.set("classId", params.classId);
     if (params?.academicYearId) query.set("academicYearId", params.academicYearId);
     const qs = query.toString();
-    // Backend doesn't have a dedicated list-structures endpoint; structures come
-    // attached to the create response and via generate-invoices. For the list page
-    // we query invoices grouped by structure. If the backend adds a GET /fees/structures
-    // later, swap this call.
-    const { data } = await apiClient.get<{ data: FeeStructureRecord[] }>(`/fees/structures${qs ? `?${qs}` : ""}`);
+
+    const { data } = await apiClient.get<{ data: FeeStructureRecord[] }>(
+      `/fees/structures${qs ? `?${qs}` : ""}`,
+    );
     return data.data;
   },
 
@@ -224,16 +247,20 @@ export const feeApi = {
     structureId: string,
     installments: { dueDate: string; amount: number; billingPeriod?: string | null }[],
   ): Promise<FeeStructureRecord> {
-    const { data } = await apiClient.post<{ data: FeeStructureRecord }>(`/fees/structures/${structureId}/installments`, { installments });
+    const { data } = await apiClient.post<{ data: FeeStructureRecord }>(
+      `/fees/structures/${structureId}/installments`,
+      { installments },
+    );
     return data.data;
   },
 
   async generateInvoices(structureId: string): Promise<InvoiceGenerationResult> {
-    const { data } = await apiClient.post<{ data: InvoiceGenerationResult }>(`/fees/structures/${structureId}/generate-invoices`);
+    const { data } = await apiClient.post<{ data: InvoiceGenerationResult }>(
+      `/fees/structures/${structureId}/generate-invoices`,
+    );
     return data.data;
   },
 
-  // Invoices
   async listInvoices(params?: {
     classId?: string;
     sectionId?: string;
@@ -250,7 +277,9 @@ export const feeApi = {
     if (params?.pageSize) query.set("pageSize", String(params.pageSize));
     if (params?.search) query.set("search", params.search);
     const qs = query.toString();
-    const { data } = await apiClient.get<{ data: InvoiceListResult }>(`/fees/invoices${qs ? `?${qs}` : ""}`);
+    const { data } = await apiClient.get<{ data: InvoiceListResult }>(
+      `/fees/invoices${qs ? `?${qs}` : ""}`,
+    );
     return data.data;
   },
 
@@ -259,8 +288,6 @@ export const feeApi = {
     return data.data;
   },
 
-  // Admin student fee lookup — grouped across every academic year the
-  // student has ever been enrolled in.
   async getStudentFeeSummary(studentId: string): Promise<StudentFeeSummaryRecord> {
     const { data } = await apiClient.get<{ data: StudentFeeSummaryRecord }>(
       `/fees/students/${studentId}/fees`,
@@ -272,11 +299,13 @@ export const feeApi = {
     invoiceId: string,
     input: { amountPaid: number; paymentMethod: PaymentMethod; paidAt?: string },
   ): Promise<PaymentRecordResult> {
-    const { data } = await apiClient.post<{ data: PaymentRecordResult }>(`/fees/invoices/${invoiceId}/payments`, input);
+    const { data } = await apiClient.post<{ data: PaymentRecordResult }>(
+      `/fees/invoices/${invoiceId}/payments`,
+      input,
+    );
     return data.data;
   },
 
-  // Discounts / Scholarships
   async applyDiscount(input: {
     enrollmentId: string;
     feeStructureId: string;
@@ -296,7 +325,6 @@ export const feeApi = {
     return data.data;
   },
 
-  // Receipts
   async getReceipt(id: string): Promise<ReceiptRecord> {
     const { data } = await apiClient.get<{ data: ReceiptRecord }>(`/fees/receipts/${id}`);
     return data.data;

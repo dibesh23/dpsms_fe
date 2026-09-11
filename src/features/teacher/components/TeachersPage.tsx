@@ -79,12 +79,7 @@ const COLUMNS: Column<Teacher>[] = [
     header: "Subjects",
     sortValue: (row) => row.subjects.join(", ") || row.subject,
     render: (row) => {
-      const subjects =
-        row.subjects.length > 0
-          ? row.subjects
-          : row.subject
-            ? [row.subject]
-            : [];
+      const subjects = row.subjects.length > 0 ? row.subjects : row.subject ? [row.subject] : [];
       return subjects.length === 0 ? (
         <span className="text-neutral-400">—</span>
       ) : (
@@ -105,9 +100,7 @@ const COLUMNS: Column<Teacher>[] = [
     key: "department",
     header: "Department",
     sortValue: (row) => row.department,
-    render: (row) => (
-      <span className="text-neutral-600">{row.department || "—"}</span>
-    ),
+    render: (row) => <span className="text-neutral-600">{row.department || "—"}</span>,
   },
   {
     key: "status",
@@ -282,41 +275,42 @@ export function TeachersPage() {
     );
   }, [teachers]);
 
-  const actionColumns: Column<Teacher>[] = canUpdate || canDelete
-    ? [
-        ...COLUMNS,
-        {
-          key: "actions",
-          header: "",
-          align: "right" as const,
-          render: (row: Teacher) => (
-            <RowActions
-              actions={[
-                ...(canUpdate
-                  ? [
-                      {
-                        label: "Edit teacher",
-                        icon: <PencilIcon className="size-3.5" />,
-                        onClick: () => setEditTarget(row),
-                      },
-                    ]
-                  : []),
-                ...(canDelete
-                  ? [
-                      {
-                        label: "Remove teacher",
-                        icon: <TrashIcon className="size-3.5" />,
-                        danger: true,
-                        onClick: () => setRemoveTarget(row),
-                      },
-                    ]
-                  : []),
-              ]}
-            />
-          ),
-        },
-      ]
-    : COLUMNS;
+  const actionColumns: Column<Teacher>[] =
+    canUpdate || canDelete
+      ? [
+          ...COLUMNS,
+          {
+            key: "actions",
+            header: "",
+            align: "right" as const,
+            render: (row: Teacher) => (
+              <RowActions
+                actions={[
+                  ...(canUpdate
+                    ? [
+                        {
+                          label: "Edit teacher",
+                          icon: <PencilIcon className="size-3.5" />,
+                          onClick: () => setEditTarget(row),
+                        },
+                      ]
+                    : []),
+                  ...(canDelete
+                    ? [
+                        {
+                          label: "Remove teacher",
+                          icon: <TrashIcon className="size-3.5" />,
+                          danger: true,
+                          onClick: () => setRemoveTarget(row),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
+            ),
+          },
+        ]
+      : COLUMNS;
 
   return (
     <div className="space-y-4">

@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { academicApi, type ClassRecord, type SectionRecord } from "@/features/academic/api/academicApi";
+import {
+  academicApi,
+  type ClassRecord,
+  type SectionRecord,
+} from "@/features/academic/api/academicApi";
 import type { NoticeRecipientScope } from "../api/noticeApi";
 import { audienceLabel } from "../api/noticeApi";
 
@@ -28,22 +32,44 @@ export function RecipientScopeEditor({
     let cancelled = false;
     const id = setTimeout(() => {
       setLoadingClasses(true);
-      academicApi.listClasses().then((items) => {
-        if (!cancelled) { setClasses(items); setLoadingClasses(false); }
-      }).catch(() => { if (!cancelled) setLoadingClasses(false); });
+      academicApi
+        .listClasses()
+        .then((items) => {
+          if (!cancelled) {
+            setClasses(items);
+            setLoadingClasses(false);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setLoadingClasses(false);
+        });
     }, 0);
-    return () => { cancelled = true; clearTimeout(id); };
+    return () => {
+      cancelled = true;
+      clearTimeout(id);
+    };
   }, []);
 
   useEffect(() => {
     let cancelled = false;
     const id = setTimeout(() => {
-      if (!selectedClassId) { setSections([]); return; }
-      academicApi.listSections(selectedClassId).then((items) => {
-        if (!cancelled) setSections(items);
-      }).catch(() => { if (!cancelled) setSections([]); });
+      if (!selectedClassId) {
+        setSections([]);
+        return;
+      }
+      academicApi
+        .listSections(selectedClassId)
+        .then((items) => {
+          if (!cancelled) setSections(items);
+        })
+        .catch(() => {
+          if (!cancelled) setSections([]);
+        });
     }, 0);
-    return () => { cancelled = true; clearTimeout(id); };
+    return () => {
+      cancelled = true;
+      clearTimeout(id);
+    };
   }, [selectedClassId]);
 
   const updateRole = (role: string, checked: boolean) => {
@@ -51,7 +77,10 @@ export function RecipientScopeEditor({
     if (role === "ALL" && checked) {
       next = [{ id: "", roleTarget: "ALL", classId: "", sectionId: "" }];
     } else if (checked) {
-      next = [...value.filter((s) => s.roleTarget !== "ALL"), { id: "", roleTarget: role, classId: "", sectionId: "" }];
+      next = [
+        ...value.filter((s) => s.roleTarget !== "ALL"),
+        { id: "", roleTarget: role, classId: "", sectionId: "" },
+      ];
     } else {
       next = value.filter((s) => s.roleTarget !== role);
     }
@@ -116,7 +145,9 @@ export function RecipientScopeEditor({
             >
               <option value="">{loadingClasses ? "Loading…" : "All classes"}</option>
               {classes.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
               ))}
             </select>
           </div>
@@ -130,7 +161,9 @@ export function RecipientScopeEditor({
               >
                 <option value="">All sections</option>
                 {sections.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
                 ))}
               </select>
             </div>

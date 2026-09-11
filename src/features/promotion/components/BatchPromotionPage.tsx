@@ -642,7 +642,7 @@ export function BatchPromotionPage() {
               {sessions.map((s) => (
                 <li key={s.id} className="flex items-center gap-3 px-5 py-3.5">
                   <span className="flex-none text-sm font-medium text-neutral-800">{s.label}</span>
-                  <StatusBadge status={s.isActive ? "Active" : "Upcoming"} />
+                  <StatusBadge status={s.isActive ? "Active" : "Inactive"} />
                 </li>
               ))}
             </ul>

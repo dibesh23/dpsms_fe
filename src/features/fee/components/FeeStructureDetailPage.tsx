@@ -188,7 +188,6 @@ export function FeeStructureDetailPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch structure detail via listStructures and find by id
       const [structs, cls, sess] = await Promise.all([
         feeApi.listStructures(),
         academicApi.listClasses(),

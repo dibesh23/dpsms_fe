@@ -360,6 +360,15 @@ function roleLabel(role?: string): string {
   return (role && ROLE_LABELS[role]) ?? "Staff";
 }
 
+function sidebarContentMotion(expanded: boolean): string {
+  return cn(
+    "transform-gpu will-change-[opacity,transform,filter] transition-[opacity,transform,filter] ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:translate-x-0 motion-reduce:blur-none motion-reduce:transition-none",
+    expanded
+      ? "translate-x-0 blur-none opacity-100 delay-100 duration-500"
+      : "pointer-events-none -translate-x-3 blur-[2px] opacity-0 delay-0 duration-200",
+  );
+}
+
 function NavList({ onNavigate, expanded = true }: { onNavigate?: () => void; expanded?: boolean }) {
   const pathname = usePathname();
   const { user, can } = useAuth();
@@ -377,20 +386,14 @@ function NavList({ onNavigate, expanded = true }: { onNavigate?: () => void; exp
             aria-label={`${section.label} overview`}
             className={cn(
               "flex h-9 items-center overflow-hidden px-3 pb-2 pt-5 text-xs font-medium tracking-wider whitespace-nowrap uppercase transition-colors",
-              pathname === section.href
-                ? "text-[#0d3320]"
-                : "text-[#52705b] hover:text-[#0d3320]",
+              pathname === section.href ? "text-[#0d3320]" : "text-[#52705b] hover:text-[#0d3320]",
             )}
           >
-            <span className={cn(!expanded && "invisible group-hover/sidebar:visible")}>
-              {section.label}
-            </span>
+            <span className={sidebarContentMotion(expanded)}>{section.label}</span>
           </Link>
         ) : (
           <p className="h-9 overflow-hidden px-3 pb-2 pt-5 text-xs font-medium tracking-wider whitespace-nowrap text-[#52705b] uppercase">
-            <span className={cn(!expanded && "invisible group-hover/sidebar:visible")}>
-              {section.label}
-            </span>
+            <span className={sidebarContentMotion(expanded)}>{section.label}</span>
           </p>
         );
         return (
@@ -418,12 +421,7 @@ function NavList({ onNavigate, expanded = true }: { onNavigate?: () => void; exp
                           active ? "text-emerald-100" : "text-[#064E3B]",
                         )}
                       />
-                      <span
-                        className={cn(
-                          "whitespace-nowrap",
-                          !expanded && "invisible group-hover/sidebar:visible",
-                        )}
-                      >
+                      <span className={cn("whitespace-nowrap", sidebarContentMotion(expanded))}>
                         {item.label}
                       </span>
                     </Link>
@@ -441,29 +439,17 @@ function NavList({ onNavigate, expanded = true }: { onNavigate?: () => void; exp
 function SidebarContent({
   onNavigate,
   expanded = true,
-  onToggle,
 }: {
   onNavigate?: () => void;
   expanded?: boolean;
-  onToggle?: () => void;
 }) {
   const { user, logout } = useAuth();
   return (
     <div className="flex h-full flex-col">
       <div className="relative flex h-16 flex-none items-center border-b border-stone-200 px-5">
         <Link href="/dashboard" onClick={onNavigate} aria-label="Digital Pathshala dashboard">
-          <Wordmark textClassName={cn(!expanded && "invisible group-hover/sidebar:visible")} />
+          <Wordmark textClassName={sidebarContentMotion(expanded)} />
         </Link>
-        {onToggle && (
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
-            className="absolute right-0 flex h-8 w-8 translate-x-1/2 items-center justify-center rounded-full border border-[#064E3B] bg-[#FBFAF7] text-[#064E3B] shadow-sm transition hover:bg-stone-100"
-          >
-            <MenuIcon className="size-4" />
-          </button>
-        )}
       </div>
 
       <NavList onNavigate={onNavigate} expanded={expanded} />
@@ -477,9 +463,7 @@ function SidebarContent({
             aria-label="Open profile"
           >
             <Avatar name={user?.fullName ?? "User"} size="sm" />
-            <div
-              className={cn("min-w-0 flex-1", !expanded && "invisible group-hover/sidebar:visible")}
-            >
+            <div className={cn("min-w-0 flex-1", sidebarContentMotion(expanded))}>
               <p className="type-navigation truncate font-normal text-[#064E3B]">
                 {user?.fullName}
               </p>
@@ -491,8 +475,8 @@ function SidebarContent({
             onClick={() => void logout()}
             aria-label="Log out"
             className={cn(
-              "flex h-8 w-8 flex-none items-center justify-center rounded-md text-[#064E3B] transition-colors hover:bg-stone-100",
-              !expanded && "invisible group-hover/sidebar:visible",
+              "flex h-8 w-8 flex-none items-center justify-center rounded-md text-[#064E3B] hover:bg-stone-100",
+              sidebarContentMotion(expanded),
             )}
           >
             <LogOutIcon className="size-4" />
@@ -509,32 +493,26 @@ export function Sidebar({
   onDesktopExpandedChange?: (expanded: boolean) => void;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [expanded, setExpanded] = useState(false);
   const [hovered, setHovered] = useState(false);
-  const desktopExpanded = expanded || hovered;
+  const desktopExpanded = hovered;
 
   const setDesktopHover = (value: boolean) => {
     setHovered(value);
-    onDesktopExpandedChange?.(expanded || value);
-  };
-
-  const toggleDesktopSidebar = () => {
-    const nextExpanded = !expanded;
-    setExpanded(nextExpanded);
-    onDesktopExpandedChange?.(nextExpanded || hovered);
+    onDesktopExpandedChange?.(value);
   };
 
   return (
     <>
       <aside
         className={cn(
-          "group/sidebar fixed inset-y-0 left-0 z-30 hidden bg-[#FBFAF7] transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] lg:block",
+          "group/sidebar fixed inset-y-0 left-0 z-30 hidden bg-[#FBFAF7] transition-[width,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[width] lg:block",
           desktopExpanded ? "w-64" : "w-20",
+          desktopExpanded && "shadow-[12px_0_32px_rgba(6,78,59,0.06)]",
         )}
         onMouseEnter={() => setDesktopHover(true)}
         onMouseLeave={() => setDesktopHover(false)}
       >
-        <SidebarContent expanded={desktopExpanded} onToggle={toggleDesktopSidebar} />
+        <SidebarContent expanded={desktopExpanded} />
       </aside>
 
       <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-stone-200 bg-[#FBFAF7]/95 px-4 backdrop-blur lg:hidden">

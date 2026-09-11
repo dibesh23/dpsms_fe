@@ -6,6 +6,7 @@ import { StatsCard } from "@/shared/components/ui/stats-card";
 import { FilterDropdown } from "@/shared/components/ui/filter-dropdown";
 import { DataTable, type Column } from "@/shared/components/ui/data-table";
 import { Pagination } from "@/shared/components/ui/pagination";
+import { ErrorState } from "@/shared/components/ui/error-state";
 import { StatusBadge, type StatusVariant } from "@/shared/components/ui/status-badge";
 import { useTable } from "@/shared/hooks/useTable";
 import { formatDate } from "@/shared/lib/format";
@@ -77,11 +78,13 @@ const WEEKDAY_FORMAT: Intl.DateTimeFormatOptions = { weekday: "short" };
 export function StudentAttendanceHistoryPage() {
   const [data, setData] = useState<MyAttendanceResponse>(EMPTY_RESPONSE);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [fromDate, setFromDate] = useState<string>(toDateString(daysAgoStart(29)));
   const [toDate, setToDate] = useState<string>(toDateString(daysAgoStart(0)));
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const from = new Date(fromDate + "T00:00:00");
       const to = new Date(toDate + "T00:00:00");
@@ -89,6 +92,7 @@ export function StudentAttendanceHistoryPage() {
       setData(result);
     } catch {
       setData(EMPTY_RESPONSE);
+      setLoadError("Attendance history could not be loaded. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -150,6 +154,10 @@ export function StudentAttendanceHistoryPage() {
       })),
     [data.records],
   );
+
+  if (loadError && !loading) {
+    return <ErrorState description={loadError} onRetry={() => void load()} />;
+  }
 
   return (
     <div className="space-y-4">

@@ -367,7 +367,7 @@ export function ClassDetailPage() {
       </section>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        {/* Sections */}
+        {}
         <section className="rounded-lg border border-neutral-200 bg-bg-default">
           <header className="flex items-center justify-between gap-3 border-b border-neutral-100 px-5 py-4">
             <div>
@@ -443,7 +443,7 @@ export function ClassDetailPage() {
           )}
         </section>
 
-        {/* Subjects */}
+        {}
         <section className="rounded-lg border border-neutral-200 bg-bg-default">
           <header className="flex items-center justify-between gap-3 border-b border-neutral-100 px-5 py-4">
             <div>
@@ -509,7 +509,7 @@ export function ClassDetailPage() {
         </section>
       </div>
 
-      {/* Students (roster) */}
+      {}
       <section className="rounded-lg border border-neutral-200 bg-bg-default">
         <header className="flex items-center justify-between gap-3 border-b border-neutral-100 px-5 py-4">
           <div>

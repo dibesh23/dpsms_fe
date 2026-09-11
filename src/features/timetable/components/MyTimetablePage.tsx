@@ -71,10 +71,7 @@ export function MyTimetablePage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title="My Timetable"
-        description={description}
-      />
+      <PageHeader title="My Timetable" description={description} />
 
       {cells.length === 0 ? (
         <div className="rounded-lg border border-dashed border-neutral-300 bg-white p-10 text-center text-sm text-neutral-500">

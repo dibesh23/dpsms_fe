@@ -61,8 +61,6 @@ export function EditTeacherForm({
     };
   }, []);
 
-  // Keep the teacher's current department in the list even if it was never
-  // created through the Departments page, so the value is never lost.
   const departmentOptions = [initial.department, ...departments]
     .filter(Boolean)
     .filter((name, index, arr) => arr.indexOf(name) === index);
@@ -190,7 +188,7 @@ export function editValuesToPayload(values: EditTeacherValues) {
   return {
     fullName: values.fullName.trim(),
     email: values.email.trim(),
-    // "" clears the phone server-side; never send null (backend rejects it).
+
     phone: values.phone.trim() || "",
     department: values.department.trim(),
     classesPerWeek: Number(values.classesPerWeek),

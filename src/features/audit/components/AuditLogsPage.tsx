@@ -94,9 +94,13 @@ export function AuditLogsPage() {
       setRecords([]);
       setTotal(0);
       if (axios.isAxiosError(loadError) && !loadError.response) {
-        setError("The backend is not reachable at localhost:4000. Start the backend server and try again.");
+        setError(
+          "The backend is not reachable at localhost:4000. Start the backend server and try again.",
+        );
       } else if (axios.isAxiosError(loadError) && loadError.response?.status === 403) {
-        setError("Your account does not have permission to read audit logs. Sign in again after permissions are seeded.");
+        setError(
+          "Your account does not have permission to read audit logs. Sign in again after permissions are seeded.",
+        );
       } else {
         setError("Audit logs could not be loaded. Please try again.");
       }
@@ -140,7 +144,10 @@ export function AuditLogsPage() {
   if (!canRead) {
     return (
       <div className="rounded-lg border border-neutral-200 bg-bg-default">
-        <EmptyState title="Access denied" description="You do not have permission to view audit logs." />
+        <EmptyState
+          title="Access denied"
+          description="You do not have permission to view audit logs."
+        />
       </div>
     );
   }
@@ -168,7 +175,9 @@ export function AuditLogsPage() {
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-medium text-neutral-900">Filter activity</h2>
-            <p className="text-xs text-neutral-500">Narrow results by event, risk, outcome, or date.</p>
+            <p className="text-xs text-neutral-500">
+              Narrow results by event, risk, outcome, or date.
+            </p>
           </div>
           {activeFilterCount > 0 && (
             <span className="rounded-full bg-neutral-100 px-2 py-1 text-xs text-neutral-600">
@@ -191,12 +200,21 @@ export function AuditLogsPage() {
             aria-label="Category"
           >
             <option value="">All categories</option>
-            {CATEGORIES.map((category) => <option key={category} value={category}>{labelize(category)}</option>)}
+            {CATEGORIES.map((category) => (
+              <option key={category} value={category}>
+                {labelize(category)}
+              </option>
+            ))}
           </select>
           <select
             className={inputClass}
             value={draft.severity ?? ""}
-            onChange={(event) => setDraft((value) => ({ ...value, severity: event.target.value as AuditSeverity | undefined }))}
+            onChange={(event) =>
+              setDraft((value) => ({
+                ...value,
+                severity: event.target.value as AuditSeverity | undefined,
+              }))
+            }
             aria-label="Severity"
           >
             <option value="">All severities</option>
@@ -207,7 +225,12 @@ export function AuditLogsPage() {
           <select
             className={inputClass}
             value={draft.status ?? ""}
-            onChange={(event) => setDraft((value) => ({ ...value, status: event.target.value as AuditStatus | undefined }))}
+            onChange={(event) =>
+              setDraft((value) => ({
+                ...value,
+                status: event.target.value as AuditStatus | undefined,
+              }))
+            }
             aria-label="Status"
           >
             <option value="">All outcomes</option>
@@ -216,11 +239,26 @@ export function AuditLogsPage() {
           </select>
           <label className="flex items-center gap-2 text-xs text-neutral-500">
             From
-            <input className={`${inputClass} min-w-0 flex-1`} type="date" value={draft.from ?? ""} onChange={(event) => setDraft((value) => ({ ...value, from: event.target.value }))} />
+            <input
+              className={`${inputClass} min-w-0 flex-1`}
+              type="date"
+              value={draft.from ?? ""}
+              onChange={(event) => setDraft((value) => ({ ...value, from: event.target.value }))}
+            />
           </label>
           <label className="flex items-center gap-2 text-xs text-neutral-500">
             To
-            <input className={`${inputClass} min-w-0 flex-1`} type="date" value={draft.to?.slice(0, 10) ?? ""} onChange={(event) => setDraft((value) => ({ ...value, to: event.target.value ? `${event.target.value}T23:59:59.999Z` : "" }))} />
+            <input
+              className={`${inputClass} min-w-0 flex-1`}
+              type="date"
+              value={draft.to?.slice(0, 10) ?? ""}
+              onChange={(event) =>
+                setDraft((value) => ({
+                  ...value,
+                  to: event.target.value ? `${event.target.value}T23:59:59.999Z` : "",
+                }))
+              }
+            />
           </label>
         </div>
         <div className="mt-4 flex justify-end gap-2">
@@ -241,9 +279,16 @@ export function AuditLogsPage() {
         {loading ? (
           <LoadingState label="Loading audit logs…" />
         ) : error ? (
-          <EmptyState title="Unable to load audit logs" description={error} action={<Button text="Try again" className="w-auto" onClick={() => void load()} />} />
+          <EmptyState
+            title="Unable to load audit logs"
+            description={error}
+            action={<Button text="Try again" className="w-auto" onClick={() => void load()} />}
+          />
         ) : records.length === 0 ? (
-          <EmptyState title="No audit logs found" description="Try changing the filters or date range." />
+          <EmptyState
+            title="No audit logs found"
+            description="Try changing the filters or date range."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] text-left text-sm">
@@ -259,43 +304,93 @@ export function AuditLogsPage() {
               </thead>
               <tbody className="divide-y divide-neutral-100">
                 {records.map((record) => (
-                  <tr key={record.id} className="cursor-pointer transition-colors hover:bg-bg-muted" onClick={() => setSelected(record)}>
-                    <td className="whitespace-nowrap px-5 py-3.5 text-neutral-500">{dateTime(record.createdAt)}</td>
+                  <tr
+                    key={record.id}
+                    className="cursor-pointer transition-colors hover:bg-bg-muted"
+                    onClick={() => setSelected(record)}
+                  >
+                    <td className="whitespace-nowrap px-5 py-3.5 text-neutral-500">
+                      {dateTime(record.createdAt)}
+                    </td>
                     <td className="px-5 py-3.5">
                       <p className="font-medium text-neutral-900">{labelize(record.eventType)}</p>
                       <p className="mt-0.5 text-xs text-neutral-400">{labelize(record.category)}</p>
                     </td>
                     <td className="px-5 py-3.5">
-                      <p className="text-neutral-700">{record.actorName ?? (record.actorId ? "Unknown user" : "System")}</p>
-                      <p className="mt-0.5 text-xs text-neutral-400">{record.actorRole ? labelize(record.actorRole) : "Automated"}</p>
+                      <p className="text-neutral-700">
+                        {record.actorName ?? (record.actorId ? "Unknown user" : "System")}
+                      </p>
+                      <p className="mt-0.5 text-xs text-neutral-400">
+                        {record.actorRole ? labelize(record.actorRole) : "Automated"}
+                      </p>
                     </td>
-                    <td className="px-5 py-3.5 text-neutral-600">{record.resourceType ? `${record.resourceType}${record.resourceId ? ` · ${record.resourceId.slice(0, 8)}…` : ""}` : "—"}</td>
-                    <td className="px-5 py-3.5"><StatusBadge status={labelize(record.severity)} variant={severityVariant(record.severity)} /></td>
-                    <td className="px-5 py-3.5"><StatusBadge status={labelize(record.status)} variant={record.status === "SUCCESS" ? "success" : "danger"} /></td>
+                    <td className="px-5 py-3.5 text-neutral-600">
+                      {record.resourceType
+                        ? `${record.resourceType}${record.resourceId ? ` · ${record.resourceId.slice(0, 8)}…` : ""}`
+                        : "—"}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <StatusBadge
+                        status={labelize(record.severity)}
+                        variant={severityVariant(record.severity)}
+                      />
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <StatusBadge
+                        status={labelize(record.status)}
+                        variant={record.status === "SUCCESS" ? "success" : "danger"}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-        {!loading && !error && total > 0 && <Pagination page={page} pageSize={PAGE_SIZE} total={total} onPageChange={setPage} label="records" />}
+        {!loading && !error && total > 0 && (
+          <Pagination
+            page={page}
+            pageSize={PAGE_SIZE}
+            total={total}
+            onPageChange={setPage}
+            label="records"
+          />
+        )}
       </section>
 
-      <Dialog open={selected !== null} onClose={() => setSelected(null)} title="Audit event details" description={selected ? `${labelize(selected.eventType)} · ${dateTime(selected.createdAt)}` : undefined} maxWidth="max-w-2xl">
+      <Dialog
+        open={selected !== null}
+        onClose={() => setSelected(null)}
+        title="Audit event details"
+        description={
+          selected ? `${labelize(selected.eventType)} · ${dateTime(selected.createdAt)}` : undefined
+        }
+        maxWidth="max-w-2xl"
+      >
         {selected && (
           <>
             <dl>
               <DetailRow label="Actor" value={selected.actorName ?? selected.actorId ?? "System"} />
-              <DetailRow label="Role" value={selected.actorRole ? labelize(selected.actorRole) : "Automated"} />
-              <DetailRow label="Resource" value={[selected.resourceType, selected.resourceId].filter(Boolean).join(" / ")} />
+              <DetailRow
+                label="Role"
+                value={selected.actorRole ? labelize(selected.actorRole) : "Automated"}
+              />
+              <DetailRow
+                label="Resource"
+                value={[selected.resourceType, selected.resourceId].filter(Boolean).join(" / ")}
+              />
               <DetailRow label="IP address" value={selected.ipAddress} />
               <DetailRow label="Request ID" value={selected.requestId} />
               <DetailRow label="Error code" value={selected.errorCode} />
               <DetailRow label="User agent" value={selected.userAgent} />
             </dl>
             <div className="mt-4">
-              <h3 className="mb-2 text-xs font-medium tracking-wide text-neutral-400 uppercase">Metadata</h3>
-              <pre className="max-h-64 overflow-auto rounded-lg bg-neutral-950 p-4 text-xs leading-5 text-neutral-200">{JSON.stringify(selected.metadata ?? {}, null, 2)}</pre>
+              <h3 className="mb-2 text-xs font-medium tracking-wide text-neutral-400 uppercase">
+                Metadata
+              </h3>
+              <pre className="max-h-64 overflow-auto rounded-lg bg-neutral-950 p-4 text-xs leading-5 text-neutral-200">
+                {JSON.stringify(selected.metadata ?? {}, null, 2)}
+              </pre>
             </div>
           </>
         )}

@@ -7,7 +7,12 @@ import { z } from "zod";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Field, Select } from "@/shared/components/ui/form-field";
-import { academicApi, type ClassRecord, type SectionRecord, type SessionRecord } from "@/features/academic/api/academicApi";
+import {
+  academicApi,
+  type ClassRecord,
+  type SectionRecord,
+  type SessionRecord,
+} from "@/features/academic/api/academicApi";
 
 const AddTimetableSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
@@ -43,10 +48,7 @@ export function AddTimetableForm({
   const selectedClassId = watch("classId");
 
   useEffect(() => {
-    void Promise.all([
-      academicApi.listClasses(),
-      academicApi.listSessions(),
-    ]).then(([c, s]) => {
+    void Promise.all([academicApi.listClasses(), academicApi.listSessions()]).then(([c, s]) => {
       setClasses(c);
       setSessions(s);
     });
@@ -96,10 +98,7 @@ export function AddTimetableForm({
       </Field>
 
       <Field label="Section" error={errors.sectionId?.message}>
-        <Select
-          disabled={isSubmitting || !selectedClassId}
-          {...register("sectionId")}
-        >
+        <Select disabled={isSubmitting || !selectedClassId} {...register("sectionId")}>
           <option value="">{selectedClassId ? "Select a section" : "Select a class first"}</option>
           {sections.map((s) => (
             <option key={s.id} value={s.id}>
@@ -121,7 +120,10 @@ export function AddTimetableForm({
       </Field>
 
       {apiError && (
-        <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div
+          role="alert"
+          className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
           {apiError}
         </div>
       )}

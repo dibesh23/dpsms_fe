@@ -27,11 +27,7 @@ import {
   type ScholarshipType,
 } from "../api/feeApi";
 import { formatCurrency, formatDate } from "@/shared/lib/format";
-import {
-  AlertTriangleIcon,
-  CreditCardIcon,
-  FileTextIcon,
-} from "@/shared/components/ui/icons";
+import { AlertTriangleIcon, CreditCardIcon, FileTextIcon } from "@/shared/components/ui/icons";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -56,8 +52,6 @@ const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   CHEQUE: "Cheque",
   OTHER: "Other",
 };
-
-// ── Payment Form ───────────────────────────────────
 
 const PaymentSchema = z.object({
   amountPaid: z.number().int().positive("Amount must be positive"),
@@ -156,8 +150,6 @@ function RecordPaymentForm({
   );
 }
 
-// ── Discount Form ──────────────────────────────────
-
 const DiscountSchema = z.object({
   amount: z.number().int().positive("Amount must be positive"),
   reason: z.string().max(255).optional(),
@@ -239,8 +231,6 @@ function DiscountForm({
     </form>
   );
 }
-
-// ── Scholarship Form ───────────────────────────────
 
 const ScholarshipFormSchema = z.object({
   percentageOrAmount: z.number().int().positive("Must be positive"),
@@ -325,8 +315,6 @@ function ScholarshipFormComponent({
   );
 }
 
-// ── Main Detail Page ───────────────────────────────
-
 export function FeeInvoiceDetailPage() {
   const params = useParams<{ id: string }>();
   const invoiceId = params.id;
@@ -369,8 +357,6 @@ export function FeeInvoiceDetailPage() {
     return () => clearTimeout(id);
   }, [load]);
 
-  // Fetch the student's full cross-year fee picture so an admin looking up
-  // one student sees every outstanding amount, not just this invoice's year.
   useEffect(() => {
     if (!invoice?.enrollment?.studentId) return;
     let cancelled = false;
@@ -422,7 +408,7 @@ export function FeeInvoiceDetailPage() {
       );
       setPaymentDialogOpen(false);
       toast.success("Payment recorded. Receipt will be generated shortly.");
-      // Receipts are generated async — poll until the attachment is ready.
+
       startPolling(result.payment.id);
       return true;
     } catch {
@@ -466,7 +452,6 @@ export function FeeInvoiceDetailPage() {
     }
     setReceiptLoading(paymentId);
     try {
-      // Receipts are generated async — try fetching; if not ready, poll.
       const receipt = await feeApi.getReceipt(paymentId);
       if (receipt.attachmentUrl) {
         setReadyReceipts((prev) => ({ ...prev, [paymentId]: receipt.attachmentUrl as string }));
@@ -591,10 +576,7 @@ export function FeeInvoiceDetailPage() {
         {studentFeesLoading ? (
           <div className="text-sm text-neutral-400">Loading student fees…</div>
         ) : !studentFees ? (
-          <EmptyState
-            title="No fee data"
-            description="This student has no fee records."
-          />
+          <EmptyState title="No fee data" description="This student has no fee records." />
         ) : (
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-3">
@@ -612,7 +594,9 @@ export function FeeInvoiceDetailPage() {
               </div>
               <div className="rounded-lg border border-neutral-200 bg-bg-subtle p-3">
                 <p className="text-xs text-neutral-400">Total outstanding</p>
-                <p className={`mt-1 font-semibold ${studentFees.totalDue > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                <p
+                  className={`mt-1 font-semibold ${studentFees.totalDue > 0 ? "text-red-600" : "text-emerald-600"}`}
+                >
                   {formatCurrency(studentFees.totalDue)}
                 </p>
               </div>
@@ -645,20 +629,34 @@ export function FeeInvoiceDetailPage() {
                       <table className="w-full text-left text-sm">
                         <thead>
                           <tr className="border-b border-neutral-100 bg-bg-subtle">
-                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">Installment</th>
-                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">Due date</th>
-                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">Amount</th>
+                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">
+                              Installment
+                            </th>
+                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">
+                              Due date
+                            </th>
+                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">
+                              Amount
+                            </th>
                             <th className="px-4 py-2 text-xs font-medium text-neutral-400">Paid</th>
-                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">Status</th>
+                            <th className="px-4 py-2 text-xs font-medium text-neutral-400">
+                              Status
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           {yearInvoices.map((inv) => (
                             <tr key={inv.id} className="border-b border-neutral-50 last:border-0">
                               <td className="px-4 py-2 text-neutral-800">{inv.installmentLabel}</td>
-                              <td className="px-4 py-2 text-neutral-700">{formatDate(inv.dueDate)}</td>
-                              <td className="px-4 py-2 text-neutral-700">{formatCurrency(inv.amount)}</td>
-                              <td className="px-4 py-2 text-neutral-700">{formatCurrency(inv.amountPaid)}</td>
+                              <td className="px-4 py-2 text-neutral-700">
+                                {formatDate(inv.dueDate)}
+                              </td>
+                              <td className="px-4 py-2 text-neutral-700">
+                                {formatCurrency(inv.amount)}
+                              </td>
+                              <td className="px-4 py-2 text-neutral-700">
+                                {formatCurrency(inv.amountPaid)}
+                              </td>
                               <td className="px-4 py-2">
                                 <StatusBadge
                                   status={STATUS_LABEL[inv.status]}

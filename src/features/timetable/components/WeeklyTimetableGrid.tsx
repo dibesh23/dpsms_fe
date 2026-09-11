@@ -2,7 +2,15 @@
 
 import type { DayOfWeek } from "../api/timetableApi";
 
-const DAYS: DayOfWeek[] = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
+const DAYS: DayOfWeek[] = [
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+  "SUNDAY",
+];
 const DAY_LABELS: Record<DayOfWeek, string> = {
   MONDAY: "Mon",
   TUESDAY: "Tue",
@@ -39,7 +47,10 @@ export function WeeklyTimetableGrid({ slots }: { slots: TimetableCell[] }) {
           <tr className="border-b border-neutral-200 bg-neutral-50">
             <th className="w-24 px-3 py-2 text-left font-medium text-neutral-600">Period</th>
             {DAYS.map((day) => (
-              <th key={day} className="min-w-[140px] px-3 py-2 text-center font-medium text-neutral-600">
+              <th
+                key={day}
+                className="min-w-[140px] px-3 py-2 text-center font-medium text-neutral-600"
+              >
                 {DAY_LABELS[day]}
               </th>
             ))}

@@ -6,7 +6,7 @@ import { LoadingSpinner } from "./icons";
 
 const buttonVariants = {
   primary:
-    "border-black bg-black text-content-inverted hover:bg-inverted hover:ring-4 hover:ring-border-subtle",
+    "border-brand-default bg-brand-default text-content-inverted hover:border-brand-hover hover:bg-brand-hover hover:ring-4 hover:ring-brand-subtle focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-subtle",
   secondary:
     "border-border-subtle bg-bg-default text-content-emphasis hover:bg-bg-muted focus-visible:border-border-emphasis outline-none data-[state=open]:border-border-emphasis data-[state=open]:ring-4 data-[state=open]:ring-border-subtle",
   outline: "border-transparent text-content-default hover:bg-neutral-900/5",
@@ -44,8 +44,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={forwardedRef}
-        // if onClick is passed, it's a "button" type, otherwise it's being
-        // used in a form, hence "submit"
+
         type={props.onClick ? "button" : "submit"}
         className={cn(
           "type-button group flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-3 transition-all",

@@ -160,8 +160,6 @@ export function StudentExamResultPage() {
     void load();
   }, [load]);
 
-  // Only PUBLISHED results should ever reach a student; filtering
-  // defensively here in case the API ever includes DRAFT/pending ones.
   const publishedResults = useMemo(
     () => summary.results.filter((exam) => exam.status === "PUBLISHED"),
     [summary.results],
@@ -323,11 +321,7 @@ export function StudentExamResultPage() {
           value={table.filter}
           onChange={table.setFilter}
         />
-        <SearchBar
-          value={table.query}
-          onChange={table.setQuery}
-          placeholder="Search exams..."
-        />
+        <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search exams..." />
       </div>
 
       <DataTable

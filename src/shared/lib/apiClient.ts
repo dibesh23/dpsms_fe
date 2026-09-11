@@ -18,7 +18,10 @@ export function setRefreshTokenRef(fn: () => Promise<boolean>): void {
   refreshTokenRef = fn;
 }
 
-const API_BASE_URL = (process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:4000").replace(/\/+$/, "");
+const API_BASE_URL = (process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:4000").replace(
+  /\/+$/,
+  "",
+);
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: `${API_BASE_URL}/api`,
@@ -31,12 +34,7 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (token) {
     config.headers["Authorization"] = `Bearer ${token}`;
   }
-  // Advisory tenant hint for pre-auth flows (login, forgot-password): lets the
-  // backend scope lookups to the chosen school and attribute audit events.
-  // Authorization itself always comes from the JWT — never from this header.
-  // Sent only when the request itself carries an explicit tenant scope, so a
-  // plain /login is never silently bound to a previously visited school from
-  // localStorage; the backend resolves unique email/role combinations instead.
+
   const body = (config.data ?? {}) as Record<string, unknown>;
   const hasExplicitScope =
     (typeof body.tenantId === "string" && body.tenantId.length > 0) ||
@@ -65,8 +63,6 @@ apiClient.interceptors.response.use(
       !isRefreshEndpoint &&
       refreshTokenRef
     ) {
-      // Retry requests must not hit a double-slash path when the original URL
-      // already started with "/" (baseURL + path join safety net).
       originalConfig.url = `${originalConfig.baseURL}${originalConfig.url}`.replace(/\/{2,}/g, "/");
       originalConfig._retry = true;
       try {

@@ -11,7 +11,5 @@ export default function NoticesRoute() {
     return <AdminNoticePage />;
   }
 
-  // TEACHER and STUDENT both get the read-only feed
-  // (teachers can no longer create notices — only PRINCIPAL/SUPER_ADMIN can)
   return <StudentNoticePage />;
 }

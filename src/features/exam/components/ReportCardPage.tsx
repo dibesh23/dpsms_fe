@@ -66,8 +66,6 @@ export function ReportCardPage({ studentId }: { studentId?: string }) {
     [data, selectedExamId],
   );
 
-  // Build the PDF from the raw data (no DOM/CSS parsing), so the generated
-  // output avoids the modern color functions used by the Tailwind v4 theme.
   const handleDownload = (exam: ExamResultSummary) => {
     if (!data) return;
     setPrinting(true);
@@ -202,25 +200,24 @@ export function ReportCardPage({ studentId }: { studentId?: string }) {
     );
   }
 
-if (!data) {
-  if (loadError) {
-    return (
-      <div className="space-y-4">
-        <PageHeader title="Report Card" description="Your official report card" />
-        <div className="rounded-lg border border-neutral-200 bg-bg-default">
-          <EmptyState
-            icon={<GraduationCapIcon className="size-5" />}
-            title="Report card unavailable"
-            description={loadError}
-          />
+  if (!data) {
+    if (loadError) {
+      return (
+        <div className="space-y-4">
+          <PageHeader title="Report Card" description="Your official report card" />
+          <div className="rounded-lg border border-neutral-200 bg-bg-default">
+            <EmptyState
+              icon={<GraduationCapIcon className="size-5" />}
+              title="Report card unavailable"
+              description={loadError}
+            />
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
+    return <LoadingState label="Loading report card…" />;
   }
-  return <LoadingState label="Loading report card…" />;
-}
 
-  // Individual exam detail view (a single printable marksheet).
   if (selectedExam) {
     return (
       <div className="space-y-4">
@@ -359,7 +356,6 @@ if (!data) {
     );
   }
 
-  // Result list view.
   return (
     <div className="space-y-4">
       <PageHeader

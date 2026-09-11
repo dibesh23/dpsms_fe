@@ -1,41 +1,40 @@
 import { apiClient } from "@/shared/lib/apiClient";
 
-// Mirrors schema.prisma
 export type InvoiceStatus = "DRAFT" | "UNPAID" | "PARTIAL" | "PAID";
 export type PaymentMethod = "CASH" | "BANK" | "CHEQUE" | "OTHER";
 export type ScholarshipType = "PERCENTAGE" | "FIXED";
 
 export interface FeeInvoiceRecord {
-  id: string; // Invoice.id
-  academicYearLabel: string; // FeeInstallment's academic year label
+  id: string;
+  academicYearLabel: string;
   isCurrentYear: boolean;
-  installmentLabel: string; // FeeInstallment.billingPeriod, falls back to due date
-  dueDate: string; // FeeInstallment.dueDate
-  amount: number; // Invoice.amount
-  amountPaid: number; // sum of FeePayment.amountPaid for this invoice
-  status: InvoiceStatus; // Invoice.status
+  installmentLabel: string;
+  dueDate: string;
+  amount: number;
+  amountPaid: number;
+  status: InvoiceStatus;
 }
 
 export interface FeePaymentRecord {
-  id: string; // FeePayment.id
+  id: string;
   invoiceId: string;
   academicYearLabel: string;
   installmentLabel: string;
-  amountPaid: number; // FeePayment.amountPaid
-  paymentMethod: PaymentMethod; // FeePayment.paymentMethod
-  paidAt: string; // FeePayment.paidAt
-  receiptNumber: string | null; // FeeReceipt.receiptNumber
-  receiptUrl: string | null; // FeeReceipt.attachment.url
+  amountPaid: number;
+  paymentMethod: PaymentMethod;
+  paidAt: string;
+  receiptNumber: string | null;
+  receiptUrl: string | null;
 }
 
 export interface FeeDiscountRecord {
   id: string;
   kind: "DISCOUNT" | "SCHOLARSHIP";
-  label: string; // FeeDiscount.reason, or a scholarship label
-  /** Fixed-amount discount, FeeDiscount.amount */
+  label: string;
+
   amount: number | null;
   scholarshipType: ScholarshipType | null;
-  /** FeeScholarship.percentageOrAmount */
+
   percentageOrAmount: number | null;
 }
 

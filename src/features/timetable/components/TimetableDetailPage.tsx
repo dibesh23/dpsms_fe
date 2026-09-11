@@ -9,15 +9,34 @@ import { LoadingState } from "@/shared/components/ui/loading-state";
 import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
-import { timetableApi, type TimetableDetailRecord, type TimetableSlotRecord, type DayOfWeek } from "../api/timetableApi";
+import {
+  timetableApi,
+  type TimetableDetailRecord,
+  type TimetableSlotRecord,
+  type DayOfWeek,
+} from "../api/timetableApi";
 import { academicApi, type SubjectRecord } from "@/features/academic/api/academicApi";
 import { apiClient } from "@/shared/lib/apiClient";
 import { ArrowLeftIcon, PlusIcon, TrashIcon, PencilIcon } from "@/shared/components/ui/icons";
 import { SlotForm } from "./SlotForm";
 
-const DAYS: DayOfWeek[] = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
+const DAYS: DayOfWeek[] = [
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+  "SUNDAY",
+];
 const DAY_LABELS: Record<DayOfWeek, string> = {
-  MONDAY: "Mon", TUESDAY: "Tue", WEDNESDAY: "Wed", THURSDAY: "Thu", FRIDAY: "Fri", SATURDAY: "Sat", SUNDAY: "Sun",
+  MONDAY: "Mon",
+  TUESDAY: "Tue",
+  WEDNESDAY: "Wed",
+  THURSDAY: "Thu",
+  FRIDAY: "Fri",
+  SATURDAY: "Sat",
+  SUNDAY: "Sun",
 };
 
 interface TeacherRecord {
@@ -64,7 +83,9 @@ export function TimetableDetailPage() {
       const [tt, subs, tchs] = await Promise.all([
         timetableApi.getTimetable(timetableId),
         academicApi.listSubjects(),
-        apiClient.get<{ data: { items: TeacherRecord[] } }>("/teachers").then((r) => r.data.data.items),
+        apiClient
+          .get<{ data: { items: TeacherRecord[] } }>("/teachers")
+          .then((r) => r.data.data.items),
       ]);
       setTimetable(tt);
       setSubjects(subs);
@@ -143,9 +164,7 @@ export function TimetableDetailPage() {
     return timetable?.slots.find((s) => s.dayOfWeek === day && s.periodNumber === period);
   };
 
-  const maxPeriod = timetable
-    ? Math.max(0, ...timetable.slots.map((s) => s.periodNumber))
-    : 0;
+  const maxPeriod = timetable ? Math.max(0, ...timetable.slots.map((s) => s.periodNumber)) : 0;
 
   const periods = Array.from({ length: Math.max(maxPeriod + 1, 1) }, (_, i) => i + 1);
 
@@ -180,9 +199,15 @@ export function TimetableDetailPage() {
 
       {timetable.slots.length === 0 ? (
         <div className="rounded-lg border border-dashed border-neutral-300 bg-white p-8 text-center">
-          <p className="text-sm text-neutral-500 mb-4">No periods added yet. Start building the schedule.</p>
+          <p className="text-sm text-neutral-500 mb-4">
+            No periods added yet. Start building the schedule.
+          </p>
           {canManage && (
-            <Button text="Add First Period" onClick={() => openAddSlot()} className="w-auto mx-auto" />
+            <Button
+              text="Add First Period"
+              onClick={() => openAddSlot()}
+              className="w-auto mx-auto"
+            />
           )}
         </div>
       ) : (
@@ -192,7 +217,10 @@ export function TimetableDetailPage() {
               <tr className="border-b border-neutral-200 bg-neutral-50">
                 <th className="px-3 py-2 text-left font-medium text-neutral-600 w-20">Period</th>
                 {DAYS.map((day) => (
-                  <th key={day} className="px-3 py-2 text-center font-medium text-neutral-600 min-w-[140px]">
+                  <th
+                    key={day}
+                    className="px-3 py-2 text-center font-medium text-neutral-600 min-w-[140px]"
+                  >
                     {DAY_LABELS[day]}
                   </th>
                 ))}
@@ -219,42 +247,50 @@ export function TimetableDetailPage() {
                               <span className="font-medium text-amber-700">Break</span>
                             ) : (
                               <>
-                                <div className="font-medium text-neutral-800 truncate">{slot.subjectName}</div>
+                                <div className="font-medium text-neutral-800 truncate">
+                                  {slot.subjectName}
+                                </div>
                                 <div className="text-neutral-500 truncate">{slot.teacherName}</div>
                               </>
                             )}
-                            <div className="text-neutral-400 mt-1">{slot.startTime} – {slot.endTime}</div>
+                            <div className="text-neutral-400 mt-1">
+                              {slot.startTime} – {slot.endTime}
+                            </div>
                             {canManage && (
                               <div className="flex gap-1 mt-1">
                                 <button
                                   type="button"
                                   className="text-neutral-400 hover:text-blue-600"
-                                  onClick={(e) => { e.stopPropagation(); openEditSlot(slot); }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openEditSlot(slot);
+                                  }}
                                 >
                                   <PencilIcon className="h-3 w-3" />
                                 </button>
                                 <button
                                   type="button"
                                   className="text-neutral-400 hover:text-red-600"
-                                  onClick={(e) => { e.stopPropagation(); setDeleteTarget(slot); }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDeleteTarget(slot);
+                                  }}
                                 >
                                   <TrashIcon className="h-3 w-3" />
                                 </button>
                               </div>
                             )}
                           </div>
+                        ) : canManage ? (
+                          <button
+                            type="button"
+                            className="w-full rounded-md border border-dashed border-neutral-200 p-2 text-xs text-neutral-400 hover:border-neutral-300 hover:text-neutral-500 transition-colors"
+                            onClick={() => openAddSlot(day, period)}
+                          >
+                            + Add
+                          </button>
                         ) : (
-                          canManage ? (
-                            <button
-                              type="button"
-                              className="w-full rounded-md border border-dashed border-neutral-200 p-2 text-xs text-neutral-400 hover:border-neutral-300 hover:text-neutral-500 transition-colors"
-                              onClick={() => openAddSlot(day, period)}
-                            >
-                              + Add
-                            </button>
-                          ) : (
-                            <div className="p-2 text-xs text-neutral-300 text-center">—</div>
-                          )
+                          <div className="p-2 text-xs text-neutral-300 text-center">—</div>
                         )}
                       </td>
                     );
@@ -269,12 +305,22 @@ export function TimetableDetailPage() {
       {canManage && (
         <Dialog
           open={slotDialogOpen}
-          onClose={() => { setSlotDialogOpen(false); setEditingSlot(null); setPrefillDay(null); setPrefillPeriod(null); }}
+          onClose={() => {
+            setSlotDialogOpen(false);
+            setEditingSlot(null);
+            setPrefillDay(null);
+            setPrefillPeriod(null);
+          }}
           title={editingSlot ? "Edit Period" : "Add Period"}
         >
           <SlotForm
             onSave={handleSaveSlot}
-            onClose={() => { setSlotDialogOpen(false); setEditingSlot(null); setPrefillDay(null); setPrefillPeriod(null); }}
+            onClose={() => {
+              setSlotDialogOpen(false);
+              setEditingSlot(null);
+              setPrefillDay(null);
+              setPrefillPeriod(null);
+            }}
             existingSlot={editingSlot}
             prefillDay={prefillDay}
             prefillPeriod={prefillPeriod}
@@ -286,17 +332,18 @@ export function TimetableDetailPage() {
         </Dialog>
       )}
 
-      <Dialog
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        title="Remove Period"
-      >
+      <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Remove Period">
         <p className="text-sm text-neutral-600">
           Remove <strong>{deleteTarget?.isBreak ? "break" : deleteTarget?.subjectName}</strong> from{" "}
           {DAY_LABELS[deleteTarget?.dayOfWeek ?? "MONDAY"]} period {deleteTarget?.periodNumber}?
         </p>
         <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4 mt-4">
-          <Button variant="secondary" text="Cancel" onClick={() => setDeleteTarget(null)} className="w-auto" />
+          <Button
+            variant="secondary"
+            text="Cancel"
+            onClick={() => setDeleteTarget(null)}
+            className="w-auto"
+          />
           <Button
             variant="danger"
             text={deleteBusy ? "Removing..." : "Remove"}

@@ -10,10 +10,7 @@ import { EmptyState } from "@/shared/components/ui/empty-state";
 import { formatDate } from "@/shared/lib/format";
 import { cn } from "@/shared/lib/cn";
 import { promotionApi } from "../api/promotionApi";
-import {
-  ArrowLeftIcon,
-  ArrowUpRightIcon,
-} from "@/shared/components/ui/icons";
+import { ArrowLeftIcon, ArrowUpRightIcon } from "@/shared/components/ui/icons";
 import type { StudentPromotionHistory } from "../types";
 
 function getApiErrorMessage(err: unknown, fallback: string): string {
@@ -29,10 +26,14 @@ function outcomeBadge(outcome: StudentPromotionHistory["outcome"]) {
   switch (outcome) {
     case "PROMOTED":
     case "REPEATER":
-      return <StatusBadge status={outcome === "PROMOTED" ? "Promoted" : "Repeater"} variant="success" />;
+      return (
+        <StatusBadge status={outcome === "PROMOTED" ? "Promoted" : "Repeater"} variant="success" />
+      );
     case "FAILED":
     case "WITHDRAWN":
-      return <StatusBadge status={outcome === "FAILED" ? "Failed" : "Withdrawn"} variant="danger" />;
+      return (
+        <StatusBadge status={outcome === "FAILED" ? "Failed" : "Withdrawn"} variant="danger" />
+      );
     case "HELD":
       return <StatusBadge status="Held" variant="warning" />;
     default:
@@ -95,7 +96,10 @@ export function StudentPromotionHistoryPage() {
         </div>
       ) : promotions.length === 0 ? (
         <div className="rounded-lg border border-neutral-200 bg-bg-default">
-          <EmptyState title="No promotion records" description="This student has no recorded transitions yet." />
+          <EmptyState
+            title="No promotion records"
+            description="This student has no recorded transitions yet."
+          />
         </div>
       ) : (
         <section className="rounded-lg border border-neutral-200 bg-bg-default">
@@ -122,7 +126,11 @@ export function StudentPromotionHistoryPage() {
                   <div className="flex items-center gap-2">{outcomeBadge(p.outcome)}</div>
                 </div>
                 {p.reviewReason && (
-                  <p className={cn("mt-2 rounded-md bg-bg-subtle px-3 py-2 text-sm text-neutral-600")}>
+                  <p
+                    className={cn(
+                      "mt-2 rounded-md bg-bg-subtle px-3 py-2 text-sm text-neutral-600",
+                    )}
+                  >
                     {p.reviewReason}
                   </p>
                 )}

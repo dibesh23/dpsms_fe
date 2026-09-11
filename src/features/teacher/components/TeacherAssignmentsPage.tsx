@@ -82,8 +82,12 @@ const sortValueOf = <T extends object>(row: T, key: string): string | number => 
 export function TeacherAssignmentsPage() {
   const [teachers, setTeachers] = useState<Array<{ id: string; name: string }>>([]);
   const [classes, setClasses] = useState<Array<{ id: string; name: string }>>([]);
-  const [subjects, setSubjects] = useState<Array<{ id: string; name: string; code: string | null }>>([]);
-  const [sessions, setSessions] = useState<Array<{ id: string; label: string; isActive: boolean }>>([]);
+  const [subjects, setSubjects] = useState<
+    Array<{ id: string; name: string; code: string | null }>
+  >([]);
+  const [sessions, setSessions] = useState<Array<{ id: string; label: string; isActive: boolean }>>(
+    [],
+  );
   const [assignments, setAssignments] = useState<AssignmentView[]>([]);
   const [sections, setSections] = useState<SectionRow[]>([]);
 
@@ -173,9 +177,7 @@ export function TeacherAssignmentsPage() {
       setAssignments(merged);
 
       const sectionLists = await Promise.all(
-        classRecords.map((c) =>
-          academicApi.listSections(c.id).catch(() => []),
-        ),
+        classRecords.map((c) => academicApi.listSections(c.id).catch(() => [])),
       );
 
       setSections(
@@ -209,8 +211,7 @@ export function TeacherAssignmentsPage() {
   const handleAssign = async (values: AssignTeacherValues): Promise<string | null> => {
     const teacher = teachers.find((t) => t.id === values.teacherId);
     const explicitYearId = values.academicYearId || undefined;
-    const effectiveYearId =
-      explicitYearId ?? sessions.find((s) => s.isActive)?.id ?? undefined;
+    const effectiveYearId = explicitYearId ?? sessions.find((s) => s.isActive)?.id ?? undefined;
 
     if (values.mode === "subject") {
       const subjectDuplicate = assignments.some(
@@ -253,12 +254,12 @@ export function TeacherAssignmentsPage() {
     }
 
     const existingClass = assignments.find(
-(a) =>
-          a.type === "class" &&
-          a.teacherId === values.teacherId &&
-          a.sectionId === values.sectionId &&
-          a.academicYearId === effectiveYearId,
-      );
+      (a) =>
+        a.type === "class" &&
+        a.teacherId === values.teacherId &&
+        a.sectionId === values.sectionId &&
+        a.academicYearId === effectiveYearId,
+    );
     if (existingClass) {
       return "This teacher is already assigned to this section for the selected academic year.";
     }
@@ -467,9 +468,7 @@ export function TeacherAssignmentsPage() {
               >
                 {assignment.subjectName}
                 {row.academicYears.length > 1 && (
-                  <span className="ml-1 text-emerald-500">
-                    ({assignment.academicYearLabel})
-                  </span>
+                  <span className="ml-1 text-emerald-500">({assignment.academicYearLabel})</span>
                 )}
               </span>
             ))}
@@ -537,9 +536,7 @@ export function TeacherAssignmentsPage() {
       header: "Capacity",
       align: "right",
       sortValue: (row) => row.capacity ?? 0,
-      render: (row) => (
-        <span className="font-medium text-neutral-700">{row.capacity ?? "—"}</span>
-      ),
+      render: (row) => <span className="font-medium text-neutral-700">{row.capacity ?? "—"}</span>,
     },
     {
       key: "classTeacherName",

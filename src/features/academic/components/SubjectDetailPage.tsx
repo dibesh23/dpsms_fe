@@ -269,7 +269,7 @@ export function SubjectDetailPage() {
         </dl>
       </section>
 
-      {/* Assigned teachers */}
+      {}
       <section className="rounded-lg border border-neutral-200 bg-bg-default">
         <header className="border-b border-neutral-100 px-5 py-4">
           <h2 className="font-medium text-neutral-900">Teachers</h2>
@@ -304,7 +304,7 @@ export function SubjectDetailPage() {
         )}
       </section>
 
-      {/* Mapped classes */}
+      {}
       <section className="rounded-lg border border-neutral-200 bg-bg-default">
         <header className="border-b border-neutral-100 px-5 py-4">
           <h2 className="font-medium text-neutral-900">Classes</h2>

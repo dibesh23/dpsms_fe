@@ -34,8 +34,6 @@ export function LoginWithSchoolContext() {
       return;
     }
     if (!subdomain) {
-      // A plain /login must not silently bind authentication to a previously
-      // visited school. The API can resolve a unique email/role combination.
       setResolvedTenantId(null);
       setSchoolName(null);
       setResolving(false);

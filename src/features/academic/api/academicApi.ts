@@ -90,7 +90,6 @@ const getItems = async <T>(path: string): Promise<T[]> => {
 };
 
 export const academicApi = {
-  // ---------- Classes ----------
   async listClasses(academicYearId?: string): Promise<ClassRecord[]> {
     const { data } = await apiClient.get<{
       data: ListResult<ClassRecord>;
@@ -115,7 +114,6 @@ export const academicApi = {
     await apiClient.delete(`/classes/${id}`);
   },
 
-  // ---------- Sections ----------
   async listSections(classId: string): Promise<SectionRecord[]> {
     const { data } = await apiClient.get<{ data: SectionRecord[] }>(`/classes/${classId}/sections`);
     return data.data;
@@ -153,7 +151,6 @@ export const academicApi = {
     await apiClient.delete(`/sections/${id}`);
   },
 
-  // ---------- Class students (roster) ----------
   async listClassStudents(classId: string): Promise<ClassStudentRow[]> {
     const { data } = await apiClient.get<{ data: ClassStudentRow[] }>(
       `/classes/${classId}/students`,
@@ -161,7 +158,6 @@ export const academicApi = {
     return data.data;
   },
 
-  // ---------- Class subjects ----------
   async listClassSubjects(classId: string): Promise<ClassSubjectRecord[]> {
     const { data } = await apiClient.get<{ data: ClassSubjectRecord[] }>(
       `/classes/${classId}/subjects`,
@@ -182,9 +178,6 @@ export const academicApi = {
     await apiClient.delete(`/classes/${classId}/subjects/${subjectId}`);
   },
 
-  // ---------- Teacher: own assigned classes & sections ----------
-  // Uses GET /attendance/my-sections which already resolves the teacher's
-  // TeacherClassAssignment rows filtered to the active academic year.
   async getMyAssignedClasses(): Promise<
     { classId: string; className: string; sections: { sectionId: string; sectionName: string }[] }[]
   > {
@@ -195,7 +188,6 @@ export const academicApi = {
       };
     }>("/attendance/my-sections");
 
-    // Group sections by classId
     const classMap = new Map<
       string,
       { classId: string; className: string; sections: { sectionId: string; sectionName: string }[] }
@@ -228,8 +220,7 @@ export const academicApi = {
     const { data } = await apiClient.post<{ data: DepartmentRecord }>("/departments", payload);
     return data.data;
   },
-  // The head must already belong to the department (teacher or staff), so
-  // heads are assigned after creation; passing null clears an assigned head.
+
   async updateDepartment(
     id: string,
     payload: {
@@ -249,7 +240,6 @@ export const academicApi = {
     await apiClient.delete(`/departments/${id}`);
   },
 
-  // ---------- Subjects ----------
   async listSubjects(): Promise<SubjectRecord[]> {
     return getItems<SubjectRecord>("/subjects");
   },
@@ -266,7 +256,7 @@ export const academicApi = {
     const { data } = await apiClient.post<{ data: SubjectRecord }>("/subjects", payload);
     return data.data;
   },
-  // The department is matched by NAME (created if missing); sending "" clears it.
+
   async updateSubject(
     id: string,
     payload: {
@@ -283,7 +273,6 @@ export const academicApi = {
     await apiClient.delete(`/subjects/${id}`);
   },
 
-  // ---------- Sessions ----------
   async listSessions(): Promise<SessionRecord[]> {
     return getItems<SessionRecord>("/academic-sessions");
   },

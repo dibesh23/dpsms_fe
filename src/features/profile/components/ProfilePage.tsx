@@ -141,7 +141,7 @@ export function ProfilePage() {
       />
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Main card */}
+        {}
         <div className="rounded-lg border border-neutral-200 bg-bg-default p-5 lg:col-span-2">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -230,9 +230,9 @@ export function ProfilePage() {
           </div>
         </div>
 
-        {/* Sidebar */}
+        {}
         <div className="space-y-4">
-          {/* Role-specific details */}
+          {}
           {teacher && (
             <div className="rounded-lg border border-neutral-200 bg-bg-default p-5">
               <h3 className="text-sm font-semibold text-neutral-900">Teacher Details</h3>
@@ -278,7 +278,7 @@ export function ProfilePage() {
             </div>
           )}
 
-          {/* Security */}
+          {}
           <div className="rounded-lg border border-neutral-200 bg-bg-default p-5">
             <div className="flex items-center gap-2">
               <ShieldIcon className="size-4 text-neutral-500" />

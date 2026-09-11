@@ -1,13 +1,12 @@
 import { apiClient } from "@/shared/lib/apiClient";
 
-// Mirrors schema.prisma: StudentAttendance.status
 export type AttendanceStatus = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED";
 
 export interface MyAttendanceRecord {
   id: string;
   enrollmentId: string;
   sectionId: string;
-  date: string; // ISO datetime (noon UTC)
+  date: string;
   status: AttendanceStatus;
 }
 

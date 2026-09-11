@@ -31,10 +31,7 @@ const STATUS_LABELS: Record<StudentAttendanceStatus, string> = {
   EXCUSED: "Excused",
 };
 
-const SEGMENT_ACTIVE_COLORS: Record<
-  (typeof PRIMARY_STATUSES)[number],
-  string
-> = {
+const SEGMENT_ACTIVE_COLORS: Record<(typeof PRIMARY_STATUSES)[number], string> = {
   PRESENT: "border-emerald-200 bg-emerald-50 text-emerald-700",
   ABSENT: "border-red-200 bg-red-50 text-red-700",
   LATE: "border-amber-200 bg-amber-50 text-amber-700",
@@ -67,9 +64,7 @@ export function AttendanceRegister({
   onSaved,
 }: AttendanceRegisterProps) {
   const toast = useToast();
-  const [statuses, setStatuses] = useState<Map<string, StudentAttendanceStatus>>(
-    new Map(),
-  );
+  const [statuses, setStatuses] = useState<Map<string, StudentAttendanceStatus>>(new Map());
   const baselineRef = useRef<Map<string, StudentAttendanceStatus>>(new Map());
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
@@ -131,9 +126,7 @@ export function AttendanceRegister({
 
   const hasChanges = roster.some((entry) => {
     const current = statuses.get(entry.enrollmentId);
-    return (
-      current !== undefined && current !== baselineRef.current.get(entry.enrollmentId)
-    );
+    return current !== undefined && current !== baselineRef.current.get(entry.enrollmentId);
   });
 
   const handleSave = async () => {
@@ -158,8 +151,8 @@ export function AttendanceRegister({
     } catch (err) {
       const message =
         err instanceof Error && "response" in err
-          ? ((err.response as { data?: { error?: { message?: string } } }).data?.error
-              ?.message ?? "Failed to save attendance.")
+          ? ((err.response as { data?: { error?: { message?: string } } }).data?.error?.message ??
+            "Failed to save attendance.")
           : "Failed to save attendance.";
       setSaveError(message);
       toast.error(message);
@@ -237,10 +230,7 @@ export function AttendanceRegister({
             description="No students are enrolled in this section yet."
           />
         ) : filteredRoster.length === 0 ? (
-          <EmptyState
-            title="No matches"
-            description={`No students match "${search.trim()}".`}
-          />
+          <EmptyState title="No matches" description={`No students match "${search.trim()}".`} />
         ) : (
           <div className="-mx-5 overflow-x-auto px-5">
             <table className="w-full min-w-[36rem] text-left text-sm">
@@ -259,8 +249,7 @@ export function AttendanceRegister({
               </thead>
               <tbody className="divide-y divide-neutral-100">
                 {filteredRoster.map((entry) => {
-                  const current =
-                    statuses.get(entry.enrollmentId) ?? entry.status ?? "PRESENT";
+                  const current = statuses.get(entry.enrollmentId) ?? entry.status ?? "PRESENT";
                   return (
                     <tr key={entry.enrollmentId} className="transition-colors hover:bg-bg-muted">
                       <td className="py-2 pr-4 align-middle text-neutral-500">
@@ -269,9 +258,7 @@ export function AttendanceRegister({
                       <td className="py-2 pr-4 align-middle">
                         <div className="flex items-center gap-3">
                           <Avatar name={entry.studentName} size="sm" />
-                          <span className="font-medium text-neutral-900">
-                            {entry.studentName}
-                          </span>
+                          <span className="font-medium text-neutral-900">{entry.studentName}</span>
                         </div>
                       </td>
                       <td className="py-2 align-middle">

@@ -208,7 +208,7 @@ export function SessionDetailPage() {
               <p className="text-xs text-neutral-400">Academic year</p>
             </div>
           </div>
-          <StatusBadge status={session.isActive ? "Active" : "Upcoming"} />
+          <StatusBadge status={session.isActive ? "Active" : "Inactive"} />
         </div>
 
         <dl className="mt-5 grid grid-cols-1 gap-4 border-t border-neutral-100 pt-5 sm:grid-cols-3">
@@ -229,7 +229,7 @@ export function SessionDetailPage() {
         </dl>
       </section>
 
-      {/* Classes in this academic year */}
+      {}
       <section className="rounded-lg border border-neutral-200 bg-bg-default">
         <header className="border-b border-neutral-100 px-5 py-4">
           <h2 className="font-medium text-neutral-900">Classes</h2>

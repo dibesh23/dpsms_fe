@@ -35,17 +35,17 @@ export interface AcademicSession {
   start: string;
   end: string;
   isActive: boolean;
-  status: "Active" | "Upcoming" | "Completed";
+  status: "Active" | "Inactive" | "Completed";
 }
 
 const STATUS_FILTERS = [
   { value: "Active", label: "Active" },
-  { value: "Upcoming", label: "Upcoming" },
+  { value: "Inactive", label: "Inactive" },
   { value: "Completed", label: "Completed" },
 ];
 
 const toStatus = (isActive: boolean): AcademicSession["status"] =>
-  isActive ? "Active" : "Upcoming";
+  isActive ? "Active" : "Inactive";
 
 const COLUMNS = ({
   canUpdate,

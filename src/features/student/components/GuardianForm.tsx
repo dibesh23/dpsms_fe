@@ -42,8 +42,7 @@ export function GuardianForm({
   onClose,
 }: {
   initial?: Partial<GuardianFormValues>;
-  // The update endpoint cannot change the primary flag, so the checkbox is
-  // only rendered when creating a new link.
+
   showPrimary?: boolean;
   onSave: (values: GuardianFormValues, isPrimary: boolean) => Promise<string | null>;
   onClose: () => void;

@@ -6,21 +6,13 @@ import { examApi, type ExamListItem } from "../api/examApi";
 const POLL_INTERVAL_MS = 30_000;
 
 interface Options {
-  /** Called when the poll detects newly published exams since the last fetch */
   onNewExams: (exams: ExamListItem[]) => void;
-  /** Called every poll cycle with the fresh published exams so the page can stay current */
+
   onRefresh: (exams: ExamListItem[]) => void;
-  /** Set false to pause polling */
+
   enabled?: boolean;
 }
 
-/**
- * Polls GET /exams?status=PUBLISHED every 30 s using the caller's own scope
- * (teachers see only exams for classes they are assigned to).
- * Compares the current set of exam IDs against the last known set.
- * If there are new ones, calls onNewExams with those exams so callers can
- * surface a notification popup.
- */
 export function usePublishedExamsPolling({ onNewExams, onRefresh, enabled = true }: Options) {
   const knownIdsRef = useRef<Set<string> | null>(null);
   const onNewExamsRef = useRef(onNewExams);
@@ -53,9 +45,7 @@ export function usePublishedExamsPolling({ onNewExams, onRefresh, enabled = true
         knownIdsRef.current = freshIds;
       }
       onRefreshRef.current(exams);
-    } catch {
-      // Silent failure — network blip should not disrupt the UI
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {

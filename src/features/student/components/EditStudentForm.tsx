@@ -18,8 +18,6 @@ const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const
 
 const STATUSES = ["Active", "On Leave", "Inactive"] as const;
 
-// Grade/section are intentionally absent — the backend rejects class/section
-// changes on update; use the transfer flow instead.
 const EditStudentSchema = z.object({
   fullName: z.string().min(1, "Full name is required").max(255),
   email: z.union([z.email("Enter a valid email address"), z.literal("")]).optional(),
@@ -208,11 +206,6 @@ export function EditStudentForm({
   );
 }
 
-// Payload rules mirror the backend contract:
-// - omit a key entirely -> keep the existing value
-// - send "" for phone/bloodGroup/address -> clear the value
-// - email/gender/dateOfBirth can only be set, not cleared, so they are
-//   omitted when empty (sending "" would fail backend validation).
 export function editValuesToPayload(values: EditStudentValues): {
   fullName: string;
   status: "ACTIVE" | "INACTIVE" | "ON_LEAVE";

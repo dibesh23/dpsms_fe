@@ -162,46 +162,47 @@ export function ClassesPage() {
   const totalSections = classes.reduce((sum, schoolClass) => sum + schoolClass.sections.length, 0);
   const totalStudents = classes.reduce((sum, schoolClass) => sum + schoolClass.students, 0);
 
-  const columnsWithActions: Column<ClassRecordDto>[] = canUpdate || canDelete
-    ? [
-        ...COLUMNS,
-        {
-          key: "actions",
-          header: "",
-          align: "right" as const,
-          render: (row: ClassRecordDto) => (
-            <RowActions
-              actions={[
-                {
-                  label: "View details",
-                  icon: <ArrowUpRightIcon className="size-3.5" />,
-                  href: `/classes/${row.id}`,
-                },
-                ...(canUpdate
-                  ? [
-                      {
-                        label: "Rename",
-                        icon: <PencilIcon className="size-3.5" />,
-                        onClick: () => setRenameTarget(row),
-                      },
-                    ]
-                  : []),
-                ...(canDelete
-                  ? [
-                      {
-                        label: "Remove",
-                        icon: <TrashIcon className="size-3.5" />,
-                        danger: true,
-                        onClick: () => setDeleteTarget(row),
-                      },
-                    ]
-                  : []),
-              ]}
-            />
-          ),
-        },
-      ]
-    : COLUMNS;
+  const columnsWithActions: Column<ClassRecordDto>[] =
+    canUpdate || canDelete
+      ? [
+          ...COLUMNS,
+          {
+            key: "actions",
+            header: "",
+            align: "right" as const,
+            render: (row: ClassRecordDto) => (
+              <RowActions
+                actions={[
+                  {
+                    label: "View details",
+                    icon: <ArrowUpRightIcon className="size-3.5" />,
+                    href: `/classes/${row.id}`,
+                  },
+                  ...(canUpdate
+                    ? [
+                        {
+                          label: "Rename",
+                          icon: <PencilIcon className="size-3.5" />,
+                          onClick: () => setRenameTarget(row),
+                        },
+                      ]
+                    : []),
+                  ...(canDelete
+                    ? [
+                        {
+                          label: "Remove",
+                          icon: <TrashIcon className="size-3.5" />,
+                          danger: true,
+                          onClick: () => setDeleteTarget(row),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
+            ),
+          },
+        ]
+      : COLUMNS;
 
   return (
     <div className="space-y-4">

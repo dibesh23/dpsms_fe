@@ -16,10 +16,7 @@ export function Grid({
 
   return (
     <svg
-      className={cn(
-        "pointer-events-none absolute inset-0 text-black/10",
-        className,
-      )}
+      className={cn("pointer-events-none absolute inset-0 text-black/10", className)}
       width="100%"
       height="100%"
     >

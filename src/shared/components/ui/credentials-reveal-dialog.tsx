@@ -25,9 +25,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
       await navigator.clipboard.writeText(value);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Clipboard API unavailable
-    }
+    } catch {}
   }, [value]);
 
   return (
@@ -179,14 +177,6 @@ export function CredentialsRevealDialog({
                 {credentials.password}
               </div>
             </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              text="Print credential slip"
-              className="w-full"
-              onClick={() => window.print()}
-            />
           </div>
 
           <div className="flex items-center justify-end border-t border-neutral-100 px-5 py-4">

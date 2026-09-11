@@ -40,8 +40,6 @@ function toDateInputValue(iso: string): string {
 
 export { toDateInputValue };
 
-// The backend cannot clear a staff department (an empty value is ignored),
-// so the form always sends one of the known departments or the current one.
 const EditStaffSchema = z.object({
   fullName: z.string().min(1, "Full name is required").max(255),
   email: z.email("Enter a valid email address"),
@@ -104,8 +102,6 @@ export function EditStaffForm({
     if (error) setApiError(error);
   };
 
-  // Keep the current department in the list even if it is not among the
-  // existing department records, so the value is never lost on save.
   const departmentOptions = [initial.department, ...departments]
     .filter(Boolean)
     .filter((name, index, arr) => arr.indexOf(name) === index);
@@ -225,18 +221,13 @@ export function EditStaffForm({
   );
 }
 
-// Payload rules mirror the backend contract:
-// - omit a key entirely -> keep the existing value
-// - phone "" -> clears the phone number server-side
-// - email/joinedAt can only be set, never cleared, so they are always sent
-// - department cannot be cleared; an empty value would be silently ignored
 export function editValuesToPayload(values: EditStaffValues) {
   return {
     fullName: values.fullName.trim(),
     email: values.email.trim(),
     role: values.role.trim(),
     department: values.department.trim(),
-    // "" clears the phone server-side; never send null (backend rejects it).
+
     phone: values.phone.trim() || "",
     ...(values.joinedAt ? { joinedAt: values.joinedAt } : {}),
     status: staffLabelToStatus(values.status),

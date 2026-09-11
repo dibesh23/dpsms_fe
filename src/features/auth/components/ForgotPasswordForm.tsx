@@ -31,9 +31,7 @@ export function ForgotPasswordForm({ defaultTenantId = "" }: { defaultTenantId?:
   const onSubmit = async ({ email, tenantId }: ForgotFormValues) => {
     try {
       await authApi.forgotPassword(email, tenantId || undefined);
-    } catch {
-      // deliberately swallow: never reveal whether an account exists
-    }
+    } catch {}
     setSubmitted(true);
   };
 
