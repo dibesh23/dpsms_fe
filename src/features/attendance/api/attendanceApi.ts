@@ -28,7 +28,7 @@ export interface RosterEntry {
   rollNumber: string;
   studentId: string;
   studentName: string;
-  status: StudentAttendanceStatus | null; // null = not marked yet
+  status: StudentAttendanceStatus | null;
 }
 
 export interface RosterResponse {
@@ -41,7 +41,7 @@ export interface RosterResponse {
 export interface StaffRosterEntry {
   teacherId: string;
   teacherName: string;
-  status: StaffAttendanceStatus | null; // null = not marked yet
+  status: StaffAttendanceStatus | null;
 }
 
 export interface StaffRosterResponse {

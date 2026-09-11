@@ -10,12 +10,6 @@ export interface DisplayAttachment {
   sizeBytes: number;
 }
 
-/**
- * Reusable multi-file attach/remove UI following the notice-attachment pattern:
- * existing attachments are shown as chips (with optional open/remove), and new
- * files are held locally until `onSaveNew` uploads them. Combines both into a
- * single list so a parent can call `onSaveNew(file)` then merge the result.
- */
 export function AttachmentUploader({
   existing,
   onSubmit,

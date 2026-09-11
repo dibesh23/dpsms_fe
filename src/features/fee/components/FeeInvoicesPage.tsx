@@ -15,11 +15,7 @@ import { useStoredView } from "@/shared/hooks/useStoredView";
 import { feeApi, type InvoiceRecord, type InvoiceStatus, INVOICE_STATUSES } from "../api/feeApi";
 import { academicApi, type ClassRecord } from "@/features/academic/api/academicApi";
 import { formatCurrency } from "@/shared/lib/format";
-import {
-  FileTextIcon,
-  ArrowUpRightIcon,
-  GraduationCapIcon,
-} from "@/shared/components/ui/icons";
+import { FileTextIcon, ArrowUpRightIcon, GraduationCapIcon } from "@/shared/components/ui/icons";
 
 const STATUS_LABEL: Record<InvoiceStatus, string> = {
   DRAFT: "Draft",
@@ -97,7 +93,9 @@ export function FeeInvoicesPage() {
     void load();
   }, [load]);
 
-  const selectedClass = selectedClassId ? classes.find((c) => c.id === selectedClassId) ?? null : null;
+  const selectedClass = selectedClassId
+    ? (classes.find((c) => c.id === selectedClassId) ?? null)
+    : null;
 
   const handleViewModeChange = (mode: string) => {
     setViewMode(mode as "classes" | "all");
@@ -129,7 +127,8 @@ export function FeeInvoicesPage() {
         sortValue: (inv) => inv.className ?? "",
         render: (inv) => (
           <span className="text-sm text-neutral-600">
-            {inv.className ?? "—"}{inv.sectionName ? ` / ${inv.sectionName}` : ""}
+            {inv.className ?? "—"}
+            {inv.sectionName ? ` / ${inv.sectionName}` : ""}
           </span>
         ),
       },
@@ -167,13 +166,10 @@ export function FeeInvoicesPage() {
     [],
   );
 
-  const handleSearch = useCallback(
-    (value: string) => {
-      setQuery(value);
-      setPage(1);
-    },
-    [],
-  );
+  const handleSearch = useCallback((value: string) => {
+    setQuery(value);
+    setPage(1);
+  }, []);
 
   const invoicesTable = (
     <DataTable
@@ -324,11 +320,7 @@ export function FeeInvoicesPage() {
               />
               <p className="text-sm text-neutral-500">{classes.length} classes</p>
             </div>
-            <SearchBar
-              value={query}
-              onChange={(v) => setQuery(v)}
-              placeholder="Search classes…"
-            />
+            <SearchBar value={query} onChange={(v) => setQuery(v)} placeholder="Search classes…" />
           </div>
 
           {loading ? (
@@ -389,7 +381,9 @@ function ClassInvoiceGrid({
       setLoading(false);
     }
     void load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [classes]);
 
   const filtered = useMemo(() => {
@@ -420,7 +414,8 @@ function ClassInvoiceGrid({
               <div>
                 <p className="font-medium text-neutral-900">{c.name}</p>
                 <p className="mt-0.5 text-xs text-neutral-400">
-                  {c.sections.length > 0 ? c.sections.join(", ") : "No sections"} &middot; {c.students} students
+                  {c.sections.length > 0 ? c.sections.join(", ") : "No sections"} &middot;{" "}
+                  {c.students} students
                 </p>
               </div>
               <ArrowUpRightIcon className="size-4 text-neutral-300" />

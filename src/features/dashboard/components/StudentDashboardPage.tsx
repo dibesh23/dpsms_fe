@@ -10,6 +10,8 @@ import { DashboardWidget } from "@/shared/components/ui/dashboard-widget";
 import { DonutChart } from "@/shared/components/ui/charts";
 import { StatusBadge, type StatusVariant } from "@/shared/components/ui/status-badge";
 import { EmptyState } from "@/shared/components/ui/empty-state";
+import { ErrorState } from "@/shared/components/ui/error-state";
+import { RouteLoading } from "@/shared/components/ui/route-loading";
 import { formatCurrency, formatDate } from "@/shared/lib/format";
 import {
   studentDashboardApi,
@@ -351,13 +353,17 @@ export default function StudentDashboardPage() {
   const firstName = user?.fullName?.split(" ")[0] ?? "Student";
   const [summary, setSummary] = useState<StudentDashboardSummary>(EMPTY_SUMMARY);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
     try {
       const data = await studentDashboardApi.getSummary();
       setSummary(data);
     } catch {
       setSummary(EMPTY_SUMMARY);
+      setLoadError("Your dashboard could not be loaded. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -374,11 +380,13 @@ export default function StudentDashboardPage() {
 
   const { profile, attendance, fee } = summary;
   const classLabel = [profile.className, profile.sectionName].filter(Boolean).join(" - ");
-  // Only PUBLISHED exam results should ever reach a student; filtering
-  // defensively here in case the API ever includes DRAFT/pending ones.
+
   const publishedResults = summary.examResults.filter((exam) => exam.status === "PUBLISHED");
   const hasAttendanceData = attendance.totalMarkedDays > 0;
   const overallRisk = hasAttendanceData ? attendanceRisk(attendance.overallPercent) : null;
+
+  if (loading) return <RouteLoading variant="dashboard" label="Loading student dashboard…" />;
+  if (loadError) return <ErrorState description={loadError} onRetry={() => void load()} />;
 
   return (
     <div className="mx-auto max-w-[1500px] space-y-4 pb-6">
@@ -419,7 +427,7 @@ export default function StudentDashboardPage() {
       </section>
 
       <div className="flex flex-col gap-4 lg:flex-row">
-        {/* Profile panel */}
+        {}
         <div className="lg:w-72 lg:flex-none">
           <div className="rounded-[18px] border border-neutral-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,.02)]">
             <div className="flex flex-col items-center text-center">
@@ -483,7 +491,7 @@ export default function StudentDashboardPage() {
           </div>
         </div>
 
-        {/* Reports */}
+        {}
         <div className="min-w-0 flex-1 space-y-4">
           <DashboardWidget
             title="Attendance Report"
@@ -504,7 +512,7 @@ export default function StudentDashboardPage() {
               </div>
             ) : (
               <div className="space-y-5">
-                {/* Today's status — the thing a student checks first */}
+                {}
                 <div
                   className={cn(
                     "flex items-center gap-3 rounded-lg border p-4",

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -19,11 +19,7 @@ import { RowActions } from "@/shared/components/ui/row-actions";
 import { useToast } from "@/shared/components/ui/toast";
 import { useTable } from "@/shared/hooks/useTable";
 import { formatDate } from "@/shared/lib/format";
-import {
-  noticeApi,
-  type AdminNotice,
-  type NoticeAttachment,
-} from "../api/noticeApi";
+import { noticeApi, type AdminNotice, type NoticeAttachment } from "../api/noticeApi";
 import { RecipientScopeEditor, AudienceBadge } from "./RecipientScopeEditor";
 import {
   AlertTriangleIcon,
@@ -36,8 +32,6 @@ import {
   UsersIcon,
 } from "@/shared/components/ui/icons";
 import { AttachmentPreviewDialog } from "./AttachmentPreviewDialog";
-
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function publishStatus(n: AdminNotice): "published" | "scheduled" | "draft" {
   if (n.publishedAt) return "published";
@@ -71,8 +65,6 @@ const FILTER_OPTIONS = [
 ];
 
 const ACCEPTED_FILE_TYPES = ".pdf,.jpg,.jpeg,.png,.webp";
-
-// â”€â”€ Attachment chip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function AttachmentChip({
   attachment,
@@ -139,8 +131,6 @@ function AttachmentChip({
   );
 }
 
-// â”€â”€ Edit form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 const scopeItemSchema = z.object({
   id: z.string(),
   roleTarget: z.string(),
@@ -169,7 +159,7 @@ function EditNoticeDialog({
   const { success, error } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newFiles, setNewFiles] = useState<File[]>([]);
-  const [replacingId, setReplacingId] = useState<string | null>(null); // attachment being replaced
+  const [replacingId, setReplacingId] = useState<string | null>(null);
   const [replaceFileRef] = useState(() => ({ current: null as HTMLInputElement | null }));
   const [saving, setSaving] = useState(false);
 
@@ -194,7 +184,6 @@ function EditNoticeDialog({
     },
   });
 
-  // Re-populate form when notice changes
   useEffect(() => {
     if (notice) {
       reset({
@@ -218,11 +207,10 @@ function EditNoticeDialog({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Replace = upload new file for a specific attachment slot, delete the old one
   const handleReplaceFile = (e: React.ChangeEvent<HTMLInputElement>, attachmentId: string) => {
     const file = e.target.files?.[0];
     if (!file || file.size > 5 * 1024 * 1024) return;
-    // Store the pending replacement in newFiles tagged with the old id
+
     setNewFiles((prev) => [
       ...prev.filter((f) => (f as File & { _replaces?: string })._replaces !== attachmentId),
       Object.assign(file, { _replaces: attachmentId }),
@@ -233,7 +221,6 @@ function EditNoticeDialog({
   const onSubmit = async (values: EditForm) => {
     setSaving(true);
     try {
-      // 1. Update text fields
       let updated = await noticeApi.update(notice.id, {
         title: values.title,
         body: values.body,
@@ -246,19 +233,16 @@ function EditNoticeDialog({
         })),
       });
 
-      // 2. Process replacements (delete old â†’ upload new)
       for (const file of newFiles) {
         const replaces = (file as File & { _replaces?: string })._replaces;
         if (replaces) {
           try {
             await noticeApi.deleteAttachment(notice.id, replaces);
-          } catch {
-            // non-fatal if old file already gone
-          }
+          } catch {}
         }
         try {
           const attachment = await noticeApi.uploadAttachment(notice.id, file);
-          // Remove old from updated attachments if replacing
+
           updated = {
             ...updated,
             attachments: [...updated.attachments.filter((a) => a.id !== replaces), attachment],
@@ -316,7 +300,7 @@ function EditNoticeDialog({
           onChange={(scopes) => setValue("recipientScopes", scopes, { shouldValidate: true })}
         />
 
-        {/* Existing attachments â€” each can be replaced */}
+        {}
         {notice.attachments.length > 0 && (
           <div>
             <p className="mb-2 text-sm font-medium text-neutral-700">Attachments</p>
@@ -374,7 +358,7 @@ function EditNoticeDialog({
           </div>
         )}
 
-        {/* Add new files */}
+        {}
         {totalAttachments < 5 && (
           <div>
             {newFiles.filter((f) => !(f as File & { _replaces?: string })._replaces).length > 0 && (
@@ -437,8 +421,6 @@ function EditNoticeDialog({
   );
 }
 
-// â”€â”€ Create form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 const CreateSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(255),
   body: z.string().trim().min(1, "Body is required"),
@@ -447,8 +429,6 @@ const CreateSchema = z.object({
   recipientScopes: z.array(scopeItemSchema),
 });
 type CreateForm = z.output<typeof CreateSchema>;
-
-// â”€â”€ Notice row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function NoticeRow({
   notice,
@@ -476,7 +456,7 @@ function NoticeRow({
   return (
     <li className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex min-w-0 flex-col gap-1">
-        {/* Title + badges */}
+        {}
         <div className="flex flex-wrap items-center gap-2">
           <span className="truncate text-sm font-semibold text-neutral-900">{notice.title}</span>
           {notice.isUrgent && <StatusBadge status="Urgent" variant="danger" />}
@@ -496,10 +476,10 @@ function NoticeRow({
           )}
         </div>
 
-        {/* Body preview */}
+        {}
         <p className="line-clamp-2 text-xs text-neutral-500">{notice.body}</p>
 
-        {/* Attachments */}
+        {}
         {notice.attachments.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1.5">
             {notice.attachments.map((a) => (
@@ -513,7 +493,7 @@ function NoticeRow({
           </div>
         )}
 
-        {/* Meta */}
+        {}
         <p className="text-xs text-neutral-400">
           {pubStatus === "published" && notice.publishedAt
             ? `Published ${formatDate(notice.publishedAt)}`
@@ -530,8 +510,6 @@ function NoticeRow({
     </li>
   );
 }
-
-// â”€â”€ Create dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CreateNoticeDialog({
   open,
@@ -561,10 +539,10 @@ function CreateNoticeDialog({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
-    // Max 5 files, each max 5MB
+
     const valid = files.filter((f) => f.size <= 5 * 1024 * 1024).slice(0, 5);
     setSelectedFiles((prev) => [...prev, ...valid].slice(0, 5));
-    // Reset input so same file can be re-added after removal
+
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -580,7 +558,6 @@ function CreateNoticeDialog({
 
   const onSubmit = async (values: CreateForm) => {
     try {
-      // Step 1: create the notice
       const created = await noticeApi.create({
         title: values.title,
         body: values.body,
@@ -595,7 +572,6 @@ function CreateNoticeDialog({
         ),
       });
 
-      // Step 2: upload attachments sequentially
       if (selectedFiles.length > 0) {
         setUploadingFiles(true);
         let updatedNotice = created;
@@ -607,7 +583,6 @@ function CreateNoticeDialog({
               attachments: [...updatedNotice.attachments, attachment],
             };
           } catch {
-            // Non-fatal â€” notice is already created, just log the failure
             error(`Failed to upload ${file.name}`);
           }
         }
@@ -665,7 +640,7 @@ function CreateNoticeDialog({
           onChange={(scopes) => setValue("recipientScopes", scopes, { shouldValidate: true })}
         />
 
-        {/* Attachments */}
+        {}
         <div className="h-28 overflow-y-auto overscroll-contain pr-1">
           <p className="mb-2 text-sm font-medium text-neutral-700">
             Attachments{" "}
@@ -740,8 +715,6 @@ function CreateNoticeDialog({
   );
 }
 
-// â”€â”€ Delete confirm â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 function DeleteConfirmDialog({
   open,
   onClose,
@@ -770,8 +743,6 @@ function DeleteConfirmDialog({
   );
 }
 
-// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 export function AdminNoticePage() {
   const { success, error } = useToast();
   const [notices, setNotices] = useState<AdminNotice[]>([]);
@@ -797,8 +768,6 @@ export function AdminNoticePage() {
     void load(false);
   }, [load]);
 
-  // Keep the list fresh so scheduled notices flip to "published" as the
-  // backend scheduler publishes them (no manual reload needed).
   useEffect(() => {
     const id = setInterval(() => void load(true), 30_000);
     return () => clearInterval(id);
@@ -857,9 +826,7 @@ export function AdminNoticePage() {
     );
   };
 
-  // Remove an attachment from a notice optimistically
   const handleAttachmentDeleted = async (noticeId: string, attachmentId: string) => {
-    // Optimistic update
     setNotices((prev) =>
       prev.map((n) =>
         n.id === noticeId
@@ -871,7 +838,6 @@ export function AdminNoticePage() {
       await noticeApi.deleteAttachment(noticeId, attachmentId);
       success("Attachment removed");
     } catch {
-      // Revert on failure
       void load();
       error("Failed to remove attachment");
     }

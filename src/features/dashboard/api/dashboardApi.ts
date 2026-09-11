@@ -70,8 +70,6 @@ export interface DashboardSummary {
   notifications: NotificationItem[];
 }
 
-// Teacher-scoped dashboard payload — everything is limited to the
-// teacher's own assigned sections (server-enforced).
 export interface TeacherSectionSummary {
   sectionId: string;
   className: string;
@@ -104,9 +102,7 @@ export const dashboardApi = {
   },
 
   async getTeacherSummary(): Promise<TeacherSummary> {
-    const { data } = await apiClient.get<{ data: TeacherSummary }>(
-      "/dashboard/teacher-summary",
-    );
+    const { data } = await apiClient.get<{ data: TeacherSummary }>("/dashboard/teacher-summary");
     return data.data;
   },
 };

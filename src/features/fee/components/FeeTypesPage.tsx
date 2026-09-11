@@ -58,13 +58,18 @@ function CreateFeeTypeForm({
   const onSubmit = async (values: CreateValues) => {
     setApiError(null);
     const result = await onAdd(values);
-    if (!result.success) setApiError(result.error ?? "Could not create fee type. It may already exist.");
+    if (!result.success)
+      setApiError(result.error ?? "Could not create fee type. It may already exist.");
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       <Field label="Name" error={errors.name?.message} required>
-        <Input {...register("name")} placeholder="e.g. Monthly Tuition Fee" disabled={isSubmitting} />
+        <Input
+          {...register("name")}
+          placeholder="e.g. Monthly Tuition Fee"
+          disabled={isSubmitting}
+        />
       </Field>
       <Field label="Category" error={errors.category?.message} required>
         <Select {...register("category")} disabled={isSubmitting}>
@@ -77,7 +82,12 @@ function CreateFeeTypeForm({
       </Field>
       <Field label="Recurring annually">
         <label className="flex items-center gap-2 text-sm text-neutral-700">
-          <input type="checkbox" {...register("isRecurringAnnually")} className="size-4 rounded border-neutral-300" disabled={isSubmitting} />
+          <input
+            type="checkbox"
+            {...register("isRecurringAnnually")}
+            className="size-4 rounded border-neutral-300"
+            disabled={isSubmitting}
+          />
           Automatically carry forward each academic year
         </label>
       </Field>
@@ -87,8 +97,18 @@ function CreateFeeTypeForm({
         </div>
       )}
       <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
-        <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" type="button" />
-        <Button text={isSubmitting ? "Creating…" : "Create Fee Type"} loading={isSubmitting} className="w-auto" />
+        <Button
+          variant="secondary"
+          text="Cancel"
+          onClick={onClose}
+          className="w-auto"
+          type="button"
+        />
+        <Button
+          text={isSubmitting ? "Creating…" : "Create Fee Type"}
+          loading={isSubmitting}
+          className="w-auto"
+        />
       </div>
     </form>
   );
@@ -129,8 +149,12 @@ export function FeeTypesPage() {
       toast.success("Fee type created.");
       return { success: true };
     } catch (err: unknown) {
-      const axiosData = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
-      return { success: false, error: axiosData ?? "Could not create fee type. It may already exist." };
+      const axiosData = (err as { response?: { data?: { error?: { message?: string } } } })
+        ?.response?.data?.error?.message;
+      return {
+        success: false,
+        error: axiosData ?? "Could not create fee type. It may already exist.",
+      };
     }
   };
 
@@ -155,7 +179,9 @@ export function FeeTypesPage() {
         key: "category",
         header: "Category",
         sortValue: (t) => t.category,
-        render: (t) => <StatusBadge status={CATEGORY_LABEL[t.category]} variant="neutral" dot={false} />,
+        render: (t) => (
+          <StatusBadge status={CATEGORY_LABEL[t.category]} variant="neutral" dot={false} />
+        ),
       },
       {
         key: "recurring",
@@ -194,7 +220,11 @@ export function FeeTypesPage() {
             value={table.filter}
             onChange={table.setFilter}
           />
-          <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search fee types…" />
+          <SearchBar
+            value={table.query}
+            onChange={table.setQuery}
+            placeholder="Search fee types…"
+          />
         </div>
       </div>
 
@@ -239,7 +269,12 @@ export function FeeTypesPage() {
         />
       )}
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} title="Create Fee Type" description="Define a new category of fee.">
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        title="Create Fee Type"
+        description="Define a new category of fee."
+      >
         <CreateFeeTypeForm onAdd={handleAdd} onClose={() => setDialogOpen(false)} />
       </Dialog>
     </div>

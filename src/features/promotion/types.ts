@@ -1,11 +1,5 @@
 export type PromotionOutcome =
-  | "PROMOTED"
-  | "REPEATER"
-  | "FAILED"
-  | "HELD"
-  | "TRANSFERRED_OUT"
-  | "WITHDRAWN"
-  | "EXCLUDED";
+  "PROMOTED" | "REPEATER" | "FAILED" | "HELD" | "TRANSFERRED_OUT" | "WITHDRAWN" | "EXCLUDED";
 
 export type ReviewDecision = "REPEATER" | "PROMOTE_OVERRIDE" | "HELD" | "WITHDRAWN";
 

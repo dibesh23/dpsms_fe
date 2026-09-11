@@ -47,8 +47,8 @@ export function ReportPreviewDialog({
         if (!cancelled) setPreview(p);
       })
       .catch((err: unknown) => {
-        const message = (err as { response?: { data?: { error?: { message?: string } } } })?.response
-          ?.data?.error?.message;
+        const message = (err as { response?: { data?: { error?: { message?: string } } } })
+          ?.response?.data?.error?.message;
         if (!cancelled) setError(message ?? "Could not load report preview.");
       })
       .finally(() => {
@@ -90,9 +90,7 @@ export function ReportPreviewDialog({
           <p role="alert" className="text-sm text-red-700">
             {error}
           </p>
-          <p className="mt-1 text-xs text-neutral-400">
-            You can still download the file directly.
-          </p>
+          <p className="mt-1 text-xs text-neutral-400">You can still download the file directly.</p>
         </div>
       ) : preview ? (
         <div className="space-y-4">
@@ -138,10 +136,7 @@ export function ReportPreviewDialog({
                   preview.rows.map((row, rowIndex) => (
                     <tr key={rowIndex} className="border-b border-neutral-100 last:border-0">
                       {(preview.columns ?? []).map((col) => (
-                        <td
-                          key={col.key}
-                          className="px-3 py-2 whitespace-nowrap text-neutral-700"
-                        >
+                        <td key={col.key} className="px-3 py-2 whitespace-nowrap text-neutral-700">
                           {formatCell(row[col.key])}
                         </td>
                       ))}

@@ -88,7 +88,7 @@ export function EditDepartmentForm({
 export function editValuesToPayload(values: EditDepartmentValues) {
   return {
     name: values.name.trim(),
-    // "" clears the description server-side.
+
     description: values.description.trim() || "",
   };
 }

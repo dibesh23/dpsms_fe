@@ -19,9 +19,7 @@ export function Breadcrumbs({
         const last = index === items.length - 1;
         return (
           <span key={`${index}-${String(item.label)}`} className="flex items-center gap-1">
-            {index > 0 && (
-              <ChevronRightIcon className="size-3.5 flex-none text-neutral-300" />
-            )}
+            {index > 0 && <ChevronRightIcon className="size-3.5 flex-none text-neutral-300" />}
             {item.href && !last ? (
               <Link
                 href={item.href}
@@ -31,11 +29,7 @@ export function Breadcrumbs({
               </Link>
             ) : (
               <span
-                className={cn(
-                  last
-                    ? "truncate font-medium text-neutral-900"
-                    : "text-neutral-500",
-                )}
+                className={cn(last ? "truncate font-medium text-neutral-900" : "text-neutral-500")}
               >
                 {item.label}
               </span>

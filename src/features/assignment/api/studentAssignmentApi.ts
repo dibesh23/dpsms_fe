@@ -85,7 +85,6 @@ export const studentAssignmentApi = {
     return data.data;
   },
 
-  // ── Submission attachments (student) ────────────────────────────────────────
   async uploadSubmissionAttachment(
     id: string,
     submissionId: string,

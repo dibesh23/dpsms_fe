@@ -3,12 +3,7 @@ import { apiClient } from "@/shared/lib/apiClient";
 export type ReportType = "EXAM" | "FEE" | "ATTENDANCE";
 export type ReportFormat = "EXCEL" | "PDF";
 export type ReportStatus =
-  | "QUEUED"
-  | "RUNNING"
-  | "PROCESSING"
-  | "COMPLETED"
-  | "FAILED"
-  | "CANCELLED";
+  "QUEUED" | "RUNNING" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED";
 
 export type ReportParameterInput = Partial<{
   academicYearId: string;
@@ -91,16 +86,21 @@ export const REPORT_STATUS_LABELS: Record<ReportStatus, string> = {
 
 export const reportApi = {
   async request(input: RequestReportInput): Promise<ReportRequestRecord> {
-    const { data } = await apiClient.post<{ data: ReportRequestRecord }>("/reports/requests", input);
+    const { data } = await apiClient.post<{ data: ReportRequestRecord }>(
+      "/reports/requests",
+      input,
+    );
     return data.data;
   },
 
-  async list(params: {
-    page?: number;
-    pageSize?: number;
-    type?: ReportType;
-    status?: ReportStatus;
-  } = {}): Promise<ReportListResult> {
+  async list(
+    params: {
+      page?: number;
+      pageSize?: number;
+      type?: ReportType;
+      status?: ReportStatus;
+    } = {},
+  ): Promise<ReportListResult> {
     const query = Object.fromEntries(
       (Object.entries(params) as [string, string | number | undefined][]).filter(
         ([, value]) => value !== undefined && value !== "",
@@ -118,7 +118,9 @@ export const reportApi = {
   },
 
   async preview(id: string): Promise<ReportPreview> {
-    const { data } = await apiClient.get<{ data: ReportPreview }>(`/reports/requests/${id}/preview`);
+    const { data } = await apiClient.get<{ data: ReportPreview }>(
+      `/reports/requests/${id}/preview`,
+    );
     return data.data;
   },
 

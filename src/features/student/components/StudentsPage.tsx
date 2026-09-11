@@ -330,7 +330,7 @@ export function StudentsPage() {
         ),
       },
     ],
-    // openEdit is stable enough for this usage; it only closes over setState + toast.
+
     [canUpdate, canDelete, canTransfer, toast],
   );
 

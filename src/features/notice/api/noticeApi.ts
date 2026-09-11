@@ -1,10 +1,6 @@
 import { apiClient } from "@/shared/lib/apiClient";
 
-// ── Approval status ───────────────────────────────────────────────────────────
-
 export type NoticeApprovalStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED";
-
-// ── Recipient scope ───────────────────────────────────────────────────────────
 
 export interface NoticeRecipientScope {
   id: string;
@@ -13,8 +9,6 @@ export interface NoticeRecipientScope {
   sectionId: string;
 }
 
-// ── Attachment ────────────────────────────────────────────────────────────────
-
 export interface NoticeAttachment {
   id: string;
   label: string;
@@ -22,8 +16,6 @@ export interface NoticeAttachment {
   mimeType: string;
   sizeBytes: number;
 }
-
-// ── Notice record ─────────────────────────────────────────────────────────────
 
 export interface AdminNotice {
   id: string;
@@ -51,8 +43,6 @@ export interface AdminNoticeListResult {
   pageSize: number;
 }
 
-// ── Read tracking ─────────────────────────────────────────────────────────────
-
 export interface NoticeReadRecord {
   userId: string;
   fullName: string;
@@ -68,8 +58,6 @@ export interface NoticeReadsResult {
   reads: NoticeReadRecord[];
 }
 
-// ── Query params ──────────────────────────────────────────────────────────────
-
 export interface NoticeListParams {
   page?: number;
   pageSize?: number;
@@ -78,8 +66,6 @@ export interface NoticeListParams {
   urgent?: boolean;
   approval?: NoticeApprovalStatus;
 }
-
-// ── Create / update payloads ──────────────────────────────────────────────────
 
 export interface NoticeCreatePayload {
   title: string;
@@ -104,8 +90,6 @@ export interface NoticeUpdatePayload {
     sectionId?: string;
   }>;
 }
-
-// ── API ───────────────────────────────────────────────────────────────────────
 
 export const noticeApi = {
   async list(params?: NoticeListParams): Promise<AdminNoticeListResult> {
@@ -158,11 +142,12 @@ export const noticeApi = {
   },
 
   async getMySubmissions(): Promise<AdminNoticeListResult> {
-    const { data } = await apiClient.get<{ data: { items: AdminNotice[] } }>("/notices/submissions");
+    const { data } = await apiClient.get<{ data: { items: AdminNotice[] } }>(
+      "/notices/submissions",
+    );
     return { items: data.data.items, total: data.data.items.length, page: 1, pageSize: 100 };
   },
 
-  /** Upload an attachment to an existing notice (multipart/form-data) */
   async uploadAttachment(noticeId: string, file: File): Promise<NoticeAttachment> {
     const form = new FormData();
     form.append("file", file);
@@ -174,20 +159,14 @@ export const noticeApi = {
     return data.data;
   },
 
-  /** Delete an attachment from a notice */
   async deleteAttachment(noticeId: string, attachmentId: string): Promise<void> {
     await apiClient.delete(`/notices/${noticeId}/attachments/${attachmentId}`);
   },
 
-  /** Returns the download URL for an attachment */
   getAttachmentDownloadUrl(noticeId: string, attachmentId: string): string {
     return `${process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:4000"}/api/notices/${noticeId}/attachments/${attachmentId}/download`;
   },
 
-  /**
-   * Fetches an attachment blob and returns an object URL + mime type.
-   * The caller is responsible for revoking the URL when done.
-   */
   async fetchAttachmentBlob(
     noticeId: string,
     attachmentId: string,
@@ -201,10 +180,6 @@ export const noticeApi = {
     return { objectUrl: URL.createObjectURL(blob), mimeType };
   },
 
-  /**
-   * Downloads an attachment as a blob via the authenticated apiClient,
-   * then opens it in a new tab. Call this instead of opening the URL directly.
-   */
   async openAttachment(noticeId: string, attachmentId: string, label: string): Promise<void> {
     const { data, headers } = await apiClient.get<Blob>(
       `/notices/${noticeId}/attachments/${attachmentId}/download`,
@@ -221,20 +196,16 @@ export const noticeApi = {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    // Revoke after a short delay to allow the browser to open the blob
+
     setTimeout(() => URL.revokeObjectURL(url), 10_000);
   },
 };
 
 export default noticeApi;
 
-// ── Helper: build human-readable audience label from scopes ───────────────────
-
 export function audienceLabel(scopes: NoticeRecipientScope[]): string {
   if (scopes.length === 0) return "Everyone";
-  const roles = scopes
-    .map((s) => s.roleTarget)
-    .filter(Boolean);
+  const roles = scopes.map((s) => s.roleTarget).filter(Boolean);
   const uniqueRoles = [...new Set(roles)];
   if (uniqueRoles.includes("ALL") || uniqueRoles.length === 0) return "Everyone";
   const roleLabel = uniqueRoles

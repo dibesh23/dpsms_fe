@@ -16,7 +16,6 @@ interface NotificationItem {
 let globalId = 0;
 let globalListener: ((item: NotificationItem) => void) | null = null;
 
-/** Call from anywhere to push a notification popup */
 export function pushNotification(variant: NotificationVariant, title: string, message: string) {
   globalListener?.({ id: ++globalId, variant, title, message });
 }
@@ -51,7 +50,7 @@ export function NotificationPopup() {
   useEffect(() => {
     globalListener = (item) => {
       setItems((prev) => [...prev, item]);
-      // Auto-dismiss
+
       setTimeout(() => {
         setItems((prev) => prev.filter((t) => t.id !== item.id));
       }, DISMISS_MS);

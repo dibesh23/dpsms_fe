@@ -282,51 +282,52 @@ export function DepartmentsPage() {
   const totalStaff = departments.reduce((sum, department) => sum + department.staffCount, 0);
   const totalSubjects = departments.reduce((sum, department) => sum + department.subjectCount, 0);
 
-  const columnsWithActions: Column<DepartmentRecordDto>[] = canUpdate || canDelete
-    ? [
-        ...COLUMNS,
-        {
-          key: "actions",
-          header: "",
-          align: "right" as const,
-          render: (row: DepartmentRecordDto) => (
-            <RowActions
-              actions={[
-                {
-                  label: "View details",
-                  icon: <ArrowUpRightIcon className="size-3.5" />,
-                  href: `/departments/${row.id}`,
-                },
-                ...(canUpdate
-                  ? [
-                      {
-                        label: "Edit",
-                        icon: <PencilIcon className="size-3.5" />,
-                        onClick: () => setEditTarget(row),
-                      },
-                      {
-                        label: "Set Head",
-                        icon: <UsersIcon className="size-3.5" />,
-                        onClick: () => void openHeadDialog(row),
-                      },
-                    ]
-                  : []),
-                ...(canDelete
-                  ? [
-                      {
-                        label: "Remove",
-                        icon: <TrashIcon className="size-3.5" />,
-                        danger: true,
-                        onClick: () => setDeleteTarget(row),
-                      },
-                    ]
-                  : []),
-              ]}
-            />
-          ),
-        },
-      ]
-    : COLUMNS;
+  const columnsWithActions: Column<DepartmentRecordDto>[] =
+    canUpdate || canDelete
+      ? [
+          ...COLUMNS,
+          {
+            key: "actions",
+            header: "",
+            align: "right" as const,
+            render: (row: DepartmentRecordDto) => (
+              <RowActions
+                actions={[
+                  {
+                    label: "View details",
+                    icon: <ArrowUpRightIcon className="size-3.5" />,
+                    href: `/departments/${row.id}`,
+                  },
+                  ...(canUpdate
+                    ? [
+                        {
+                          label: "Edit",
+                          icon: <PencilIcon className="size-3.5" />,
+                          onClick: () => setEditTarget(row),
+                        },
+                        {
+                          label: "Set Head",
+                          icon: <UsersIcon className="size-3.5" />,
+                          onClick: () => void openHeadDialog(row),
+                        },
+                      ]
+                    : []),
+                  ...(canDelete
+                    ? [
+                        {
+                          label: "Remove",
+                          icon: <TrashIcon className="size-3.5" />,
+                          danger: true,
+                          onClick: () => setDeleteTarget(row),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
+            ),
+          },
+        ]
+      : COLUMNS;
 
   return (
     <div className="space-y-4">
@@ -370,7 +371,11 @@ export function DepartmentsPage() {
       </section>
 
       <div className="flex items-center justify-end">
-        <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search departments…" />
+        <SearchBar
+          value={table.query}
+          onChange={table.setQuery}
+          placeholder="Search departments…"
+        />
       </div>
 
       <DataTable

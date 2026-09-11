@@ -73,8 +73,7 @@ export function AssignTeacherForm({
     setValue("sectionId", "");
     setValue("subjectId", "");
     setSections([]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode]);
+  }, [mode, setValue]);
 
   useEffect(() => {
     if (!selectedClassId) {

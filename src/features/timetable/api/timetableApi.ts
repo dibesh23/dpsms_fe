@@ -1,6 +1,7 @@
 import { apiClient } from "@/shared/lib/apiClient";
 
-export type DayOfWeek = "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+export type DayOfWeek =
+  "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
 
 export interface TimetableRecord {
   id: string;
@@ -78,7 +79,10 @@ interface ListResult<T> {
 }
 
 export const timetableApi = {
-  async listTimetables(query?: { classId?: string; academicYearId?: string }): Promise<ListResult<TimetableRecord>> {
+  async listTimetables(query?: {
+    classId?: string;
+    academicYearId?: string;
+  }): Promise<ListResult<TimetableRecord>> {
     const { data } = await apiClient.get<{ data: ListResult<TimetableRecord> }>("/timetables", {
       params: query,
     });

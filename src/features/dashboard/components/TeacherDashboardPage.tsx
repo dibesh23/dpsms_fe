@@ -9,6 +9,8 @@ import { DashboardWidget } from "@/shared/components/ui/dashboard-widget";
 import { BarChart } from "@/shared/components/ui/charts";
 import { StatusBadge, type StatusVariant } from "@/shared/components/ui/status-badge";
 import { EmptyState } from "@/shared/components/ui/empty-state";
+import { ErrorState } from "@/shared/components/ui/error-state";
+import { RouteLoading } from "@/shared/components/ui/route-loading";
 import { formatDate } from "@/shared/lib/format";
 import { DashboardNoticesWidget } from "@/features/notice/components/DashboardNoticesWidget";
 import { NoticeBell } from "@/features/notice/components/NoticeBell";
@@ -183,14 +185,20 @@ export default function TeacherDashboardPage() {
   const firstName = user?.fullName?.split(" ")[0] ?? "Teacher";
   const [summary, setSummary] = useState<TeacherDashboardSummary>(EMPTY_SUMMARY);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
     try {
       const data = await teacherDashboardApi.getSummary();
       setSummary({ ...EMPTY_SUMMARY, ...data });
     } catch (err) {
       console.error("[TeacherDashboard] Failed to load summary:", err);
       setSummary(EMPTY_SUMMARY);
+      setLoadError(
+        "Your teaching summary could not be loaded. Check your connection and try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -209,6 +217,9 @@ export default function TeacherDashboardPage() {
   const ownAttendance = summary.ownAttendance ?? EMPTY_SUMMARY.ownAttendance;
   const totalMonthDays =
     ownAttendance.presentDays + ownAttendance.absentDays + ownAttendance.onLeaveDays;
+
+  if (loading) return <RouteLoading variant="dashboard" label="Loading teaching dashboard…" />;
+  if (loadError) return <ErrorState description={loadError} onRetry={() => void load()} />;
 
   return (
     <div className="mx-auto max-w-[1500px] space-y-4 pb-6">
@@ -252,7 +263,7 @@ export default function TeacherDashboardPage() {
       </section>
 
       <div className="flex flex-col gap-4 lg:flex-row">
-        {/* Profile panel */}
+        {}
         <div className="lg:w-72 lg:flex-none">
           <div className="rounded-[18px] border border-neutral-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,.02)]">
             <div className="flex flex-col items-center text-center">
@@ -336,7 +347,7 @@ export default function TeacherDashboardPage() {
           </div>
         </div>
 
-        {/* Reports */}
+        {}
         <div className="min-w-0 flex-1 space-y-4">
           <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <DashboardWidget
@@ -520,7 +531,7 @@ export default function TeacherDashboardPage() {
             <DashboardWidget
               title="Notifications"
               className="lg:col-span-2"
-              action={<span className="text-xs font-medium text-[#064E3B]">View all</span>}
+              action={<span className="text-xs font-medium text-brand-default">View all</span>}
             >
               {(summary.notifications ?? []).length === 0 ? (
                 <EmptyState icon={<BellIcon className="size-5" />} title="You're all caught up" />

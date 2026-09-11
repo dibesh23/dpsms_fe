@@ -16,8 +16,6 @@ import {
 import { useNoticePolling } from "../hooks/useNoticePolling";
 import { AlertTriangleIcon, BellIcon } from "@/shared/components/ui/icons";
 
-// ── Shared widget notice shape ────────────────────────────────────────────────
-
 interface WidgetNotice {
   id: string;
   title: string;
@@ -58,8 +56,6 @@ function sortByNewest<T extends { publishedAt: string }>(items: T[]): T[] {
   );
 }
 
-// ── Notice row ────────────────────────────────────────────────────────────────
-
 function NoticeRow({ notice }: { notice: WidgetNotice }) {
   const audience = audienceLabel(notice.recipientScopes);
   return (
@@ -95,8 +91,6 @@ function NoticeRow({ notice }: { notice: WidgetNotice }) {
   );
 }
 
-// ── Widget ────────────────────────────────────────────────────────────────────
-
 interface Props {
   role: string;
   limit?: number;
@@ -109,7 +103,6 @@ export function DashboardNoticesWidget({ role, limit = 5 }: Props) {
   const [hasNew, setHasNew] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // ── Admin: poll every 30s ──────────────────────────────────────────────────
   const knownAdminIdsRef = useRef<Set<string> | null>(null);
 
   const loadAdmin = useCallback(async () => {
@@ -126,7 +119,6 @@ export function DashboardNoticesWidget({ role, limit = 5 }: Props) {
       }
       setNotices(sorted);
     } catch {
-      // silent
     } finally {
       setLoading(false);
     }
@@ -139,7 +131,6 @@ export function DashboardNoticesWidget({ role, limit = 5 }: Props) {
     return () => clearInterval(id);
   }, [isAdmin, loadAdmin]);
 
-  // ── Recipient polling (student / teacher) ─────────────────────────────────
   useNoticePolling({
     enabled: !isAdmin,
     onNewNotices: (count) => {
@@ -181,7 +172,7 @@ export function DashboardNoticesWidget({ role, limit = 5 }: Props) {
       action={
         <Link
           href="/notices"
-          className="text-xs font-medium text-blue-600 hover:underline"
+          className="text-xs font-medium text-brand-default transition-colors hover:text-brand-hover hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-default"
           onClick={() => setHasNew(false)}
         >
           View all

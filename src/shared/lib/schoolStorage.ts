@@ -12,9 +12,7 @@ export function getLastSchool(): SavedSchool | null {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as SavedSchool;
-    return parsed && typeof parsed.tenantId === "string"
-      ? parsed
-      : null;
+    return parsed && typeof parsed.tenantId === "string" ? parsed : null;
   } catch {
     return null;
   }
@@ -24,7 +22,5 @@ export function saveLastSchool(school: SavedSchool): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(school));
-  } catch {
-    // ignore
-  }
+  } catch {}
 }

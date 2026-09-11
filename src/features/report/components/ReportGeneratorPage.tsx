@@ -395,9 +395,9 @@ export function ReportGeneratorPage() {
     }
   };
 
-  const handlePreview = (report: ReportRequestRecord) => {
+  const handlePreview = useCallback((report: ReportRequestRecord) => {
     setPreviewReport(report);
-  };
+  }, []);
 
   const table = useTable<ReportRequestRecord>({
     data: requests,
@@ -471,8 +471,7 @@ export function ReportGeneratorPage() {
           ) : null,
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [handlePreview],
   );
 
   return (

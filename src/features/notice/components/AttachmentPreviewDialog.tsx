@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { Dialog } from "@/shared/components/ui/dialog";
 import { DownloadIcon, FileTextIcon, LoadingSpinner } from "@/shared/components/ui/icons";
 import { noticeApi, type NoticeAttachment } from "../api/noticeApi";
@@ -122,10 +123,12 @@ export function AttachmentPreviewDialog({
 
         {!loading && !error && previewable && isImage(mimeType) && (
           <div className="flex justify-center overflow-auto rounded-md border border-neutral-200 bg-neutral-50">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={objectUrl}
               alt={attachment.label}
+              width={1600}
+              height={1200}
+              unoptimized
               className="max-h-[60vh] w-auto object-contain"
             />
           </div>
@@ -133,11 +136,7 @@ export function AttachmentPreviewDialog({
 
         {!loading && !error && previewable && isPdf(mimeType) && (
           <div className="overflow-hidden rounded-md border border-neutral-200">
-            <iframe
-              src={objectUrl}
-              title={attachment.label}
-              className="h-[60vh] w-full"
-            />
+            <iframe src={objectUrl} title={attachment.label} className="h-[60vh] w-full" />
           </div>
         )}
 

@@ -7,9 +7,6 @@ import { LoadingState } from "@/shared/components/ui/loading-state";
 import { EmptyState } from "@/shared/components/ui/empty-state";
 import { BanIcon } from "@/shared/components/ui/icons";
 
-// Client-side convenience guard for admin-only screens. Real enforcement
-// lives in the API (requirePermission + row-level scoping); this only
-// spares non-admin users from landing on pages that would 403.
 export const ADMIN_ROLES = ["SUPER_ADMIN", "PRINCIPAL"] as const;
 export function RequireRole({
   roles,

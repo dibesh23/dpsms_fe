@@ -101,8 +101,8 @@ export function LoginForm({ defaultTenantId = "", schoolName, defaultRole }: Log
                 className={cn(
                   "flex flex-1 flex-col items-center gap-1 rounded-lg border px-3 py-3 text-xs font-medium transition-colors",
                   active
-                    ? "border-neutral-900 bg-neutral-900 text-white"
-                    : "border-border-subtle bg-bg-default text-content-subtle hover:border-neutral-400 hover:text-content-emphasis",
+                    ? "border-brand-default bg-brand-default text-white shadow-sm"
+                    : "border-border-subtle bg-bg-default text-content-subtle hover:border-brand-default hover:text-brand-default",
                 )}
               >
                 <Icon className="size-5" />

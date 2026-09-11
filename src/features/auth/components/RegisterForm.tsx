@@ -81,6 +81,9 @@ const STRENGTH_COLORS: Record<PasswordStrength, string> = {
   3: "bg-emerald-500",
 };
 
+const REGISTER_INPUT_CLASS =
+  "h-12 max-w-none rounded-xl border-stone-200 bg-stone-50/70 px-4 shadow-[0_1px_2px_rgba(0,0,0,.03)] transition-colors placeholder:text-stone-400 hover:border-stone-300 focus:border-emerald-300 focus:bg-white focus:ring-2 focus:ring-emerald-100";
+
 function SectionHeading({
   icon,
   title,
@@ -91,13 +94,13 @@ function SectionHeading({
   description?: string;
 }) {
   return (
-    <div className="flex items-center gap-2.5">
-      <span className="flex size-9 items-center justify-center rounded-lg bg-neutral-100 text-neutral-600">
+    <div className="flex items-start gap-3">
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-default text-white shadow-[0_8px_20px_rgba(6,78,59,.16)]">
         {icon}
       </span>
       <div>
-        <h4 className="text-content-emphasis text-sm font-semibold leading-tight">{title}</h4>
-        {description && <p className="mt-0.5 text-xs text-neutral-500">{description}</p>}
+        <h2 className="type-section-title leading-tight">{title}</h2>
+        {description && <p className="type-body-secondary mt-1 max-w-xs">{description}</p>}
       </div>
     </div>
   );
@@ -115,10 +118,10 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <label className="type-label mb-2 block">{label}</label>
+    <div className="min-w-0">
+      <label className="type-label mb-2 block font-semibold text-content-emphasis">{label}</label>
       {children}
-      {!error && hint ? <span className="mt-2 block text-sm text-neutral-500">{hint}</span> : null}
+      {!error && hint ? <span className="type-helper mt-2 block">{hint}</span> : null}
     </div>
   );
 }
@@ -206,20 +209,36 @@ export function RegisterForm() {
   const subdomainTaken = subdomainStatus === "taken";
 
   return (
-    <div className="flex w-full flex-col gap-3">
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex w-full flex-col gap-y-8">
-        <div className="flex flex-col gap-5">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      noValidate
+      className="w-full overflow-hidden rounded-[28px] border border-stone-200 bg-white/95 shadow-[0_24px_80px_rgba(6,78,59,.10),0_2px_8px_rgba(28,25,23,.05)] ring-1 ring-emerald-950/5 backdrop-blur"
+    >
+      <section className="grid gap-7 border-b border-stone-200 p-6 sm:p-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-10 lg:p-10">
+        <div>
           <SectionHeading
             icon={<Building2Icon className="size-5" />}
-            title="School details"
-            description="This creates a new school and a full set of roles."
+            title="School identity"
+            description="The name and address your school community will recognize."
           />
+          <div className="mt-6 hidden rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 lg:block">
+            <p className="type-micro-label text-brand-default">Workspace preview</p>
+            <p className="type-body mt-2 truncate font-semibold text-content-emphasis">
+              {watchedSchoolName || "Your school name"}
+            </p>
+            <p className="type-caption mt-1 truncate text-emerald-700">
+              {watchedSubdomain || "your-school"}.dpsms.app
+            </p>
+          </div>
+        </div>
 
+        <div className="grid content-start gap-6 md:grid-cols-2">
           <Field label="School name" error={errors.schoolName?.message}>
             <Input
+              className={REGISTER_INPUT_CLASS}
               type="text"
               autoComplete="organization"
-              placeholder="e.g. Shree Pathshala Secondary School"
+              placeholder="Shree Pathshala Secondary School"
               autoFocus
               disabled={isSubmitting}
               error={errors.schoolName?.message}
@@ -228,36 +247,29 @@ export function RegisterForm() {
           </Field>
 
           <Field
-            label="Subdomain"
+            label="School web address"
             hint={
               subdomainStatus === "checking" ? (
                 <span className="inline-flex items-center gap-1.5">
-                  <LoadingSpinner className="size-3.5" />
-                  Checking availability...
+                  <LoadingSpinner className="size-3.5" /> Checking availability…
                 </span>
               ) : subdomainStatus === "available" ? (
-                <span className="inline-flex items-center gap-1.5 text-emerald-600">
-                  <CheckCircle2Icon className="size-3.5" />
-                  <span>
-                    Available —{" "}
-                    <span className="font-medium">
-                      {watchedSubdomain || "your-school"}.dpsms.app
-                    </span>
-                  </span>
+                <span className="inline-flex items-center gap-1.5 font-medium text-emerald-700">
+                  <CheckCircle2Icon className="size-3.5" /> Available for your school
                 </span>
               ) : subdomainStatus === "taken" ? (
-                <span className="inline-flex items-center gap-1.5 text-red-500">
-                  <AlertTriangleIcon className="size-3.5" />
-                  This subdomain is already taken.
+                <span className="inline-flex items-center gap-1.5 font-medium text-red-600">
+                  <AlertTriangleIcon className="size-3.5" /> This address is already taken
                 </span>
               ) : (
-                <>This is your school&apos;s web address. You can change it before you finish.</>
+                "Lowercase letters, numbers, and hyphens only."
               )
             }
             error={errors.subdomain?.message}
           >
-            <div className="flex items-center gap-2">
+            <div className="relative">
               <Input
+                className={`${REGISTER_INPUT_CLASS} pr-28`}
                 type="text"
                 autoComplete="off"
                 placeholder="your-school"
@@ -267,12 +279,12 @@ export function RegisterForm() {
               />
               <span
                 className={cn(
-                  "flex-none text-sm",
+                  "type-caption pointer-events-none absolute inset-y-0 right-4 flex items-center font-medium",
                   subdomainStatus === "taken"
                     ? "text-red-500"
                     : subdomainStatus === "available"
-                      ? "text-emerald-600"
-                      : "text-neutral-400",
+                      ? "text-emerald-700"
+                      : "text-stone-400",
                 )}
               >
                 .dpsms.app
@@ -280,16 +292,19 @@ export function RegisterForm() {
             </div>
           </Field>
         </div>
+      </section>
 
-        <div className="flex flex-col gap-5">
-          <SectionHeading
-            icon={<UserIcon className="size-5" />}
-            title="Admin account"
-            description="This account will manage the school as Principal."
-          />
+      <section className="grid gap-7 border-b border-stone-200 bg-stone-50/45 p-6 sm:p-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-10 lg:p-10">
+        <SectionHeading
+          icon={<UserIcon className="size-5" />}
+          title="Principal account"
+          description="Your first administrator account with full workspace access."
+        />
 
-          <Field label="Your full name" error={errors.fullName?.message}>
+        <div className="grid content-start gap-6 md:grid-cols-2">
+          <Field label="Full name" error={errors.fullName?.message}>
             <Input
+              className={REGISTER_INPUT_CLASS}
               type="text"
               autoComplete="name"
               placeholder="Jane Smith"
@@ -299,15 +314,12 @@ export function RegisterForm() {
             />
           </Field>
 
-          <Field
-            label="Work email"
-            hint="You'll log in with this email."
-            error={errors.email?.message}
-          >
+          <Field label="Work email" hint="Used for secure sign-in." error={errors.email?.message}>
             <Input
+              className={REGISTER_INPUT_CLASS}
               type="email"
               autoComplete="email"
-              placeholder="you@example.com"
+              placeholder="principal@school.edu"
               disabled={isSubmitting}
               error={errors.email?.message}
               {...register("email")}
@@ -325,25 +337,26 @@ export function RegisterForm() {
                       <span
                         key={segment}
                         className={cn(
-                          "h-1 w-6 rounded-full transition-colors",
-                          segment <= strength ? STRENGTH_COLORS[strength] : "bg-neutral-200",
+                          "h-1.5 w-8 rounded-full transition-colors duration-300",
+                          segment <= strength ? STRENGTH_COLORS[strength] : "bg-stone-200",
                         )}
                       />
                     ))}
                   </span>
-                  <span className={cn(strength >= 2 ? "text-neutral-600" : "text-neutral-500")}>
-                    {STRENGTH_LABELS[strength] || "Min. 8 characters"}
+                  <span className="font-medium">
+                    {STRENGTH_LABELS[strength] || "At least 8 characters"}
                   </span>
                 </span>
               ) : (
-                "Min. 8 characters"
+                "At least 8 characters."
               )
             }
           >
             <Input
+              className={REGISTER_INPUT_CLASS}
               type="password"
               autoComplete="new-password"
-              placeholder="Min. 8 characters"
+              placeholder="Create a secure password"
               disabled={isSubmitting}
               error={errors.password?.message}
               {...register("password")}
@@ -352,38 +365,47 @@ export function RegisterForm() {
 
           <Field label="Confirm password" error={errors.confirmPassword?.message}>
             <Input
+              className={REGISTER_INPUT_CLASS}
               type="password"
               autoComplete="new-password"
-              placeholder="Re-enter password"
+              placeholder="Repeat your password"
               disabled={isSubmitting}
               error={errors.confirmPassword?.message}
               {...register("confirmPassword")}
             />
           </Field>
         </div>
+      </section>
 
-        {apiError && (
-          <div
-            role="alert"
-            className="flex items-start gap-2.5 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
-          >
-            <AlertTriangleIcon className="mt-0.5 size-4 flex-none" />
-            <p>{apiError}</p>
-          </div>
-        )}
-
-        <div className="flex flex-col gap-3">
-          <Button
-            text={isSubmitting ? "Creating your school..." : "Create my school"}
-            loading={isSubmitting}
-            disabled={isSubmitting || subdomainTaken}
-          />
-          <p className="flex items-center gap-1.5 text-center text-xs text-neutral-500">
-            <LockIcon className="size-3.5 flex-none" />
-            Your data is protected and never shared.
-          </p>
+      {apiError && (
+        <div
+          role="alert"
+          className="mx-6 mt-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 sm:mx-8 lg:mx-10"
+        >
+          <AlertTriangleIcon className="mt-0.5 size-5 flex-none" />
+          <p className="font-medium">{apiError}</p>
         </div>
-      </form>
-    </div>
+      )}
+
+      <footer className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8 lg:px-10">
+        <div className="flex items-start gap-3 text-content-subtle">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-brand-default">
+            <LockIcon className="size-4" />
+          </span>
+          <div>
+            <p className="type-body font-semibold text-content-emphasis">Secure by default</p>
+            <p className="type-caption mt-0.5">
+              Your school data stays private and role-protected.
+            </p>
+          </div>
+        </div>
+        <Button
+          text={isSubmitting ? "Creating your workspace…" : "Create school workspace"}
+          loading={isSubmitting}
+          disabled={isSubmitting || subdomainTaken}
+          className="h-12 w-full rounded-xl px-7 font-semibold shadow-[0_10px_24px_rgba(6,78,59,.18)] sm:w-auto"
+        />
+      </footer>
+    </form>
   );
 }

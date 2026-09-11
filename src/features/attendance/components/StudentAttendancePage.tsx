@@ -7,10 +7,7 @@ import { EmptyState } from "@/shared/components/ui/empty-state";
 import { LoadingState } from "@/shared/components/ui/loading-state";
 import { useToast } from "@/shared/components/ui/toast";
 import { useAuth } from "@/shared/providers/AuthProvider";
-import {
-  attendanceApi,
-  type RosterEntry,
-} from "../api/attendanceApi";
+import { attendanceApi, type RosterEntry } from "../api/attendanceApi";
 import {
   AlertTriangleIcon,
   CheckCircle2Icon,
@@ -45,7 +42,7 @@ function formatDateShort(date: string): string {
 export function StudentAttendancePage() {
   const toast = useToast();
   const { user, isLoading: authLoading } = useAuth();
-  // Only teachers mark student attendance; admin/principal get a read-only register.
+
   const canMark = user?.role === "TEACHER";
   const [sections, setSections] = useState<Array<{ id: string; label: string }>>([]);
   const [sectionsLoaded, setSectionsLoaded] = useState(false);
@@ -67,7 +64,6 @@ export function StudentAttendancePage() {
   const loadSections = useCallback(async () => {
     try {
       if (canMark) {
-        // Teachers only see the sections they're assigned to.
         const result = await attendanceApi.getMySections();
         const list = result.items.map((s) => ({
           id: s.sectionId,
@@ -82,7 +78,6 @@ export function StudentAttendancePage() {
           );
         }
       } else {
-        // Admin/Principal can pick any section in the school.
         const options = await attendanceApi.listSections();
         const list = options.map((s) => ({ id: s.id, label: s.label }));
         setSections(list);
@@ -101,14 +96,11 @@ export function StudentAttendancePage() {
     }
   }, [canMark, toast]);
 
-  // Wait for auth to resolve before firing any requests — prevents
-  // pointless 401s when the session is missing or still being restored.
   useEffect(() => {
     if (authLoading || !user) return;
     void loadSections();
   }, [loadSections, authLoading, user]);
 
-  // Teachers only need their own class's stats; school-wide is for admins.
   const loadStats = useCallback(async () => {
     if (canMark && !selectedSection) {
       if (sectionsLoaded) setStatsLoading(false);
@@ -149,8 +141,7 @@ export function StudentAttendancePage() {
       if (!options?.silent) setLoading(true);
       try {
         const dateObj = new Date(`${selectedDate}T12:00:00Z`);
-        // Full enrolled roster merged with the day's marked status
-        // (null = not yet marked) — works on fresh days too.
+
         const result = await attendanceApi.getSectionRoster(selectedSection, dateObj);
         setRoster(result.items);
         setLoadError(null);
@@ -237,16 +228,16 @@ export function StudentAttendancePage() {
             <StatsCard
               label="Present Today"
               value={loading ? "—" : String(roster.filter((r) => r.status === "PRESENT").length)}
-              delta={statsLoading || !overallStats ? "No data" : `${overallStats.attendanceRate}% rate`}
+              delta={
+                statsLoading || !overallStats ? "No data" : `${overallStats.attendanceRate}% rate`
+              }
               deltaDirection="up"
               icon={<CheckCircle2Icon className="size-4" />}
             />
             <StatsCard
               label="Absent Today"
               value={loading ? "—" : String(roster.filter((r) => r.status === "ABSENT").length)}
-              deltaDirection={
-                roster.some((r) => r.status === "ABSENT") ? "down" : "neutral"
-              }
+              deltaDirection={roster.some((r) => r.status === "ABSENT") ? "down" : "neutral"}
               icon={<ClipboardCheckIcon className="size-4" />}
             />
             <StatsCard

@@ -1,30 +1,16 @@
 import { apiClient } from "@/shared/lib/apiClient";
 
-
 export type AttendanceStatus = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED";
 export type Gender = "MALE" | "FEMALE" | "OTHER";
 export type GuardianRelation = "FATHER" | "MOTHER" | "GUARDIAN";
 export type StudentLifecycleStatus =
-  | "ACTIVE"
-  | "INACTIVE"
-  | "ON_LEAVE"
-  | "TRANSFERRED_OUT"
-  | "GRADUATED"
-  | "WITHDRAWN";
+  "ACTIVE" | "INACTIVE" | "ON_LEAVE" | "TRANSFERRED_OUT" | "GRADUATED" | "WITHDRAWN";
 export type ExamStatus = "DRAFT" | "RESULTS_PENDING_APPROVAL" | "PUBLISHED";
 export type InvoiceStatus = "DRAFT" | "UNPAID" | "PARTIAL" | "PAID";
 export type NotificationType = "ALERT" | "WARNING" | "SUCCESS" | "INFO";
 export type SchoolEventCategory =
-  | "EXAM"
-  | "ACADEMIC"
-  | "EXTRA_CURRICULAR"
-  | "HOLIDAY"
-  | "MEETING"
-  | "OTHER";
+  "EXAM" | "ACADEMIC" | "EXTRA_CURRICULAR" | "HOLIDAY" | "MEETING" | "OTHER";
 
-/** StudentAttendance.status, widened with a client-only sentinel for
- *  "no record exists for this date yet" — the schema has no such
- *  enum value since a row simply doesn't exist until marked. */
 export type DayAttendanceStatus = AttendanceStatus | "NOT_MARKED";
 
 export interface GuardianSummary {
@@ -53,23 +39,21 @@ export interface StudentProfileSummary {
 }
 
 export interface DayAttendancePoint {
-  /** Local calendar date, YYYY-MM-DD */
   date: string;
   status: DayAttendanceStatus;
 }
 
 export interface AttendanceSummary {
-  /** % PRESENT out of all marked days, current academic year */
   overallPercent: number;
-  /** % PRESENT out of all marked days, current calendar month */
+
   monthPercent: number;
   monthLabel: string;
   todayStatus: DayAttendanceStatus;
-  /** Marked rows in the current academic year — 0 means no attendance data yet */
+
   totalMarkedDays: number;
-  /** Marked rows in the current calendar month — 0 means the month gauge has no denominator */
+
   totalMarkedDaysThisMonth: number;
-  /** Last 30 calendar days ending today, oldest first; NOT_MARKED where no row exists */
+
   recentDays: DayAttendancePoint[];
   presentDaysThisMonth: number;
   lateDaysThisMonth: number;
@@ -106,9 +90,9 @@ export interface FeeDiscountSummary {
   id: string;
   kind: "DISCOUNT" | "SCHOLARSHIP";
   label: string;
-  /** Fixed-amount discount (FeeDiscount.amount) */
+
   amount: number | null;
-  /** Scholarship of type PERCENTAGE or FIXED (FeeScholarship.percentageOrAmount) */
+
   scholarshipType: "PERCENTAGE" | "FIXED" | null;
   percentageOrAmount: number | null;
 }

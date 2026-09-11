@@ -19,8 +19,18 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useStoredView } from "@/shared/hooks/useStoredView";
 import { useTable } from "@/shared/hooks/useTable";
 import { PERMISSIONS } from "@/shared/permissions";
-import { academicApi, type ClassRecord, type SessionRecord } from "@/features/academic/api/academicApi";
-import { feeApi, type FeeTypeRecord, type FeeStructureRecord, FEE_CATEGORIES, type FeeCategory } from "../api/feeApi";
+import {
+  academicApi,
+  type ClassRecord,
+  type SessionRecord,
+} from "@/features/academic/api/academicApi";
+import {
+  feeApi,
+  type FeeTypeRecord,
+  type FeeStructureRecord,
+  FEE_CATEGORIES,
+  type FeeCategory,
+} from "../api/feeApi";
 import { formatCurrency } from "@/shared/lib/format";
 import {
   ArrowUpRightIcon,
@@ -107,8 +117,18 @@ function CreateStructureForm({
           ))}
         </Select>
       </Field>
-      <Field label="Total Amount" error={errors.amount?.message} required hint="Total fee for this structure (will be split into installments)">
-        <Input type="number" {...register("amount", { valueAsNumber: true })} placeholder="e.g. 24000" disabled={isSubmitting} />
+      <Field
+        label="Total Amount"
+        error={errors.amount?.message}
+        required
+        hint="Total fee for this structure (will be split into installments)"
+      >
+        <Input
+          type="number"
+          {...register("amount", { valueAsNumber: true })}
+          placeholder="e.g. 24000"
+          disabled={isSubmitting}
+        />
       </Field>
       {apiError && (
         <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
@@ -116,8 +136,18 @@ function CreateStructureForm({
         </div>
       )}
       <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
-        <Button variant="secondary" text="Cancel" onClick={onClose} className="w-auto" type="button" />
-        <Button text={isSubmitting ? "Creating…" : "Create Structure"} loading={isSubmitting} className="w-auto" />
+        <Button
+          variant="secondary"
+          text="Cancel"
+          onClick={onClose}
+          className="w-auto"
+          type="button"
+        />
+        <Button
+          text={isSubmitting ? "Creating…" : "Create Structure"}
+          loading={isSubmitting}
+          className="w-auto"
+        />
       </div>
     </form>
   );
@@ -194,10 +224,7 @@ export function FeeStructuresPage() {
     }
   };
 
-  const classMap = useMemo(
-    () => new Map(classes.map((c) => [c.id, c])),
-    [classes],
-  );
+  const classMap = useMemo(() => new Map(classes.map((c) => [c.id, c])), [classes]);
   const sessionMap = useMemo(() => new Map(sessions.map((s) => [s.id, s])), [sessions]);
 
   const classStructureCount = useMemo(() => {
@@ -222,7 +249,9 @@ export function FeeStructuresPage() {
     return classes.filter((c) => c.name.toLowerCase().includes(q));
   }, [classes, query]);
 
-  const selectedClass = selectedClassId ? classes.find((c) => c.id === selectedClassId) ?? null : null;
+  const selectedClass = selectedClassId
+    ? (classes.find((c) => c.id === selectedClassId) ?? null)
+    : null;
 
   const classStructures = useMemo(() => {
     if (!selectedClassId) return [];
@@ -273,9 +302,7 @@ export function FeeStructuresPage() {
         sortValue: (row) => row.feeTypeName,
         render: (row) => (
           <Link href={`/fees/structures/${row.id}`} className="group">
-            <p className="font-medium text-neutral-900 group-hover:underline">
-              {row.feeTypeName}
-            </p>
+            <p className="font-medium text-neutral-900 group-hover:underline">{row.feeTypeName}</p>
             <p className="text-xs text-neutral-400">{CATEGORY_LABEL[row.category]}</p>
           </Link>
         ),
@@ -350,7 +377,11 @@ export function FeeStructuresPage() {
                 value={table.filter}
                 onChange={table.setFilter}
               />
-              <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search fee types…" />
+              <SearchBar
+                value={table.query}
+                onChange={table.setQuery}
+                placeholder="Search fee types…"
+              />
             </div>
           </div>
 
@@ -437,9 +468,7 @@ export function FeeStructuresPage() {
                         <p className="truncate font-medium text-neutral-900 group-hover:underline">
                           {ft?.name ?? "Unknown Type"}
                         </p>
-                        <p className="mt-0.5 text-xs text-neutral-400">
-                          {sess?.label ?? "—"}
-                        </p>
+                        <p className="mt-0.5 text-xs text-neutral-400">{sess?.label ?? "—"}</p>
                       </Link>
                       <Link
                         href={`/fees/structures/${s.id}`}
@@ -451,11 +480,15 @@ export function FeeStructuresPage() {
                     <div className="mt-auto flex items-center justify-between border-t border-neutral-100 pt-4">
                       <div>
                         <p className="text-xs text-neutral-400">Total Amount</p>
-                        <p className="mt-0.5 font-medium text-neutral-800">{formatCurrency(s.amount)}</p>
+                        <p className="mt-0.5 font-medium text-neutral-800">
+                          {formatCurrency(s.amount)}
+                        </p>
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-neutral-400">Installments</p>
-                        <p className="mt-0.5 font-medium text-neutral-800">{s.installments?.length ?? 0}</p>
+                        <p className="mt-0.5 font-medium text-neutral-800">
+                          {s.installments?.length ?? 0}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -506,7 +539,8 @@ export function FeeStructuresPage() {
                       <div>
                         <p className="font-medium text-neutral-900">{c.name}</p>
                         <p className="mt-0.5 text-xs text-neutral-400">
-                          {c.sections.length > 0 ? c.sections.join(", ") : "No sections"} &middot; {c.students} students
+                          {c.sections.length > 0 ? c.sections.join(", ") : "No sections"} &middot;{" "}
+                          {c.students} students
                         </p>
                       </div>
                       <ArrowUpRightIcon className="size-4 text-neutral-300" />
@@ -534,7 +568,11 @@ export function FeeStructuresPage() {
           open={dialogOpen}
           onClose={() => setDialogOpen(false)}
           title="Create Fee Structure"
-          description={selectedClass ? `Add a fee structure for ${selectedClass.name}.` : "Assign a fee type to a class for an academic year."}
+          description={
+            selectedClass
+              ? `Add a fee structure for ${selectedClass.name}.`
+              : "Assign a fee type to a class for an academic year."
+          }
         >
           <CreateStructureForm
             feeTypes={feeTypes}

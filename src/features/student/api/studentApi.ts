@@ -101,7 +101,6 @@ export interface StudentEnrollmentDetail {
   } | null;
 }
 
-// Raw row returned by GET /students/:id and PATCH /students/:id.
 export interface StudentDetailRecord {
   id: string;
   admissionNumber: string;
@@ -195,7 +194,6 @@ export const studentApi = {
     return data.data;
   },
 
-  // ---------- Guardians ----------
   async listGuardians(id: string): Promise<GuardianRecord[]> {
     const { data } = await apiClient.get<{ data: GuardianRecord[] }>(`/students/${id}/guardians`);
     return data.data;
@@ -217,7 +215,6 @@ export const studentApi = {
     await apiClient.delete(`/students/${studentId}/guardians/${guardianId}`);
   },
 
-  // ---------- Documents ----------
   async listDocuments(id: string): Promise<StudentDocumentRecord[]> {
     const { data } = await apiClient.get<{ data: StudentDocumentRecord[] }>(
       `/students/${id}/documents`,

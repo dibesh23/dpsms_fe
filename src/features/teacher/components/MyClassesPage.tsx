@@ -99,9 +99,7 @@ export function MyClassesPage() {
       header: "Students",
       align: "right",
       sortValue: (row) => row.totalStudents,
-      render: (row) => (
-        <span className="font-medium text-neutral-700">{row.totalStudents}</span>
-      ),
+      render: (row) => <span className="font-medium text-neutral-700">{row.totalStudents}</span>,
     },
     {
       key: "academicYearLabel",
@@ -184,7 +182,8 @@ export function MyClassesPage() {
           onSort={table.handleSort}
           empty={{
             title: "No classes assigned",
-            description: "You have not been assigned to any sections yet. Contact your administrator.",
+            description:
+              "You have not been assigned to any sections yet. Contact your administrator.",
           }}
           footer={
             <Pagination

@@ -15,10 +15,7 @@ import { cn } from "@/shared/lib/cn";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PERMISSIONS } from "@/shared/permissions";
 import { promotionApi } from "../api/promotionApi";
-import {
-  ArrowUpRightIcon,
-  GraduationCapIcon,
-} from "@/shared/components/ui/icons";
+import { ArrowUpRightIcon, GraduationCapIcon } from "@/shared/components/ui/icons";
 import type { PromotionBatchRow } from "../types";
 
 function getApiErrorMessage(err: unknown, fallback: string): string {
@@ -97,7 +94,9 @@ export function PromotionHistoryPage() {
       header: "Failed",
       sortValue: (b) => b.summary.failed,
       render: (b) => (
-        <span className={cn("font-medium", b.summary.failed > 0 ? "text-red-600" : "text-neutral-500")}>
+        <span
+          className={cn("font-medium", b.summary.failed > 0 ? "text-red-600" : "text-neutral-500")}
+        >
           {b.summary.failed}
         </span>
       ),

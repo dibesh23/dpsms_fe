@@ -6,12 +6,6 @@ import { pushNotification } from "@/shared/components/ui/NotificationPopup";
 import { useExamPolling } from "../hooks/useExamPolling";
 import { usePublishedExamsPolling } from "../hooks/usePublishedExamsPolling";
 
-/**
- * Global, layout-level notifier for the "Exam Result Published" popup.
- * Mounted once in the root layout so the notification fires on any page,
- * not just the dashboard: students poll their own published results and
- * teachers poll published exams for the classes they are assigned to.
- */
 export function ExamResultNotifier() {
   const { user } = useAuth();
   const isStudent = user?.role === "STUDENT";

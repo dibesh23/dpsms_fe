@@ -56,7 +56,7 @@ export function EditSubjectForm({
     setApiError(null);
     const error = await onUpdate({
       ...values,
-      // "" clears the department on the backend; undefined would keep it.
+
       department: values.department ?? "",
     });
     if (error) setApiError(error);

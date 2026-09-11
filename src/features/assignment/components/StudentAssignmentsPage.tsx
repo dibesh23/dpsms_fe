@@ -29,8 +29,6 @@ import {
 
 type SubmissionFilter = "PENDING" | StudentAssignmentListItem["submissionStatus"] | "";
 
-// A published assignment the student hasn't yet finished is considered overdue
-// once its due date has passed. Late submissions are still allowed server-side.
 function isOverdue(a: StudentAssignmentListItem): boolean {
   if (a.submissionStatus === "GRADED") return false;
   return new Date(`${a.dueDate}T23:59:59`) < new Date();

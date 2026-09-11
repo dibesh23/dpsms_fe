@@ -72,16 +72,13 @@ const EMPTY_SUMMARY: StudentFeeSummary = {
   yearGroups: [],
 };
 
-/** Extracted so the DataTable column config below only ever holds a
- *  simple `<ReceiptLink .../>` call, not an inline ternary with a
- *  nested anchor tag. */
 function ReceiptLink({ payment }: { payment: FeePaymentRecord }) {
   if (!payment.receiptUrl) {
     return <span className="text-xs text-neutral-400">Not available</span>;
   }
   return (
-    
-      <a href={payment.receiptUrl}
+    <a
+      href={payment.receiptUrl}
       target="_blank"
       rel="noreferrer"
       className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline"
@@ -145,7 +142,10 @@ export function StudentFeePage() {
         header: "Status",
         sortValue: (invoice) => invoice.status,
         render: (invoice) => (
-          <StatusBadge status={INVOICE_LABEL[invoice.status]} variant={INVOICE_VARIANT[invoice.status]} />
+          <StatusBadge
+            status={INVOICE_LABEL[invoice.status]}
+            variant={INVOICE_VARIANT[invoice.status]}
+          />
         ),
       },
     ],
@@ -158,17 +158,13 @@ export function StudentFeePage() {
         key: "paidAt",
         header: "Date",
         sortValue: (payment) => payment.paidAt,
-        render: (payment) => (
-          <span className="text-neutral-700">{formatDate(payment.paidAt)}</span>
-        ),
+        render: (payment) => <span className="text-neutral-700">{formatDate(payment.paidAt)}</span>,
       },
       {
         key: "installment",
         header: "Installment",
         sortValue: (payment) => payment.installmentLabel,
-        render: (payment) => (
-          <span className="text-neutral-700">{payment.installmentLabel}</span>
-        ),
+        render: (payment) => <span className="text-neutral-700">{payment.installmentLabel}</span>,
       },
       {
         key: "amount",

@@ -12,19 +12,29 @@ export function BarChart({
   data,
   height = 160,
   highlightMax = false,
+  emptyLabel = "No data recorded for this period",
 }: {
   data: BarDatum[];
   height?: number;
   highlightMax?: boolean;
+  emptyLabel?: string;
 }) {
   const max = Math.max(...data.map((datum) => datum.value), 1);
   const maxIndex = data.findIndex((datum) => datum.value === max);
+  const hasValues = data.some((datum) => datum.value > 0);
+  const chartLabel = data
+    .map((datum) => `${datum.label}: ${datum.valueLabel ?? datum.value}`)
+    .join(", ");
 
   return (
-    <div className="w-full">
-      <div className="flex items-end gap-2" style={{ height }}>
+    <div className="w-full" role="img" aria-label={chartLabel || emptyLabel}>
+      <div
+        className="relative flex items-end gap-2 border-b border-neutral-200 bg-[linear-gradient(to_bottom,transparent_24%,#f5f5f5_25%,transparent_26%,transparent_49%,#f5f5f5_50%,transparent_51%,transparent_74%,#f5f5f5_75%,transparent_76%)] px-2"
+        style={{ height }}
+      >
         {data.map((datum, index) => {
-          const isMax = highlightMax && index === maxIndex;
+          const isMax = hasValues && highlightMax && index === maxIndex;
+          const heightPercent = hasValues ? Math.max((datum.value / max) * 92, 4) : 4;
           return (
             <div
               key={datum.label}
@@ -35,16 +45,24 @@ export function BarChart({
               </span>
               <div
                 className={cn(
-                  "w-full rounded-t-md transition-all",
+                  "chart-bar-enter w-full rounded-t-md transition-colors",
                   isMax
                     ? "bg-[#064E3B] shadow-[0_8px_24px_rgba(6,78,59,.14)]"
                     : "bg-stone-200 group-hover:bg-stone-300",
                 )}
-                style={{ height: `${(datum.value / max) * 100}%` }}
+                style={{
+                  height: `${heightPercent}%`,
+                  animationDelay: `${index * 70}ms`,
+                }}
               />
             </div>
           );
         })}
+        {!hasValues && (
+          <span className="type-body-secondary pointer-events-none absolute inset-0 flex items-center justify-center px-4 text-center">
+            {emptyLabel}
+          </span>
+        )}
       </div>
       <div className="mt-2 flex gap-2">
         {data.map((datum) => (
@@ -93,7 +111,7 @@ export function DonutChart({
           strokeWidth={thickness}
           className="text-neutral-100"
         />
-        {data.map((datum) => {
+        {data.map((datum, index) => {
           const length = (datum.value / total) * circumference;
           const element = (
             <circle
@@ -106,6 +124,9 @@ export function DonutChart({
               strokeWidth={thickness}
               strokeDasharray={`${length} ${circumference - length}`}
               strokeDashoffset={-offset}
+              strokeLinecap="round"
+              className="chart-donut-enter"
+              style={{ animationDelay: `${index * 120}ms` }}
             />
           );
           offset += length;

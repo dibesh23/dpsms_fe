@@ -18,9 +18,7 @@ export function TopBar() {
         <nav className="flex items-center gap-2">
           {!isLoading && user && (
             <>
-              <span className="hidden text-sm text-neutral-500 sm:block">
-                {user.fullName}
-              </span>
+              <span className="hidden text-sm text-neutral-500 sm:block">{user.fullName}</span>
               <button
                 type="button"
                 onClick={() => void logout()}

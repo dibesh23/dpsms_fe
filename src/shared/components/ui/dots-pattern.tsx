@@ -16,10 +16,7 @@ export function DotsPattern({
 
   return (
     <svg
-      className={cn(
-        "pointer-events-none absolute inset-0 text-black/10",
-        className,
-      )}
+      className={cn("pointer-events-none absolute inset-0 text-black/10", className)}
       width="100%"
       height="100%"
       aria-hidden="true"
@@ -33,13 +30,7 @@ export function DotsPattern({
           height={dotSize + gapSize}
           patternUnits="userSpaceOnUse"
         >
-          <rect
-            x={1}
-            y={1}
-            width={dotSize}
-            height={dotSize}
-            fill="currentColor"
-          />
+          <rect x={1} y={1} width={dotSize} height={dotSize} fill="currentColor" />
         </pattern>
       </defs>
       <rect fill={`url(#dots-${id})`} width="100%" height="100%" />

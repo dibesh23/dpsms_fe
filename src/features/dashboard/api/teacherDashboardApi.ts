@@ -38,8 +38,6 @@ export interface TeacherProfileSummary {
   classTeacherOf: ClassTeacherSection[];
 }
 
-/** Per-section attendance snapshot for a date range (today / this month),
- *  produced by the attendance feature's stats endpoint. */
 export interface SectionAttendanceSnapshot {
   sectionId: string;
   classId: string;

@@ -33,29 +33,26 @@ export function useNoticeBell() {
   const [notices, setNotices] = useState<BellNotice[]>([]);
   const [unread, setUnread] = useState(0);
 
-  const mergeExam = useCallback((exam: {
-    id: string;
-    updatedAt: string;
-    subtitle: string;
-    href: string;
-  }) => {
-    setNotices((prev) => {
-      if (prev.some((n) => n.kind === "exam" && n.id === exam.id)) return prev;
-      const entry: BellNotice = {
-        id: exam.id,
-        kind: "exam",
-        title: "Exam Result Published",
-        subtitle: exam.subtitle,
-        isUrgent: false,
-        isRead: true,
-        publishedAt: exam.updatedAt,
-        href: exam.href,
-      };
-      return [entry, ...prev];
-    });
-  }, []);
+  const mergeExam = useCallback(
+    (exam: { id: string; updatedAt: string; subtitle: string; href: string }) => {
+      setNotices((prev) => {
+        if (prev.some((n) => n.kind === "exam" && n.id === exam.id)) return prev;
+        const entry: BellNotice = {
+          id: exam.id,
+          kind: "exam",
+          title: "Exam Result Published",
+          subtitle: exam.subtitle,
+          isUrgent: false,
+          isRead: true,
+          publishedAt: exam.updatedAt,
+          href: exam.href,
+        };
+        return [entry, ...prev];
+      });
+    },
+    [],
+  );
 
-  // ── Recipients (student / teacher): /notices/me feed ────────────────────────
   const { refresh: refreshRecipient } = useNoticePolling({
     enabled: isRecipient,
     onNewNotices: (count) => setUnread((prev) => prev + count),
@@ -77,7 +74,6 @@ export function useNoticeBell() {
     },
   });
 
-  // ── Exam result notifications for students / teachers ───────────────────────
   const { refresh: refreshExams } = useExamPolling({
     enabled: isStudent,
     onNewResults: () => {},
@@ -109,7 +105,6 @@ export function useNoticeBell() {
     },
   });
 
-  // ── Admins: published notice list ─────────────────────────────────────────────
   const loadAdmin = useCallback(async () => {
     try {
       const result = await noticeApi.list({ status: "published", pageSize: 6 });
@@ -126,9 +121,7 @@ export function useNoticeBell() {
         const examEntries = prev.filter((n) => n.kind === "exam");
         return [...noticeEntries, ...examEntries];
       });
-    } catch {
-      // silent
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -162,17 +155,11 @@ export function useNoticeBell() {
 const DEFAULT_BUTTON_CLASS =
   "flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 text-neutral-700 transition-colors hover:bg-neutral-50";
 
-/**
- * Header notification bell that opens a dropdown with the latest notices and,
- * for students/teachers, newly published exam results. Polls every 30s like
- * the rest of the notification system.
- */
 export function NoticeBell({ buttonClassName }: { buttonClassName?: string }) {
   const { notices, unread, refresh } = useNoticeBell();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
-  // ── Close on outside click / Escape ───────────────────────────────────────────
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent | TouchEvent) => {
@@ -216,9 +203,9 @@ export function NoticeBell({ buttonClassName }: { buttonClassName?: string }) {
       {open && (
         <div className="absolute right-0 top-12 z-[60] w-80 overflow-hidden rounded-lg border border-neutral-200 bg-bg-default shadow-xl animate-scale-in">
           <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
-            <p className="text-sm font-semibold text-neutral-900">Notifications</p>
+            <p className="text-base font-bold tracking-tight text-neutral-950">Notifications</p>
             {unread > 0 && (
-              <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600">
+              <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
                 {unread} unread
               </span>
             )}
@@ -226,7 +213,7 @@ export function NoticeBell({ buttonClassName }: { buttonClassName?: string }) {
 
           <ul className="max-h-80 divide-y divide-neutral-100 overflow-y-auto">
             {notices.length === 0 ? (
-              <li className="px-4 py-8 text-center text-sm text-neutral-400">
+              <li className="px-4 py-8 text-center text-sm font-medium text-neutral-500">
                 {unread > 0 ? "Loading…" : "No notifications yet"}
               </li>
             ) : (
@@ -252,18 +239,22 @@ export function NoticeBell({ buttonClassName }: { buttonClassName?: string }) {
                       <div className="min-w-0 flex-1">
                         <p
                           className={cn(
-                            "truncate text-sm",
+                            "truncate text-[0.9375rem] leading-5 tracking-[-0.01em]",
                             n.isRead
-                              ? "font-medium text-neutral-700"
-                              : "font-semibold text-neutral-900",
+                              ? "font-semibold text-neutral-800"
+                              : "font-bold text-neutral-950",
                           )}
                         >
                           {n.title}
                         </p>
                         {n.subtitle && (
-                          <p className="truncate text-xs text-neutral-500">{n.subtitle}</p>
+                          <p className="mt-0.5 truncate text-sm font-medium text-neutral-600">
+                            {n.subtitle}
+                          </p>
                         )}
-                        <p className="text-xs text-neutral-400">{formatDate(n.publishedAt)}</p>
+                        <p className="mt-1 text-xs font-medium text-neutral-500">
+                          {formatDate(n.publishedAt)}
+                        </p>
                       </div>
                       {!n.isRead && !n.isUrgent && (
                         <span className="mt-1.5 size-1.5 flex-none rounded-full bg-violet-500" />
@@ -277,7 +268,7 @@ export function NoticeBell({ buttonClassName }: { buttonClassName?: string }) {
           <Link
             href="/notices"
             onClick={() => setOpen(false)}
-            className="block border-t border-neutral-100 px-4 py-2.5 text-center text-xs font-medium text-violet-600 hover:bg-neutral-50"
+            className="block border-t border-emerald-100 px-4 py-3 text-center text-sm font-semibold text-brand-default transition-colors hover:bg-brand-subtle hover:text-brand-hover focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-default"
           >
             View all notices
           </Link>

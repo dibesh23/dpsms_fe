@@ -1,95 +1,87 @@
 import { apiClient } from "@/shared/lib/apiClient";
 import type { ExamStatus } from "./studentExamApi";
 
-// ── Config records ────────────────────────────────────────────────────────────
-
 export interface ExamTypeRecord {
-  id: string; // ExamType.id
-  name: string; // ExamType.name
+  id: string;
+  name: string;
 }
 
-// ── Exams ─────────────────────────────────────────────────────────────────────
-
 export interface ExamListItem {
-  id: string; // Exam.id
-  name: string; // Exam.name
-  status: ExamStatus; // Exam.status
-  examTypeName: string; // Exam.examType -> ExamType.name
-  className: string; // Exam.class -> Class.name
-  academicYearLabel: string; // Exam.academicYear -> AcademicYear.label
-  termName: string | null; // Exam.term -> AcademicTerm.name
-  subjectCount: number; // count of non-deleted ExamSubject rows
-  subjectsEntered: number; // subjects with ENTERED/SUBMITTED/APPROVED status
-  subjectsApproved: number; // subjects fully APPROVED
-  createdAt: string; // Exam.createdAt
-  updatedAt: string; // Exam.updatedAt (proxy for publish time)
+  id: string;
+  name: string;
+  status: ExamStatus;
+  examTypeName: string;
+  className: string;
+  academicYearLabel: string;
+  termName: string | null;
+  subjectCount: number;
+  subjectsEntered: number;
+  subjectsApproved: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type ExamSubjectStatus = "NOT_ENTERED" | "ENTERED" | "SUBMITTED" | "APPROVED" | "REJECTED";
 
 export interface ExamDetailSubject {
-  id: string; // ExamSubject.id
-  subjectId: string; // Subject.id
-  subjectName: string; // Subject.name
-  subjectCode: string; // Subject.code
-  fullMarksTheory: number; // ExamSubject.fullMarksTheory
-  fullMarksPractical: number; // ExamSubject.fullMarksPractical
-  passMarks: number; // ExamSubject.passMarks
-  status: ExamSubjectStatus; // ExamSubject.status
-  submittedByUserId: string | null; // ExamSubject.submittedByUserId
-  submittedAt: string | null; // ExamSubject.submittedAt
-  approvedByUserId: string | null; // ExamSubject.approvedByUserId
-  approvedAt: string | null; // ExamSubject.approvedAt
-  rejectedReason: string | null; // ExamSubject.rejectedReason
+  id: string;
+  subjectId: string;
+  subjectName: string;
+  subjectCode: string;
+  fullMarksTheory: number;
+  fullMarksPractical: number;
+  passMarks: number;
+  status: ExamSubjectStatus;
+  submittedByUserId: string | null;
+  submittedAt: string | null;
+  approvedByUserId: string | null;
+  approvedAt: string | null;
+  rejectedReason: string | null;
 }
 
 export interface ExamDetail {
-  id: string; // Exam.id
-  name: string; // Exam.name
-  status: ExamStatus; // Exam.status
-  examTypeId: string; // Exam.examTypeId
-  examTypeName: string; // Exam.examType -> ExamType.name
-  academicYearId: string; // Exam.academicYearId
-  academicYearLabel: string; // Exam.academicYear -> AcademicYear.label
-  classId: string; // Exam.classId
-  className: string; // Exam.class -> Class.name
-  termId: string | null; // Exam.termId
-  termName: string | null; // Exam.term -> AcademicTerm.name
+  id: string;
+  name: string;
+  status: ExamStatus;
+  examTypeId: string;
+  examTypeName: string;
+  academicYearId: string;
+  academicYearLabel: string;
+  classId: string;
+  className: string;
+  termId: string | null;
+  termName: string | null;
   subjects: ExamDetailSubject[];
 }
 
-// ── Marks register ────────────────────────────────────────────────────────────
-
 export interface RegisterStudentRow {
-  enrollmentId: string; // Enrollment.id
-  studentId: string; // Student.id
-  studentName: string; // Student.fullName
-  admissionNumber: string; // Student.admissionNumber
-  rollNumber: string; // Enrollment.rollNumber
-  sectionName: string; // Section.name
-  theoryMarks: number | null; // ExamResult.theoryMarks
-  practicalMarks: number | null; // ExamResult.practicalMarks
-  grade: string | null; // ExamResult.grade (auto NEB grade)
-  gpaValue: number | null; // ExamResult.gpaValue (auto NEB grade point)
-  isAbsent: boolean; // ExamResult.isAbsent
+  enrollmentId: string;
+  studentId: string;
+  studentName: string;
+  admissionNumber: string;
+  rollNumber: string;
+  sectionName: string;
+  theoryMarks: number | null;
+  practicalMarks: number | null;
+  grade: string | null;
+  gpaValue: number | null;
+  isAbsent: boolean;
 }
 
 export interface MarksRegister {
-  examId: string; // Exam.id
-  examName: string; // Exam.name
-  examStatus: ExamStatus; // Exam.status
-  sectionId: string; // Section.id
-  sectionName: string; // Section.name
-  subjectId: string; // Subject.id
-  subjectName: string; // Subject.name
-  fullMarksTheory: number; // ExamSubject.fullMarksTheory
-  fullMarksPractical: number; // ExamSubject.fullMarksPractical
-  passMarks: number; // ExamSubject.passMarks
-  subjectStatus: ExamSubjectStatus; // ExamSubject.status
+  examId: string;
+  examName: string;
+  examStatus: ExamStatus;
+  sectionId: string;
+  sectionName: string;
+  subjectId: string;
+  subjectName: string;
+  fullMarksTheory: number;
+  fullMarksPractical: number;
+  passMarks: number;
+  subjectStatus: ExamSubjectStatus;
   students: RegisterStudentRow[];
 }
-
-// ── Payloads ──────────────────────────────────────────────────────────────────
 
 export interface ExamSubjectInput {
   subjectId: string;
@@ -126,7 +118,6 @@ interface ListResult<T> {
 }
 
 export const examApi = {
-  // ---------- Exam types ----------
   async listExamTypes(): Promise<ExamTypeRecord[]> {
     const { data } = await apiClient.get<{ data: ExamTypeRecord[] }>("/exam-types");
     return data.data;
@@ -143,7 +134,6 @@ export const examApi = {
     await apiClient.delete(`/exam-types/${id}`);
   },
 
-  // ---------- Exams ----------
   async listExams(query?: {
     status?: ExamStatus;
     academicYearId?: string;
@@ -174,7 +164,6 @@ export const examApi = {
     await apiClient.delete(`/exams/${id}`);
   },
 
-  // ---------- Exam subjects ----------
   async addSubject(examId: string, payload: ExamSubjectInput): Promise<void> {
     await apiClient.post(`/exams/${examId}/subjects`, payload);
   },
@@ -182,7 +171,6 @@ export const examApi = {
     await apiClient.delete(`/exams/${examId}/subjects/${subjectId}`);
   },
 
-  // ---------- Lifecycle ----------
   async startExam(id: string): Promise<void> {
     await apiClient.post(`/exams/${id}/start`);
   },
@@ -196,7 +184,6 @@ export const examApi = {
     await apiClient.post(`/exams/${id}/reopen`);
   },
 
-  // ---------- Marks entry & approval ----------
   async getMarksRegister(
     examId: string,
     params: { sectionId: string; subjectId: string },

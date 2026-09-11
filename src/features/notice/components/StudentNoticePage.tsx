@@ -30,8 +30,6 @@ import {
 } from "@/shared/components/ui/icons";
 import { AttachmentPreviewDialog } from "./AttachmentPreviewDialog";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
 const EMPTY_RESULT: MyNoticesResult = { notices: [], unreadCount: 0 };
 
 function formatBytes(bytes: number): string {
@@ -40,9 +38,10 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// ── Attachment chip ───────────────────────────────────────────────────────────
-
-function AttachmentChip({ noticeId, attachment }: {
+function AttachmentChip({
+  noticeId,
+  attachment,
+}: {
   noticeId: string;
   attachment: { id: string; label: string; mimeType: string; sizeBytes: number };
 }) {
@@ -92,8 +91,6 @@ function AttachmentChip({ noticeId, attachment }: {
   );
 }
 
-// ── Notice detail dialog ──────────────────────────────────────────────────────
-
 function NoticeDetailDialog({
   notice,
   onClose,
@@ -108,7 +105,7 @@ function NoticeDetailDialog({
   return (
     <Dialog open={notice !== null} onClose={onClose} title={notice.title}>
       <div className="space-y-4">
-        {/* Meta */}
+        {}
         <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-400">
           {notice.isUrgent && <StatusBadge status="Urgent" variant="danger" />}
           <span>{formatDate(notice.publishedAt)}</span>
@@ -116,14 +113,14 @@ function NoticeDetailDialog({
           <span>Posted by {notice.publishedByName}</span>
         </div>
 
-        {/* Body — full text, no truncation */}
+        {}
         <div className="rounded-lg border border-neutral-100 bg-neutral-50 p-4">
           <p className="whitespace-pre-line text-sm leading-relaxed text-neutral-700">
             {notice.body}
           </p>
         </div>
 
-        {/* Attachments */}
+        {}
         {notice.attachments.length > 0 && (
           <div>
             <p className="mb-2 text-xs font-medium text-neutral-500">
@@ -137,7 +134,7 @@ function NoticeDetailDialog({
           </div>
         )}
 
-        {/* Urgent acknowledgement */}
+        {}
         {notice.isUrgent && !notice.isAcknowledged && (
           <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
             <AlertTriangleIcon className="size-4 flex-none text-amber-500" />
@@ -168,8 +165,6 @@ function NoticeDetailDialog({
   );
 }
 
-// ── Notice card (list item) ───────────────────────────────────────────────────
-
 function NoticeCard({
   notice,
   onRead,
@@ -182,7 +177,6 @@ function NoticeCard({
   const cardRef = useRef<HTMLLIElement>(null);
   const hasMarkedRead = useRef(false);
 
-  // Auto mark-as-read when 60% visible
   useEffect(() => {
     if (notice.isRead || hasMarkedRead.current) return;
     const el = cardRef.current;
@@ -214,12 +208,17 @@ function NoticeCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
-          {/* Title row */}
+          {}
           <div className="flex flex-wrap items-center gap-2">
             {!notice.isRead && (
-              <span className="mt-0.5 size-2 flex-none rounded-full bg-blue-500" aria-label="Unread" />
+              <span
+                className="mt-0.5 size-2 flex-none rounded-full bg-blue-500"
+                aria-label="Unread"
+              />
             )}
-            <h3 className={`text-sm ${!notice.isRead ? "font-semibold" : "font-medium"} text-neutral-900`}>
+            <h3
+              className={`text-sm ${!notice.isRead ? "font-semibold" : "font-medium"} text-neutral-900`}
+            >
               {notice.title}
             </h3>
             {notice.isUrgent && <StatusBadge status="Urgent" variant="danger" />}
@@ -231,16 +230,16 @@ function NoticeCard({
             )}
           </div>
 
-          {/* Body preview — one line only, click to read full */}
+          {}
           <p className="line-clamp-1 text-xs text-neutral-500">{notice.body}</p>
 
-          {/* Meta */}
+          {}
           <p className="text-xs text-neutral-400">
             {formatDate(notice.publishedAt)} · {notice.publishedByName}
           </p>
         </div>
 
-        {/* Unacknowledged urgent indicator */}
+        {}
         {notice.isUrgent && !notice.isAcknowledged && (
           <span className="flex-none rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
             Action required
@@ -250,8 +249,6 @@ function NoticeCard({
     </li>
   );
 }
-
-// ── Main page ─────────────────────────────────────────────────────────────────
 
 export function StudentNoticePage() {
   const { success, error } = useToast();
@@ -281,18 +278,21 @@ export function StudentNoticePage() {
       const updated = prev.notices.map((n) => (n.id === id ? { ...n, isRead: true } : n));
       return { notices: updated, unreadCount: updated.filter((n) => !n.isRead).length };
     });
-    // Also update the open dialog if it's for this notice
+
     setOpenNotice((prev) => (prev?.id === id ? { ...prev, isRead: true } : prev));
     studentNoticeApi.markRead(id).catch(() => {});
   }, []);
 
-  const handleClickNotice = useCallback((notice: NoticeSummary) => {
-    setOpenNotice(notice);
-    // Mark as read when opened
-    if (!notice.isRead) {
-      handleRead(notice.id);
-    }
-  }, [handleRead]);
+  const handleClickNotice = useCallback(
+    (notice: NoticeSummary) => {
+      setOpenNotice(notice);
+
+      if (!notice.isRead) {
+        handleRead(notice.id);
+      }
+    },
+    [handleRead],
+  );
 
   const handleAcknowledge = useCallback(
     async (id: string) => {
@@ -310,9 +310,7 @@ export function StudentNoticePage() {
       } catch {
         setResult((prev) => ({
           ...prev,
-          notices: prev.notices.map((n) =>
-            n.id === id ? { ...n, isAcknowledged: false } : n,
-          ),
+          notices: prev.notices.map((n) => (n.id === id ? { ...n, isAcknowledged: false } : n)),
         }));
         setOpenNotice((prev) => (prev?.id === id ? { ...prev, isAcknowledged: false } : prev));
         error("Failed to acknowledge notice");
@@ -357,10 +355,26 @@ export function StudentNoticePage() {
       />
 
       <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <StatsCard label="Total" value={loading ? "-" : String(result.notices.length)} icon={<BellIcon className="size-4" />} />
-        <StatsCard label="Unread" value={loading ? "-" : String(result.unreadCount)} icon={<BellIcon className="size-4" />} />
-        <StatsCard label="Urgent" value={loading ? "-" : String(urgentCount)} icon={<AlertTriangleIcon className="size-4" />} />
-        <StatsCard label="Pending Ack." value={loading ? "-" : String(pendingAckCount)} icon={<CheckCircle2Icon className="size-4" />} />
+        <StatsCard
+          label="Total"
+          value={loading ? "-" : String(result.notices.length)}
+          icon={<BellIcon className="size-4" />}
+        />
+        <StatsCard
+          label="Unread"
+          value={loading ? "-" : String(result.unreadCount)}
+          icon={<BellIcon className="size-4" />}
+        />
+        <StatsCard
+          label="Urgent"
+          value={loading ? "-" : String(urgentCount)}
+          icon={<AlertTriangleIcon className="size-4" />}
+        />
+        <StatsCard
+          label="Pending Ack."
+          value={loading ? "-" : String(pendingAckCount)}
+          icon={<CheckCircle2Icon className="size-4" />}
+        />
       </section>
 
       {pendingAckCount > 0 && (
@@ -378,7 +392,9 @@ export function StudentNoticePage() {
           <div className="flex items-center gap-2">
             <BellIcon className="size-4 flex-none text-blue-500" />
             <p className="text-sm text-blue-700">
-              <strong>{newBanner} new {newBanner === 1 ? "notice" : "notices"}</strong>{" "}
+              <strong>
+                {newBanner} new {newBanner === 1 ? "notice" : "notices"}
+              </strong>{" "}
               {newBanner === 1 ? "has" : "have"} been posted.
             </p>
           </div>
@@ -393,7 +409,12 @@ export function StudentNoticePage() {
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <FilterDropdown label="Filter" options={filterOptions} value={table.filter} onChange={table.setFilter} />
+        <FilterDropdown
+          label="Filter"
+          options={filterOptions}
+          value={table.filter}
+          onChange={table.setFilter}
+        />
         <SearchBar value={table.query} onChange={table.setQuery} placeholder="Search notices…" />
       </div>
 
@@ -429,7 +450,7 @@ export function StudentNoticePage() {
         />
       </div>
 
-      {/* Full notice detail dialog */}
+      {}
       <NoticeDetailDialog
         notice={openNotice}
         onClose={() => setOpenNotice(null)}

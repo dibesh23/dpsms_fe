@@ -30,8 +30,6 @@ export interface StaffCreatePayload {
 
 export type StaffUpdatePayload = Partial<StaffCreatePayload>;
 
-// GET /staff/:id returns the raw staff row (fullName + department object),
-// unlike list/create/update which return the normalized StaffRecord.
 export interface StaffDetailRecord {
   id: string;
   tenantId: string;

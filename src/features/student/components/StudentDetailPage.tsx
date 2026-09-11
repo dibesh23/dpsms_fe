@@ -137,8 +137,6 @@ export function StudentDetailPage() {
     void loadDocuments();
   }, [load, loadGuardians, loadDocuments]);
 
-  // Deep-link support: /students/{id}?transfer=1 opens the transfer dialog
-  // directly, then cleans the query param from the URL.
   useEffect(() => {
     if (shouldOpenTransfer && canTransfer && student) {
       setTransferOpen(true);
@@ -146,7 +144,6 @@ export function StudentDetailPage() {
     }
   }, [shouldOpenTransfer, canTransfer, student, router, studentId]);
 
-  // ---------- Profile ----------
   const handleSave = async (values: EditStudentValues): Promise<string | null> => {
     if (!studentId) return "Could not save changes. Try again.";
     try {
@@ -193,7 +190,6 @@ export function StudentDetailPage() {
     }
   };
 
-  // ---------- Guardians ----------
   const handleGuardianSave = async (
     values: GuardianFormValues,
     isPrimary: boolean,
@@ -242,7 +238,6 @@ export function StudentDetailPage() {
     }
   };
 
-  // ---------- Documents ----------
   const handleUpload = async () => {
     if (!studentId || !documentFile || !documentType.trim()) return;
     setUploading(true);
@@ -449,7 +444,7 @@ export function StudentDetailPage() {
         </div>
 
         <div className="space-y-4">
-          {/* Guardians */}
+          {}
           <div className="rounded-lg border border-neutral-200 bg-bg-default p-5">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold text-neutral-900">Guardians</h3>
@@ -518,7 +513,7 @@ export function StudentDetailPage() {
             )}
           </div>
 
-          {/* Documents */}
+          {}
           <div className="rounded-lg border border-neutral-200 bg-bg-default p-5">
             <h3 className="text-sm font-semibold text-neutral-900">Documents</h3>
             {documents.length === 0 ? (

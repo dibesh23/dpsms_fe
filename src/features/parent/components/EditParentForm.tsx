@@ -30,8 +30,6 @@ export function relationToLabel(relation: string): string {
   return RELATIONS.find((item) => item.value === relation)?.label ?? "Guardian";
 }
 
-// Linked students are matched by exact full name server-side and the list is
-// replaced wholesale, so an empty value intentionally unlinks every student.
 const EditParentSchema = z.object({
   fullName: z.string().min(1, "Full name is required").max(255),
   relation: z.enum(["FATHER", "MOTHER", "GUARDIAN"]),
@@ -189,10 +187,6 @@ export function EditParentForm({
   );
 }
 
-// Payload rules mirror the backend contract:
-// - omit a key entirely -> keep the existing value
-// - email "" -> clears it server-side; occupation "" -> stored as empty string
-// - studentNames is always sent and replaces the whole link set (replace-all)
 export function editValuesToPayload(values: EditParentValues) {
   const email = values.email?.trim();
   return {

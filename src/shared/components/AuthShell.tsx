@@ -13,7 +13,7 @@ export function AuthShell({
   return (
     <div className="relative min-h-[100dvh]">
       <div className="absolute inset-0 isolate overflow-hidden bg-white">
-        {/* Grid */}
+        {}
         <div
           className={cn(
             "absolute inset-y-0 left-1/2 w-[1200px] -translate-x-1/2",
@@ -23,7 +23,7 @@ export function AuthShell({
           <Grid cellSize={60} patternOffset={[0.75, 0]} className="text-neutral-200" />
         </div>
 
-        {/* Gradient */}
+        {}
         {[...Array(2)].map((_, idx) => (
           <div
             key={idx}
@@ -55,7 +55,7 @@ export function AuthShell({
         </Link>
 
         <div className="flex min-h-[100dvh] w-full flex-col items-center justify-between">
-          {/* Spacer to help center the main content */}
+          {}
           <div className="grow basis-0">
             <div className="h-24" />
           </div>

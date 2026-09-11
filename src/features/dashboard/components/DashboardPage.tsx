@@ -7,6 +7,9 @@ import { DashboardNoticesWidget } from "@/features/notice/components/DashboardNo
 import { NoticeBell } from "@/features/notice/components/NoticeBell";
 import { PERMISSIONS, ROLE_LABELS } from "@/shared/permissions";
 import { Avatar } from "@/shared/components/ui/avatar";
+import { ErrorState } from "@/shared/components/ui/error-state";
+import { RouteLoading } from "@/shared/components/ui/route-loading";
+import { BarChart } from "@/shared/components/ui/charts";
 import { cn } from "@/shared/lib/cn";
 import {
   ArrowUpRightIcon,
@@ -74,15 +77,6 @@ const QUICK_ACTIONS = [
 ];
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const CALENDAR_EVENTS = new Set([5, 12, 18, 21]);
-const DISTRIBUTION_COLORS = [
-  "#064e3b",
-  "#475569",
-  "#4f46e5",
-  "#0369a1",
-  "#a16207",
-  "#7e22ce",
-  "#78716c",
-];
 
 function buildMonthGrid() {
   const now = new Date();
@@ -134,14 +128,18 @@ export default function DashboardPage() {
   const { user, can } = useAuth();
   const [summary, setSummary] = useState<DashboardSummary>(EMPTY_SUMMARY);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const calendar = useMemo(buildMonthGrid, []);
   const firstName = user?.fullName?.split(" ")[0] ?? "Principal";
   const roleLabel = (user?.role && ROLE_LABELS[user.role]) ?? "Staff";
   const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
     try {
       setSummary(await dashboardApi.getSummary());
     } catch {
       setSummary(EMPTY_SUMMARY);
+      setLoadError("The school summary could not be loaded. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -149,7 +147,8 @@ export default function DashboardPage() {
   useEffect(() => {
     void load();
   }, [load]);
-  const maxAttendance = Math.max(...summary.weeklyAttendance.map((item) => item.value), 1);
+  if (loading) return <RouteLoading variant="dashboard" label="Loading school dashboard…" />;
+  if (loadError) return <ErrorState description={loadError} onRetry={() => void load()} />;
 
   return (
     <div className="mx-auto max-w-[1500px] space-y-4 pb-6">
@@ -209,45 +208,20 @@ export default function DashboardPage() {
           title="Attendance Overview"
           action={
             <Link
-              href="/classes"
-              className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs text-neutral-600 hover:bg-neutral-50"
+              href="/attendance/students"
+              className="rounded-lg border border-emerald-200 bg-emerald-50/60 px-3 py-1.5 text-xs font-medium text-brand-default transition-colors hover:border-emerald-300 hover:bg-brand-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-default"
             >
               View all
             </Link>
           }
         >
           <div className="px-5 pb-5 pt-6">
-            <div className="relative flex h-64 items-end gap-3 border-b border-neutral-200 bg-[linear-gradient(to_bottom,transparent_24%,#f5f5f5_25%,transparent_26%,transparent_49%,#f5f5f5_50%,transparent_51%,transparent_74%,#f5f5f5_75%,transparent_76%)] px-2">
-              {summary.weeklyAttendance.map((item) => {
-                const highlighted = item.value === maxAttendance;
-                return (
-                  <div key={item.label} className="group relative flex h-full flex-1 items-end">
-                    <div
-                      className={cn(
-                        "relative w-full rounded-t-xl",
-                        highlighted
-                          ? "bg-[#064E3B] shadow-[0_8px_30px_rgba(6,78,59,.14)]"
-                          : "bg-[repeating-linear-gradient(135deg,#e7e5e4_0,#e7e5e4_3px,#f5f5f4_3px,#f5f5f4_6px)]",
-                      )}
-                      style={{ height: `${Math.max((item.value / maxAttendance) * 86, 4)}%` }}
-                    >
-                      {highlighted && (
-                        <span className="type-badge type-numeric absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-[#064E3B] px-2.5 py-1 text-white">
-                          {item.valueLabel}
-                        </span>
-                      )}
-                    </div>
-                    <span className="type-caption absolute -bottom-6 left-1/2 -translate-x-1/2">
-                      {item.label}
-                    </span>
-                  </div>
-                );
-              })}
-              {!loading && summary.weeklyAttendance.length === 0 && (
-                <p className="m-auto text-sm text-neutral-400">No attendance data available</p>
-              )}
-            </div>
-            <div className="h-7" />
+            <BarChart
+              data={summary.weeklyAttendance}
+              height={256}
+              highlightMax
+              emptyLabel="No attendance has been marked in the last seven days"
+            />
           </div>
         </Panel>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
@@ -264,25 +238,25 @@ export default function DashboardPage() {
                 {summary.gradeDistribution.map((grade, index) => (
                   <div
                     key={grade.label}
+                    className="chart-width-enter border-r border-white/70 last:border-r-0"
                     style={{
                       width: `${(grade.value / Math.max(summary.gradeDistributionTotal, 1)) * 100}%`,
-                      backgroundColor: DISTRIBUTION_COLORS[index % DISTRIBUTION_COLORS.length],
+                      backgroundColor: grade.color,
+                      animationDelay: `${index * 90}ms`,
                     }}
                     title={`${grade.label}: ${grade.value}`}
                   />
                 ))}
               </div>
               <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2">
-                {summary.gradeDistribution.map((grade, index) => (
+                {summary.gradeDistribution.map((grade) => (
                   <li
                     key={grade.label}
                     className="flex items-center gap-1.5 text-xs text-neutral-600"
                   >
                     <span
-                      className="size-2 rounded-sm"
-                      style={{
-                        backgroundColor: DISTRIBUTION_COLORS[index % DISTRIBUTION_COLORS.length],
-                      }}
+                      className="size-2.5 rounded-sm ring-1 ring-black/10"
+                      style={{ backgroundColor: grade.color }}
                     />
                     {grade.label} <b className="text-neutral-900">{grade.value}</b>
                   </li>
@@ -371,7 +345,10 @@ export default function DashboardPage() {
         <Panel
           title="Recent Admissions"
           action={
-            <Link href="/students" className="text-xs font-medium text-violet-600">
+            <Link
+              href="/students"
+              className="text-xs font-medium text-brand-default transition-colors hover:text-brand-hover hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-default"
+            >
               View all
             </Link>
           }
@@ -405,15 +382,15 @@ export default function DashboardPage() {
                 className={cn(
                   "relative flex h-8 items-center justify-center rounded-lg text-xs",
                   cell === calendar.today
-                    ? "bg-violet-600 font-semibold text-white"
+                    ? "bg-brand-default font-semibold text-white shadow-sm"
                     : cell
-                      ? "text-neutral-700 hover:bg-neutral-50"
+                      ? "text-neutral-700 hover:bg-brand-subtle hover:text-brand-default"
                       : "text-transparent",
                 )}
               >
                 {cell ?? 0}
                 {cell && CALENDAR_EVENTS.has(cell) && cell !== calendar.today && (
-                  <span className="absolute bottom-0.5 size-1 rounded-full bg-violet-400" />
+                  <span className="absolute bottom-0.5 size-1 rounded-full bg-emerald-500" />
                 )}
               </div>
             ))}
@@ -424,7 +401,7 @@ export default function DashboardPage() {
 
       <Panel
         title="Notifications"
-        action={<span className="text-xs font-medium text-violet-600">View all</span>}
+        action={<span className="text-xs font-medium text-brand-default">View all</span>}
       >
         <ul className="grid divide-y divide-neutral-100 px-5 lg:grid-cols-2 lg:divide-x lg:divide-y-0">
           {summary.notifications.map((item) => (

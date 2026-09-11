@@ -61,10 +61,9 @@ export const promotionApi = {
     page?: number;
     pageSize?: number;
   }): Promise<ListResult<PromotionRecordRow>> {
-    const { data } = await apiClient.get<{ data: ListResult<PromotionRecordRow> }>(
-      "/promotions",
-      { params },
-    );
+    const { data } = await apiClient.get<{ data: ListResult<PromotionRecordRow> }>("/promotions", {
+      params,
+    });
     return data.data;
   },
 
@@ -80,9 +79,7 @@ export const promotionApi = {
   },
 
   async getBatchDetails(batchId: string): Promise<BatchDetail> {
-    const { data } = await apiClient.get<{ data: BatchDetail }>(
-      `/promotions/batches/${batchId}`,
-    );
+    const { data } = await apiClient.get<{ data: BatchDetail }>(`/promotions/batches/${batchId}`);
     return data.data;
   },
 
@@ -90,9 +87,9 @@ export const promotionApi = {
     studentId: string;
     promotions: StudentPromotionHistory[];
   }> {
-    const { data } = await apiClient.get<{ data: { studentId: string; promotions: StudentPromotionHistory[] } }>(
-      `/promotions/student/${studentId}/history`,
-    );
+    const { data } = await apiClient.get<{
+      data: { studentId: string; promotions: StudentPromotionHistory[] };
+    }>(`/promotions/student/${studentId}/history`);
     return data.data;
   },
 };

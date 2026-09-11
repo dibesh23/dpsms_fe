@@ -67,8 +67,6 @@ export const authApi = {
   },
 
   async refresh(): Promise<RefreshResponse> {
-    // Prefer the per-tab token so concurrent portals in separate tabs each
-    // rotate their own session; fall back to the shared cookie.
     const tabToken = getTabRefreshToken();
     const { data } = await apiClient.post<RefreshResponse>(
       "/auth/refresh",
@@ -85,6 +83,10 @@ export const authApi = {
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
     await apiClient.post("/auth/reset-password", { token, newPassword });
+  },
+
+  async verifyEmail(token: string): Promise<void> {
+    await apiClient.get("/auth/verify-email", { params: { token } });
   },
 
   async me(): Promise<AuthUser> {

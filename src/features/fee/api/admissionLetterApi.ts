@@ -16,7 +16,9 @@ export interface AdmissionLetterData {
 export const admissionLetterApi = {
   async get(): Promise<AdmissionLetterData | null> {
     try {
-      const { data } = await apiClient.get<{ data: AdmissionLetterData }>("/students/me/admission-letter");
+      const { data } = await apiClient.get<{ data: AdmissionLetterData }>(
+        "/students/me/admission-letter",
+      );
       return data.data;
     } catch {
       return null;

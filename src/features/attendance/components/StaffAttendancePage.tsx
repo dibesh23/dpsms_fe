@@ -32,10 +32,7 @@ const STATUS_LABELS: Record<StaffAttendanceStatus, string> = {
   ON_LEAVE: "On Leave",
 };
 
-const SEGMENT_ACTIVE_COLORS: Record<
-  (typeof PRIMARY_STATUSES)[number],
-  string
-> = {
+const SEGMENT_ACTIVE_COLORS: Record<(typeof PRIMARY_STATUSES)[number], string> = {
   PRESENT: "border-emerald-200 bg-emerald-50 text-emerald-700",
   ABSENT: "border-red-200 bg-red-50 text-red-700",
   ON_LEAVE: "border-amber-200 bg-amber-50 text-amber-700",
@@ -98,13 +95,11 @@ export function StaffAttendancePage() {
     setLoading(true);
     try {
       const dateObj = new Date(selectedDate + "T12:00:00Z");
-      // Roster = every active teacher, with their status for the date
-      // (null when not yet marked) — works on fresh days too.
+
       const result = await attendanceApi.getStaffRoster(dateObj);
       setRecords(result.items);
       const map = new Map<string, StaffAttendanceStatus>();
       for (const r of result.items) {
-        // Unmarked staff read as Present — matches what save submits.
         map.set(r.teacherId, r.status ?? "PRESENT");
       }
       setLocalStatuses(map);
@@ -196,7 +191,7 @@ export function StaffAttendancePage() {
         }
       />
 
-      {/* Controls */}
+      {}
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
           <label htmlFor="staff-attendance-date" className="text-sm font-medium text-neutral-700">
@@ -218,7 +213,7 @@ export function StaffAttendancePage() {
         />
       </div>
 
-      {/* Stats Row */}
+      {}
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <StatsCard
           label="Total Staff"
@@ -255,7 +250,7 @@ export function StaffAttendancePage() {
         />
       </section>
 
-      {/* Attendance Table */}
+      {}
       <DashboardWidget
         title="Staff Attendance Register"
         description={`${records.length} staff members · Defaults to Present — only mark the exceptions`}

@@ -58,9 +58,7 @@ export interface FinanceSummary {
 export const financeApi = {
   async getSummary(search?: string): Promise<FinanceSummary> {
     const qs = search ? `?search=${encodeURIComponent(search)}` : "";
-    const { data } = await apiClient.get<{ data: FinanceSummary }>(
-      `/fees/summary${qs}`,
-    );
+    const { data } = await apiClient.get<{ data: FinanceSummary }>(`/fees/summary${qs}`);
     return data.data;
   },
 };
