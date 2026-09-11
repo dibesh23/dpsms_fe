@@ -170,7 +170,14 @@ export default function DashboardPage() {
             Academic Year {summary.academicYear || "—"}
           </div>
           <NoticeBell buttonClassName="relative flex size-10 items-center justify-center rounded-xl border border-neutral-200 text-neutral-700 hover:bg-neutral-50" />
-          <Avatar name={user?.fullName ?? "Principal"} size="md" />
+          <Link
+            href="/profile"
+            aria-label="Open your profile"
+            title="Open profile"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-full transition hover:ring-4 hover:ring-brand-subtle focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-subtle"
+          >
+            <Avatar name={user?.fullName ?? "Principal"} size="md" />
+          </Link>
         </div>
       </header>
 

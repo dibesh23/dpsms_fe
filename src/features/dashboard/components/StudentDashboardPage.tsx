@@ -408,7 +408,14 @@ export default function StudentDashboardPage() {
             </span>
           )}
           <NoticeBell buttonClassName="flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-[#064E3B] transition-colors hover:bg-stone-100" />
-          <Avatar name={user?.fullName ?? "Student"} size="md" />
+          <Link
+            href="/profile"
+            aria-label="Open your profile"
+            title="Open profile"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-full transition hover:ring-4 hover:ring-brand-subtle focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-subtle"
+          >
+            <Avatar name={user?.fullName ?? "Student"} size="md" />
+          </Link>
         </div>
       </header>
 

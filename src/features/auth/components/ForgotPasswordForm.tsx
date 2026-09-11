@@ -7,7 +7,6 @@ import { z } from "zod";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { authApi } from "../api/authApi";
-import { getLastSchool } from "../../../shared/lib/schoolStorage";
 
 const ForgotSchema = z.object({
   email: z.email("Enter a valid email address").trim().toLowerCase(),
@@ -17,7 +16,7 @@ type ForgotFormValues = z.infer<typeof ForgotSchema>;
 
 export function ForgotPasswordForm({ defaultTenantId = "" }: { defaultTenantId?: string }) {
   const [submitted, setSubmitted] = useState(false);
-  const knownTenantId = defaultTenantId || getLastSchool()?.tenantId || "";
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const {
     register,
@@ -25,14 +24,22 @@ export function ForgotPasswordForm({ defaultTenantId = "" }: { defaultTenantId?:
     formState: { errors, isSubmitting },
   } = useForm<ForgotFormValues>({
     resolver: zodResolver(ForgotSchema),
-    defaultValues: { tenantId: knownTenantId },
+    defaultValues: { tenantId: defaultTenantId },
   });
 
   const onSubmit = async ({ email, tenantId }: ForgotFormValues) => {
+    setApiError(null);
     try {
       await authApi.forgotPassword(email, tenantId || undefined);
-    } catch {}
-    setSubmitted(true);
+      setSubmitted(true);
+    } catch (error: unknown) {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      setApiError(
+        status === 429
+          ? "Too many reset requests. Please wait a few minutes and try again."
+          : "We couldn't send the request. Check your connection and try again.",
+      );
+    }
   };
 
   if (submitted) {
@@ -62,6 +69,16 @@ export function ForgotPasswordForm({ defaultTenantId = "" }: { defaultTenantId?:
       </label>
 
       <input type="hidden" {...register("tenantId")} />
+
+      {apiError && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700"
+        >
+          {apiError}
+        </div>
+      )}
 
       <Button
         text={isSubmitting ? "Sending..." : "Send reset link"}

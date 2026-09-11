@@ -4,7 +4,14 @@ import { ForgotPasswordForm } from "../../../features/auth/components/ForgotPass
 
 const DEFAULT_TENANT_ID = process.env["NEXT_PUBLIC_TENANT_ID"] ?? "";
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tenantId?: string }>;
+}) {
+  const { tenantId } = await searchParams;
+  const defaultTenantId = tenantId ?? DEFAULT_TENANT_ID;
+
   return (
     <div className="w-full max-w-sm">
       <h1 className="type-page-title text-center">Reset your password</h1>
@@ -13,7 +20,7 @@ export default function ForgotPasswordPage() {
       </p>
 
       <div className="mt-8">
-        <ForgotPasswordForm defaultTenantId={DEFAULT_TENANT_ID} />
+        <ForgotPasswordForm defaultTenantId={defaultTenantId} />
       </div>
 
       <p className="type-body-secondary mt-6 text-center font-medium">

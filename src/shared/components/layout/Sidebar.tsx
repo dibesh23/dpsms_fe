@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/shared/lib/cn";
@@ -439,17 +439,20 @@ function NavList({ onNavigate, expanded = true }: { onNavigate?: () => void; exp
 function SidebarContent({
   onNavigate,
   expanded = true,
+  closeButton,
 }: {
   onNavigate?: () => void;
   expanded?: boolean;
+  closeButton?: ReactNode;
 }) {
   const { user, logout } = useAuth();
   return (
     <div className="flex h-full flex-col">
-      <div className="relative flex h-16 flex-none items-center border-b border-stone-200 px-5">
+      <div className="relative flex h-16 flex-none items-center justify-between border-b border-stone-200 px-4 sm:px-5">
         <Link href="/dashboard" onClick={onNavigate} aria-label="Digital Pathshala dashboard">
           <Wordmark textClassName={sidebarContentMotion(expanded)} />
         </Link>
+        {closeButton}
       </div>
 
       <NavList onNavigate={onNavigate} expanded={expanded} />
@@ -554,22 +557,24 @@ export function Sidebar({
             aria-hidden="true"
           />
           <div
-            className="absolute inset-y-0 left-0 flex w-[min(20rem,90vw)] flex-col bg-[#FBFAF7] shadow-xl animate-drawer-in"
+            className="absolute inset-y-0 left-0 flex w-[min(20rem,90vw)] min-h-0 flex-col bg-[#FBFAF7] shadow-xl animate-drawer-in"
             role="dialog"
             aria-modal="true"
             aria-label="Navigation menu"
           >
-            <div className="flex min-h-16 flex-none items-center justify-end border-b border-stone-200 px-3">
-              <button
-                type="button"
-                onClick={() => setDrawerOpen(false)}
-                aria-label="Close navigation menu"
-                className="flex h-11 w-11 items-center justify-center rounded-xl text-[#064E3B] transition-colors hover:bg-stone-100"
-              >
-                <XIcon className="size-4" />
-              </button>
-            </div>
-            <SidebarContent onNavigate={() => setDrawerOpen(false)} />
+            <SidebarContent
+              onNavigate={() => setDrawerOpen(false)}
+              closeButton={
+                <button
+                  type="button"
+                  onClick={() => setDrawerOpen(false)}
+                  aria-label="Close navigation menu"
+                  className="flex h-11 w-11 flex-none items-center justify-center rounded-xl text-[#064E3B] transition-colors hover:bg-stone-100"
+                >
+                  <XIcon className="size-4" />
+                </button>
+              }
+            />
           </div>
         </div>
       )}

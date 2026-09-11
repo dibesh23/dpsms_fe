@@ -138,8 +138,12 @@ export function LoginForm({ defaultTenantId = "", schoolName, defaultRole }: Log
           <div className="mb-2 flex items-center justify-between">
             <span className="type-label block">Password</span>
             <Link
-              href="/forgot-password"
-              className="type-caption hover:text-content-emphasis underline underline-offset-2 transition-colors"
+              href={
+                defaultTenantId
+                  ? `/forgot-password?tenantId=${encodeURIComponent(defaultTenantId)}`
+                  : "/forgot-password"
+              }
+              className="type-caption -mr-2 inline-flex min-h-11 items-center rounded-lg px-2 font-semibold text-brand-default underline underline-offset-2 transition-colors hover:bg-brand-subtle hover:text-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-subtle"
             >
               Forgot password?
             </Link>
