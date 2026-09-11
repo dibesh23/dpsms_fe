@@ -44,9 +44,16 @@ test("authentication pages do not link to unavailable legal routes", async () =>
 
 test("forgot password distinguishes server and connection failures", async () => {
   const form = await read("src/features/auth/components/ForgotPasswordForm.tsx");
+  assert.match(form, /value === "" \|\| z\.uuid\(\)\.safeParse\(value\)\.success/);
+  assert.match(form, /type="submit"/);
   assert.match(form, /status && status >= 500/);
   assert.match(form, /reset email service is temporarily unavailable/i);
   assert.match(form, /couldn't reach the server/i);
+});
+
+test("reset password uses an explicit submit button", async () => {
+  const form = await read("src/features/auth/components/ResetPasswordForm.tsx");
+  assert.match(form, /type="submit"/);
 });
 
 test("plain login does not reuse a cached or environment tenant", async () => {

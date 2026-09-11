@@ -81,6 +81,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
       )}
 
       <Button
+        type="submit"
         text={isSubmitting ? "Resetting..." : "Reset password"}
         loading={isSubmitting}
         disabled={isSubmitting}

@@ -10,7 +10,10 @@ import { authApi } from "../api/authApi";
 
 const ForgotSchema = z.object({
   email: z.email("Enter a valid email address").trim().toLowerCase(),
-  tenantId: z.uuid("Invalid tenant ID").optional(),
+  tenantId: z
+    .string()
+    .refine((value) => value === "" || z.uuid().safeParse(value).success, "Invalid tenant ID")
+    .optional(),
 });
 type ForgotFormValues = z.infer<typeof ForgotSchema>;
 
@@ -85,6 +88,7 @@ export function ForgotPasswordForm({ defaultTenantId = "" }: { defaultTenantId?:
       )}
 
       <Button
+        type="submit"
         text={isSubmitting ? "Sending..." : "Send reset link"}
         loading={isSubmitting}
         disabled={isSubmitting}
